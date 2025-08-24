@@ -1,0 +1,23 @@
+{
+    "folders": [
+        {
+            "name": "Main Project",
+            "path": "."
+        },
+        {
+            "name": "API Manager",
+            "path": "./API-manager"
+        },
+        {
+            "name": "Frontend",
+            "path": "./frontend"
+        },
+        {
+            "name": "Backend",
+            "path": "./backend"
+        }
+    ],
+    "settings": {
+        "typescript.preferences.includePackageJsonAutoImports": "auto"
+    }
+}

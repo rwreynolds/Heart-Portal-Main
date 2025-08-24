@@ -73,7 +73,8 @@ class BaseNutritionAPI(ABC):
         # Set default headers
         self.session.headers.update({
             'User-Agent': 'NutritionAPIManager/1.0',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-API-HEARS': "Ocnd7wcThywKAMRJM0QCbtNsXhs77wNnNXtBvJCt"
         })
     
     @abstractmethod
@@ -109,7 +110,8 @@ class USDAFoodDataAPI(BaseNutritionAPI):
         super().__init__(api_key, rate_limit=(1000, 3600))  # 1000 calls per hour
         
         # Add API key to headers
-        self.session.headers.update({'X-API-Key': self.api_key})
+        if self.api_key:
+            self.session.headers['X-API-Key'] = self.api_key
     
     def search_foods(self, query: str, limit: int = 10) -> List[NutritionData]:
         """Search for foods using USDA FoodData Central"""
