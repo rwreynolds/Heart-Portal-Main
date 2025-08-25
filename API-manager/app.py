@@ -1,0 +1,193 @@
+from flask import Flask, render_template, request, jsonify
+from nutrition_api_manager import (
+    USDAFoodDataAPI,
+    APIProvider,
+    APIError,
+)
+from enhanced_nutrition_api_manager import EnhancedNutritionAPIManager
+
+app = Flask(__name__)
+
+# Use enhanced manager with persistence
+manager = EnhancedNutritionAPIManager()
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+@app.route("/api/providers", methods=["GET"])
+def get_providers():
+    return jsonify({
+        "available": [provider.value for provider in manager.get_available_providers()],
+        "supported": [provider.value for provider in APIProvider],
+    })
+
+@app.route("/api/add-provider", methods=["POST"])
+def add_provider():
+    try:
+        data = request.get_json()
+        provider_name = data.get("provider")
+        api_key = data.get("api_key")
+
+        if not provider_name or not api_key:
+            return jsonify({"error": "Provider and API key are required"}), 400
+
+        provider = APIProvider(provider_name)
+
+        if provider == APIProvider.USDA_FOODDATA:
+            # Use the new persistence method
+            manager.add_api_with_persistence(provider, api_key)
+            return jsonify({"message": f"Successfully added and saved {provider_name} API"})
+        else:
+            return jsonify({"error": f"Provider {provider_name} not yet implemented"}), 400
+
+    except ValueError:
+        return jsonify({"error": "Invalid provider name"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/remove-provider", methods=["POST"])
+def remove_provider():
+    try:
+        data = request.get_json()
+        provider_name = data.get("provider")
+
+        if not provider_name:
+            return jsonify({"error": "Provider name is required"}), 400
+
+        provider = APIProvider(provider_name)
+        # Use the new persistence method
+        manager.remove_api_with_persistence(provider)
+        return jsonify({"message": f"Successfully removed {provider_name} API and deleted saved key"})
+
+    except ValueError:
+        return jsonify({"error": "Invalid provider name"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# Copy your existing routes here
+@app.route('/api/search', methods=['POST'])
+def search_foods():
+    try:
+        data = request.get_json()
+        query = data.get('query', '')
+        limit = data.get('limit', 10)
+        providers = data.get('providers', [])
+        
+        if not query:
+            return jsonify({'error': 'Query is required'}), 400
+            
+        provider_enums = []
+        if providers:
+            for provider_name in providers:
+                provider_enums.append(APIProvider(provider_name))
+        else:
+            provider_enums = None
+            
+        results = manager.search_foods(query, provider_enums, limit)
+        
+        serialized_results = {}
+        for provider_name, foods in results.items():
+            serialized_results[provider_name] = []
+            for food in foods:
+                serialized_results[provider_name].append({
+                    'food_id': food.food_id,
+                    'name': food.name,
+                    'brand': food.brand,
+                    'serving_size': food.serving_size,
+                    'calories': food.calories,
+                    'protein': food.protein,
+                    'carbs': food.carbs,
+                    'fat': food.fat,
+                    'fiber': food.fiber,
+                    'sugar': food.sugar,
+                    'sodium': food.sodium,
+                    'source': food.source
+                })
+                
+        return jsonify({'results': serialized_results})
+        
+    except APIError as e:
+        return jsonify({'error': f'API Error: {str(e)}'}), 503
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/food-details', methods=['POST'])
+def get_food_details():
+    try:
+        data = request.get_json()
+        provider_name = data.get('provider')
+        food_id = data.get('food_id')
+        
+        if not provider_name or not food_id:
+            return jsonify({'error': 'Provider and food_id are required'}), 400
+            
+        provider = APIProvider(provider_name)
+        food_details = manager.get_food_details(provider, food_id)
+        
+        if food_details is None:
+            return jsonify({'error': 'Food not found or API error'}), 404
+            
+        return jsonify({
+            'food_id': food_details.food_id,
+            'name': food_details.name,
+            'brand': food_details.brand,
+            'serving_size': food_details.serving_size,
+            'calories': food_details.calories,
+            'protein': food_details.protein,
+            'carbs': food_details.carbs,
+            'fat': food_details.fat,
+            'fiber': food_details.fiber,
+            'sugar': food_details.sugar,
+            'sodium': food_details.sodium,
+            'source': food_details.source,
+            'raw_data': food_details.raw_data
+        })
+        
+    except APIError as e:
+        return jsonify({'error': f'API Error: {str(e)}'}), 503
+    except ValueError:
+        return jsonify({'error': 'Invalid provider name'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route("/api/test-connection", methods=["POST"])
+def test_connection():
+    try:
+        data = request.get_json()
+        provider_name = data.get("provider")
+
+        if not provider_name:
+            return jsonify({"error": "Provider name is required"}), 400
+
+        provider = APIProvider(provider_name)
+
+        if provider not in manager.apis:
+            return jsonify({"error": f"Provider {provider_name} not configured"}), 400
+
+        test_results = manager.search_foods("test", [provider], 1)
+
+        if provider_name in test_results and isinstance(
+            test_results[provider_name], list
+        ):
+            return jsonify({
+                "status": "success",
+                "message": f"{provider_name} API is working correctly",
+                "test_results_count": len(test_results[provider_name]),
+            })
+        else:
+            return jsonify({
+                "status": "error", 
+                "message": f"{provider_name} API test failed"
+            })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+    
+
+if __name__ == "__main__":
+    # Load any existing API keys on startup
+    print(f"Loaded {len(manager.get_available_providers())} API providers from configuration")
+    app.run(debug=True, host="0.0.0.0", port=5000)

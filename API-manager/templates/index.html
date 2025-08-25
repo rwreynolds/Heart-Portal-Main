@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutrition API Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #86868b;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e5e7;
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .btn:hover {
+            background: #0056cc;
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #8e8e93;
+        }
+
+        .btn-secondary:hover {
+            background: #6d6d70;
+        }
+
+        .btn-danger {
+            background: #ff3b30;
+        }
+
+        .btn-danger:hover {
+            background: #d70015;
+        }
+
+        .btn-success {
+            background: #34c759;
+        }
+
+        .btn-success:hover {
+            background: #248a3d;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-connected {
+            background-color: #34c759;
+        }
+
+        .status-disconnected {
+            background-color: #ff3b30;
+        }
+
+        .provider-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .provider-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #f7f7f9;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .provider-name {
+            font-weight: 500;
+        }
+
+        .search-results {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fafafa;
+        }
+
+        .food-item {
+            background: white;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .food-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .food-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .food-brand {
+            color: #86868b;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .nutrition-info {
+            display: flex;
+            gap: 16px;
+            font-size: 0.9rem;
+            color: #1d1d1f;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d1eddb;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c2c7;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007aff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .nutrition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .nutrition-card {
+            background: #f7f7f9;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .nutrition-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #007aff;
+        }
+
+        .nutrition-label {
+            font-size: 0.9rem;
+            color: #86868b;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍎 Nutrition API Manager</h1>
+            <p>Manage and test your nutrition data API endpoints</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>API Providers</h2>
+                <div class="form-group">
+                    <label for="provider">Provider</label>
+                    <select id="provider" class="form-control">
+                        <option value="usda_fooddata">USDA FoodData Central</option>
+                        <option value="edamam">Edamam (Coming Soon)</option>
+                        <option value="spoonacular">Spoonacular (Coming Soon)</option>
+                        <option value="nutritionix">Nutritionix (Coming Soon)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="api-key">API Key</label>
+                    <input type="password" id="api-key" class="form-control" placeholder="Enter your API key">
+                </div>
+                <button onclick="addProvider()" class="btn">Add Provider</button>
+                <button onclick="loadProviders()" class="btn btn-secondary">Refresh</button>
+                
+                <div id="provider-status" style="margin-top: 24px;">
+                    <h3>Active Providers</h3>
+                    <ul id="provider-list" class="provider-list">
+                        <li class="provider-item">
+                            <span class="status-indicator status-disconnected"></span>
+                            <span>No providers configured</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>API Testing</h2>
+                <div class="form-group">
+                    <label for="search-query">Search Query</label>
+                    <input type="text" id="search-query" class="form-control" placeholder="e.g., chicken breast, coca cola">
+                </div>
+                <div class="form-group">
+                    <label for="search-limit">Results Limit</label>
+                    <input type="number" id="search-limit" class="form-control" value="5" min="1" max="50">
+                </div>
+                <button onclick="searchFoods()" class="btn">Search Foods</button>
+                <button onclick="testConnections()" class="btn btn-success">Test All Connections</button>
+                
+                <div class="loading" id="search-loading">
+                    <div class="spinner"></div>
+                    Searching...
+                </div>
+            </div>
+        </div>
+
+        <div id="alerts"></div>
+
+        <div class="card" id="results-section" style="display: none;">
+            <h2>Search Results</h2>
+            <div id="search-results" class="search-results"></div>
+        </div>
+    </div>
+
+    <div id="food-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modal-food-name">Food Details</h2>
+            <div id="modal-food-details"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentProviders = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProviders();
+            
+            const modal = document.getElementById('food-modal');
+            const span = document.getElementsByClassName('close')[0];
+            
+            span.onclick = function() {
+                modal.style.display = 'none';
+            }
+            
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+
+        function showAlert(message, type = 'success') {
+            const alertsDiv = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            alertsDiv.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        async function loadProviders() {
+            try {
+                const response = await fetch('/api/providers');
+                const data = await response.json();
+                
+                currentProviders = data.available;
+                updateProviderList(data.available);
+            } catch (error) {
+                showAlert('Failed to load providers: ' + error.message, 'error');
+            }
+        }
+
+        function updateProviderList(providers) {
+            const list = document.getElementById('provider-list');
+            list.innerHTML = '';
+            
+            if (providers.length === 0) {
+                const item = document.createElement('li');
+                item.className = 'provider-item';
+                item.innerHTML = `
+                    <span class="status-indicator status-disconnected"></span>
+                    <span>No providers configured</span>
+                `;
+                list.appendChild(item);
+                return;
+            }
+            
+            providers.forEach(provider => {
+                const item = document.createElement('li');
+                item.className = 'provider-item';
+                item.innerHTML = `
+                    <div>
+                        <span class="status-indicator status-connected"></span>
+                        <span class="provider-name">${provider}</span>
+                    </div>
+                    <div>
+                        <button onclick="testConnection('${provider}')" class="btn btn-success" style="padding: 6px 12px; font-size: 14px;">Test</button>
+                        <button onclick="removeProvider('${provider}')" class="btn btn-danger" style="padding: 6px 12px; font-size: 14px;">Remove</button>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        async function addProvider() {
+            const provider = document.getElementById('provider').value;
+            const apiKey = document.getElementById('api-key').value;
+            
+            if (!apiKey) {
+                showAlert('Please enter an API key', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/add-provider', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        provider: provider,
+                        api_key: apiKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(data.message);
+                    document.getElementById('api-key').value = '';
+                    loadProviders();
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to add provider: ' + error.message, 'error');
+            }
+        }
+
+        async function removeProvider(provider) {
+            if (!confirm(`Are you sure you want to remove the ${provider} provider?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/remove-provider', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        provider: provider
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(data.message);
+                    loadProviders();
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to remove provider: ' + error.message, 'error');
+            }
+        }
+
+        async function testConnection(provider) {
+            try {
+                const response = await fetch('/api/test-connection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        provider: provider
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showAlert(`${provider}: ${data.message}`);
+                } else {
+                    showAlert(`${provider}: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showAlert(`Failed to test ${provider}: ` + error.message, 'error');
+            }
+        }
+
+        async function testConnections() {
+            if (currentProviders.length === 0) {
+                showAlert('No providers configured', 'error');
+                return;
+            }
+            
+            for (const provider of currentProviders) {
+                await testConnection(provider);
+            }
+        }
+
+        async function searchFoods() {
+            const query = document.getElementById('search-query').value;
+            const limit = parseInt(document.getElementById('search-limit').value);
+            
+            if (!query) {
+                showAlert('Please enter a search query', 'error');
+                return;
+            }
+            
+            if (currentProviders.length === 0) {
+                showAlert('No providers configured', 'error');
+                return;
+            }
+            
+            const loadingDiv = document.getElementById('search-loading');
+            const resultsSection = document.getElementById('results-section');
+            const resultsDiv = document.getElementById('search-results');
+            
+            loadingDiv.classList.add('show');
+            resultsSection.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        limit: limit,
+                        providers: currentProviders
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displaySearchResults(data.results);
+                    resultsSection.style.display = 'block';
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Search failed: ' + error.message, 'error');
+            } finally {
+                loadingDiv.classList.remove('show');
+            }
+        }
+
+        function displaySearchResults(results) {
+            const resultsDiv = document.getElementById('search-results');
+            resultsDiv.innerHTML = '';
+            
+            if (Object.keys(results).length === 0) {
+                resultsDiv.innerHTML = '<p>No results found.</p>';
+                return;
+            }
+            
+            for (const [provider, foods] of Object.entries(results)) {
+                const providerSection = document.createElement('div');
+                providerSection.innerHTML = `<h3>${provider} (${foods.length} results)</h3>`;
+                
+                foods.forEach(food => {
+                    const foodItem = document.createElement('div');
+                    foodItem.className = 'food-item';
+                    foodItem.onclick = () => showFoodDetails(provider, food);
+                    
+                    const nutritionInfo = [];
+                    if (food.calories) nutritionInfo.push(`${food.calories} cal`);
+                    if (food.protein) nutritionInfo.push(`${food.protein}g protein`);
+                    if (food.carbs) nutritionInfo.push(`${food.carbs}g carbs`);
+                    if (food.fat) nutritionInfo.push(`${food.fat}g fat`);
+                    
+                    foodItem.innerHTML = `
+                        <div class="food-name">${food.name}</div>
+                        ${food.brand ? `<div class="food-brand">${food.brand}</div>` : ''}
+                        <div class="nutrition-info">${nutritionInfo.join(' • ')}</div>
+                    `;
+                    
+                    providerSection.appendChild(foodItem);
+                });
+                
+                resultsDiv.appendChild(providerSection);
+            }
+        }
+
+        async function showFoodDetails(provider, food) {
+            const modal = document.getElementById('food-modal');
+            const nameElement = document.getElementById('modal-food-name');
+            const detailsElement = document.getElementById('modal-food-details');
+            
+            nameElement.textContent = food.name;
+            detailsElement.innerHTML = '<div class="loading show"><div class="spinner"></div>Loading details...</div>';
+            
+            modal.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/food-details', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        provider: provider,
+                        food_id: food.food_id
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayFoodDetails(data);
+                } else {
+                    detailsElement.innerHTML = `<p class="alert alert-error">${data.error}</p>`;
+                }
+            } catch (error) {
+                detailsElement.innerHTML = `<p class="alert alert-error">Failed to load details: ${error.message}</p>`;
+            }
+        }
+
+        function displayFoodDetails(food) {
+            const detailsElement = document.getElementById('modal-food-details');
+            
+            const nutritionData = [
+                { label: 'Calories', value: food.calories, unit: '' },
+                { label: 'Protein', value: food.protein, unit: 'g' },
+                { label: 'Carbohydrates', value: food.carbs, unit: 'g' },
+                { label: 'Fat', value: food.fat, unit: 'g' },
+                { label: 'Fiber', value: food.fiber, unit: 'g' },
+                { label: 'Sugar', value: food.sugar, unit: 'g' },
+                { label: 'Sodium', value: food.sodium, unit: 'mg' }
+            ];
+            
+            let nutritionCards = '';
+            nutritionData.forEach(item => {
+                if (item.value !== null && item.value !== undefined) {
+                    nutritionCards += `
+                        <div class="nutrition-card">
+                            <div class="nutrition-value">${item.value}${item.unit}</div>
+                            <div class="nutrition-label">${item.label}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            detailsElement.innerHTML = `
+                <div style="margin-bottom: 16px;">
+                    ${food.brand ? `<p><strong>Brand:</strong> ${food.brand}</p>` : ''}
+                    ${food.serving_size ? `<p><strong>Serving Size:</strong> ${food.serving_size}</p>` : ''}
+                    <p><strong>Source:</strong> ${food.source}</p>
+                    <p><strong>Food ID:</strong> ${food.food_id}</p>
+                </div>
+                
+                <h3>Nutrition Information</h3>
+                <div class="nutrition-grid">
+                    ${nutritionCards}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

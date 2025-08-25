@@ -1,0 +1,42 @@
+{
+  "name": "heart-portal-main",
+  "version": "1.0.0",
+  "description": "Heart Portal - Nutrition API Manager with Flask backend and web interface",
+  "main": "index.js",
+  "scripts": {
+    "start": "cd API-manager && python app.py",
+    "dev": "cd API-manager && python app.py",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"No build process defined\"",
+    "lint": "echo \"No linting configured\"",
+    "install-python-deps": "cd API-manager && pip install -r requirements.txt"
+  },
+  "keywords": [
+    "nutrition",
+    "api",
+    "flask",
+    "food",
+    "health",
+    "usda",
+    "nutrition-data"
+  ],
+  "author": "Rick Reynolds <rick.reynolds@rwrholdingsco.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {},
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
