@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, jsonify
-from nutrition_api_manager import (
+""" from nutrition_api_manager import (
     USDAFoodDataAPI,
     APIProvider,
     APIError,
-)
+) """
 from enhanced_nutrition_api_manager import EnhancedNutritionAPIManager
 
 app = Flask(__name__)
