@@ -3,416 +3,839 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nutrition API Manager</title>
+    <title>Enhanced Nutrition API Manager</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-            background-color: #f5f5f7;
-            color: #1d1d1f;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1d1d1f;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            color: #86868b;
-        }
-
-        .card {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 24px;
+        /* Keep your existing styles and add these new ones */
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e5e7;
             margin-bottom: 24px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-            border: 1px solid #e5e5e7;
         }
-
-        .card h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #1d1d1f;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: #1d1d1f;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #d2d2d7;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.2s ease;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #007aff;
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
-        }
-
-        .btn {
-            background: #007aff;
-            color: white;
-            border: none;
+        
+        .tab {
             padding: 12px 24px;
-            border-radius: 8px;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
             font-size: 16px;
             font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-right: 8px;
-            margin-bottom: 8px;
-        }
-
-        .btn:hover {
-            background: #0056cc;
-            transform: translateY(-1px);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-secondary {
-            background: #8e8e93;
-        }
-
-        .btn-secondary:hover {
-            background: #6d6d70;
-        }
-
-        .btn-danger {
-            background: #ff3b30;
-        }
-
-        .btn-danger:hover {
-            background: #d70015;
-        }
-
-        .btn-success {
-            background: #34c759;
-        }
-
-        .btn-success:hover {
-            background: #248a3d;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .status-connected {
-            background-color: #34c759;
-        }
-
-        .status-disconnected {
-            background-color: #ff3b30;
-        }
-
-        .provider-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .provider-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: #f7f7f9;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-
-        .provider-name {
-            font-weight: 500;
-        }
-
-        .search-results {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #e5e5e7;
-            border-radius: 8px;
-            padding: 16px;
-            background: #fafafa;
-        }
-
-        .food-item {
-            background: white;
-            border: 1px solid #e5e5e7;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .food-item:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transform: translateY(-1px);
-        }
-
-        .food-name {
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 4px;
-        }
-
-        .food-brand {
             color: #86868b;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            transition: all 0.2s ease;
         }
-
-        .nutrition-info {
-            display: flex;
-            gap: 16px;
-            font-size: 0.9rem;
-            color: #1d1d1f;
+        
+        .tab.active {
+            color: #007aff;
+            border-bottom-color: #007aff;
         }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-weight: 500;
-        }
-
-        .alert-success {
-            background-color: #d1eddb;
-            color: #0f5132;
-            border: 1px solid #badbcc;
-        }
-
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c2c7;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading.show {
-            display: block;
-        }
-
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #007aff;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 5% auto;
-            padding: 24px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover {
-            color: #000;
-        }
-
-        .nutrition-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .nutrition-card {
-            background: #f7f7f9;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .nutrition-value {
-            font-size: 1.2rem;
-            font-weight: 600;
+        
+        .tab:hover {
             color: #007aff;
         }
-
-        .nutrition-label {
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .filter-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: #f7f7f9;
+            border-radius: 8px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #d2d2d7;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background: #f7f7f9;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination .current-page {
+            padding: 8px 12px;
+            background: #007aff;
+            color: white;
+            border-radius: 6px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        
+        .comparison-table th {
+            background: #f7f7f9;
+            font-weight: 600;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .selected-foods {
+            background: #e8f4fd;
+            border: 1px solid #007aff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .selected-food-item {
+            display: inline-block;
+            background: #007aff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 12px;
+        }
+        
+        .remove-food {
+            margin-left: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .data-type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        
+        .badge-foundation { background: #d1eddb; color: #0f5132; }
+        .badge-branded { background: #fff3cd; color: #664d03; }
+        .badge-sr-legacy { background: #d1ecf1; color: #055160; }
+        .badge-survey { background: #f8d7da; color: #721c24; }
+        .badge-experimental { background: #e2e3e5; color: #41464b; }
+        
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e5e5e7;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #007aff;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
             font-size: 0.9rem;
             color: #86868b;
-            margin-top: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🍎 Nutrition API Manager</h1>
-            <p>Manage and test your nutrition data API endpoints</p>
+            <h1>🍎 Enhanced Nutrition API Manager</h1>
+            <p>Advanced nutrition data management with comprehensive API support</p>
         </div>
 
-        <div class="grid">
-            <div class="card">
-                <h2>API Providers</h2>
-                <div class="form-group">
-                    <label for="provider">Provider</label>
-                    <select id="provider" class="form-control">
-                        <option value="usda_fooddata">USDA FoodData Central</option>
-                        <option value="edamam">Edamam (Coming Soon)</option>
-                        <option value="spoonacular">Spoonacular (Coming Soon)</option>
-                        <option value="nutritionix">Nutritionix (Coming Soon)</option>
-                    </select>
+        <!-- Enhanced API Provider Section -->
+        <div class="card">
+            <h2>Enhanced API Providers</h2>
+            <div class="form-group">
+                <label for="enhanced-api-key">Enhanced USDA API Key</label>
+                <input type="password" id="enhanced-api-key" class="form-control" placeholder="Enter your USDA API key">
+            </div>
+            <button onclick="addEnhancedProvider()" class="btn">Add Enhanced Provider</button>
+            <button onclick="loadDataTypes()" class="btn btn-secondary">Load Data Types</button>
+        </div>
+
+        <!-- Tabbed Interface -->
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('search')">Advanced Search</button>
+                <button class="tab" onclick="switchTab('browse')">Browse Foods</button>
+                <button class="tab" onclick="switchTab('compare')">Compare Foods</button>
+                <button class="tab" onclick="switchTab('analytics')">Analytics</button>
+            </div>
+
+            <!-- Advanced Search Tab -->
+            <div id="search-tab" class="tab-content active">
+                <h3>Advanced Food Search</h3>
+                <div class="filter-group">
+                    <div class="form-group">
+                        <label for="adv-search-query">Search Query</label>
+                        <input type="text" id="adv-search-query" class="form-control" placeholder="e.g., chicken breast, organic milk">
+                    </div>
+                    <div class="form-group">
+                        <label for="brand-owner">Brand Owner (Optional)</label>
+                        <input type="text" id="brand-owner" class="form-control" placeholder="e.g., General Mills">
+                    </div>
+                    <div class="form-group">
+                        <label for="sort-by">Sort By</label>
+                        <select id="sort-by" class="form-control">
+                            <option value="description">Description</option>
+                            <option value="dataType">Data Type</option>
+                            <option value="fdcId">FDC ID</option>
+                            <option value="publishedDate">Published Date</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sort-order">Sort Order</label>
+                        <select id="sort-order" class="form-control">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="api-key">API Key</label>
-                    <input type="password" id="api-key" class="form-control" placeholder="Enter your API key">
-                </div>
-                <button onclick="addProvider()" class="btn">Add Provider</button>
-                <button onclick="loadProviders()" class="btn btn-secondary">Refresh</button>
                 
-                <div id="provider-status" style="margin-top: 24px;">
-                    <h3>Active Providers</h3>
-                    <ul id="provider-list" class="provider-list">
-                        <li class="provider-item">
-                            <span class="status-indicator status-disconnected"></span>
-                            <span>No providers configured</span>
-                        </li>
-                    </ul>
+                <div class="form-group">
+                    <label>Data Types to Include</label>
+                    <div id="data-types-checkboxes" class="checkbox-group">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <button onclick="performAdvancedSearch()" class="btn">Advanced Search</button>
+                <button onclick="clearAdvancedSearch()" class="btn btn-secondary">Clear Filters</button>
+                
+                <div id="search-stats" class="stats-row" style="display: none;">
+                    <div class="stat-card">
+                        <div id="total-results" class="stat-value">0</div>
+                        <div class="stat-label">Total Results</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="current-page-stat" class="stat-value">1</div>
+                        <div class="stat-label">Current Page</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="total-pages" class="stat-value">1</div>
+                        <div class="stat-label">Total Pages</div>
+                    </div>
+                </div>
+                
+                <div id="search-pagination" class="pagination" style="display: none;"></div>
+                <div id="advanced-search-results" class="search-results" style="display: none;"></div>
+            </div>
+
+            <!-- Browse Foods Tab -->
+            <div id="browse-tab" class="tab-content">
+                <h3>Browse Foods by Category</h3>
+                <div class="filter-group">
+                    <div class="form-group">
+                        <label>Select Food Categories</label>
+                        <div id="browse-data-types" class="checkbox-group">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="browse-page-size">Items per Page</label>
+                        <select id="browse-page-size" class="form-control">
+                            <option value="10">10</option>
+                            <option value="20" selected>20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button onclick="browseFoods()" class="btn">Browse Foods</button>
+                <button onclick="loadRandomSample()" class="btn btn-secondary">Random Sample</button>
+                
+                <div id="browse-pagination" class="pagination" style="display: none;"></div>
+                <div id="browse-results" class="search-results" style="display: none;"></div>
+            </div>
+
+            <!-- Compare Foods Tab -->
+            <div id="compare-tab" class="tab-content">
+                <h3>Compare Foods</h3>
+                <p>Select foods from search results to compare their nutritional profiles side by side.</p>
+                
+                <div id="selected-foods-display" class="selected-foods" style="display: none;">
+                    <strong>Selected Foods for Comparison:</strong>
+                    <div id="selected-foods-list"></div>
+                    <button onclick="performComparison()" class="btn">Compare Selected Foods</button>
+                    <button onclick="clearSelectedFoods()" class="btn btn-secondary">Clear Selection</button>
+                </div>
+                
+                <div class="form-group">
+                    <label for="compare-fdc-ids">Or enter FDC IDs directly (comma-separated)</label>
+                    <input type="text" id="compare-fdc-ids" class="form-control" placeholder="e.g., 170148,170149,170150">
+                    <button onclick="compareByIds()" class="btn" style="margin-top: 8px;">Compare by IDs</button>
+                </div>
+                
+                <div id="comparison-results" style="display: none;">
+                    <h4>Nutritional Comparison</h4>
+                    <div id="comparison-table-container"></div>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>API Testing</h2>
-                <div class="form-group">
-                    <label for="search-query">Search Query</label>
-                    <input type="text" id="search-query" class="form-control" placeholder="e.g., chicken breast, coca cola">
-                </div>
-                <div class="form-group">
-                    <label for="search-limit">Results Limit</label>
-                    <input type="number" id="search-limit" class="form-control" value="5" min="1" max="50">
-                </div>
-                <button onclick="searchFoods()" class="btn">Search Foods</button>
-                <button onclick="testConnections()" class="btn btn-success">Test All Connections</button>
+            <!-- Analytics Tab -->
+            <div id="analytics-tab" class="tab-content">
+                <h3>Database Analytics</h3>
+                <p>Get insights into the USDA FoodData Central database.</p>
                 
-                <div class="loading" id="search-loading">
-                    <div class="spinner"></div>
-                    Searching...
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div id="foundation-count" class="stat-value">-</div>
+                        <div class="stat-label">Foundation Foods</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="branded-count" class="stat-value">-</div>
+                        <div class="stat-label">Branded Foods</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="sr-legacy-count" class="stat-value">-</div>
+                        <div class="stat-label">SR Legacy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="survey-count" class="stat-value">-</div>
+                        <div class="stat-label">Survey Foods</div>
+                    </div>
                 </div>
+                
+                <button onclick="generateAnalytics()" class="btn">Generate Analytics</button>
+                <button onclick="exportData()" class="btn btn-secondary">Export Sample Data</button>
             </div>
         </div>
 
+        <!-- Alerts area -->
         <div id="alerts"></div>
-
-        <div class="card" id="results-section" style="display: none;">
-            <h2>Search Results</h2>
-            <div id="search-results" class="search-results"></div>
-        </div>
-    </div>
-
-    <div id="food-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 id="modal-food-name">Food Details</h2>
-            <div id="modal-food-details"></div>
-        </div>
     </div>
 
     <script>
-        let currentProviders = [];
+        // Global variables
+        let currentDataTypes = [];
+        let selectedFoodsForComparison = [];
+        let currentSearchResults = null;
 
         document.addEventListener('DOMContentLoaded', function() {
-            loadProviders();
-            
-            const modal = document.getElementById('food-modal');
-            const span = document.getElementsByClassName('close')[0];
-            
-            span.onclick = function() {
-                modal.style.display = 'none';
-            }
-            
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
-            }
+            loadDataTypes();
         });
 
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Enhanced provider management
+        async function addEnhancedProvider() {
+            const apiKey = document.getElementById('enhanced-api-key').value;
+            
+            if (!apiKey) {
+                showAlert('Please enter an API key', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/add-enhanced-provider', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Enhanced USDA API added successfully! Available endpoints: ' + data.endpoints.join(', '));
+                    document.getElementById('enhanced-api-key').value = '';
+                    loadDataTypes();
+                } else {
+                    showAlert(data.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to add enhanced provider: ' + error.message, 'error');
+            }
+        }
+
+        // Load available data types
+        async function loadDataTypes() {
+            try {
+                const response = await fetch('/api/data-types');
+                const data = await response.json();
+                
+                currentDataTypes = data.dataTypes;
+                populateDataTypeCheckboxes();
+                
+            } catch (error) {
+                showAlert('Failed to load data types: ' + error.message, 'error');
+            }
+        }
+
+        function populateDataTypeCheckboxes() {
+            const searchCheckboxes = document.getElementById('data-types-checkboxes');
+            const browseCheckboxes = document.getElementById('browse-data-types');
+            
+            const checkboxHtml = currentDataTypes.map(type => `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="dt-${type.value}" value="${type.value}">
+                    <label for="dt-${type.value}">${type.label}</label>
+                </div>
+            `).join('');
+            
+            searchCheckboxes.innerHTML = checkboxHtml;
+            browseCheckboxes.innerHTML = checkboxHtml.replace(/dt-/g, 'browse-dt-');
+        }
+
+        // Advanced search functionality
+        async function performAdvancedSearch(pageNumber = 1) {
+            const query = document.getElementById('adv-search-query').value;
+            const brandOwner = document.getElementById('brand-owner').value;
+            const sortBy = document.getElementById('sort-by').value;
+            const sortOrder = document.getElementById('sort-order').value;
+            
+            if (!query) {
+                showAlert('Please enter a search query', 'error');
+                return;
+            }
+            
+            // Get selected data types
+            const selectedDataTypes = [];
+            document.querySelectorAll('#data-types-checkboxes input:checked').forEach(checkbox => {
+                selectedDataTypes.push(checkbox.value);
+            });
+            
+            const searchData = {
+                query: query,
+                dataTypes: selectedDataTypes,
+                brandOwner: brandOwner || null,
+                sortBy: sortBy,
+                sortOrder: sortOrder,
+                pageSize: 25,
+                pageNumber: pageNumber
+            };
+            
+            try {
+                showLoading('advanced-search-results');
+                
+                const response = await fetch('/api/advanced-search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(searchData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentSearchResults = data;
+                    displayAdvancedSearchResults(data);
+                    updateSearchStats(data);
+                    createPagination('search-pagination', data, performAdvancedSearch);
+                } else {
+                    showAlert(data.error, 'error');
+                }
+                
+            } catch (error) {
+                showAlert('Advanced search failed: ' + error.message, 'error');
+            } finally {
+                hideLoading('advanced-search-results');
+            }
+        }
+
+        function displayAdvancedSearchResults(data) {
+            const resultsDiv = document.getElementById('advanced-search-results');
+            resultsDiv.style.display = 'block';
+            
+            if (!data.results || data.results.length === 0) {
+                resultsDiv.innerHTML = '<p>No results found.</p>';
+                return;
+            }
+            
+            const resultsHtml = data.results.map(food => `
+                <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
+                    <div class="food-name">
+                        ${food.name}
+                        ${getDataTypeBadge(food.data_type)}
+                        <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${food.name}')" 
+                                class="btn btn-success" style="float: right; padding: 4px 8px; font-size: 12px;">
+                            + Compare
+                        </button>
+                    </div>
+                    ${food.brand ? `<div class="food-brand">${food.brand}</div>` : ''}
+                    ${food.published_date ? `<div style="font-size: 0.8rem; color: #86868b;">Published: ${new Date(food.published_date).toLocaleDateString()}</div>` : ''}
+                    <div class="nutrition-info">
+                        ${formatNutritionInfo(food)}
+                    </div>
+                </div>
+            `).join('');
+            
+            resultsDiv.innerHTML = resultsHtml;
+        }
+
+        function updateSearchStats(data) {
+            document.getElementById('total-results').textContent = data.totalHits || 0;
+            document.getElementById('current-page-stat').textContent = data.currentPage || 1;
+            document.getElementById('total-pages').textContent = data.totalPages || 1;
+            document.getElementById('search-stats').style.display = 'flex';
+        }
+
+        // Browse foods functionality
+        async function browseFoods(pageNumber = 1) {
+            const selectedDataTypes = [];
+            document.querySelectorAll('#browse-data-types input:checked').forEach(checkbox => {
+                selectedDataTypes.push(checkbox.value);
+            });
+            
+            if (selectedDataTypes.length === 0) {
+                showAlert('Please select at least one data type to browse', 'error');
+                return;
+            }
+            
+            const pageSize = parseInt(document.getElementById('browse-page-size').value);
+            
+            const browseData = {
+                dataTypes: selectedDataTypes,
+                sortBy: 'description',
+                sortOrder: 'asc',
+                pageSize: pageSize,
+                pageNumber: pageNumber
+            };
+            
+            try {
+                showLoading('browse-results');
+                
+                const response = await fetch('/api/foods-list', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(browseData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayBrowseResults(data);
+                    createPagination('browse-pagination', data, browseFoods);
+                } else {
+                    showAlert(data.error, 'error');
+                }
+                
+            } catch (error) {
+                showAlert('Browse failed: ' + error.message, 'error');
+            } finally {
+                hideLoading('browse-results');
+            }
+        }
+
+        function displayBrowseResults(data) {
+            const resultsDiv = document.getElementById('browse-results');
+            resultsDiv.style.display = 'block';
+            
+            if (!data.foods || data.foods.length === 0) {
+                resultsDiv.innerHTML = '<p>No foods found.</p>';
+                return;
+            }
+            
+            const resultsHtml = data.foods.map(food => `
+                <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
+                    <div class="food-name">
+                        ${food.name}
+                        ${getDataTypeBadge(food.data_type)}
+                        <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${food.name}')" 
+                                class="btn btn-success" style="float: right; padding: 4px 8px; font-size: 12px;">
+                            + Compare
+                        </button>
+                    </div>
+                    ${food.brand ? `<div class="food-brand">${food.brand}</div>` : ''}
+                    <div class="nutrition-info">
+                        ${formatNutritionInfo(food)}
+                    </div>
+                </div>
+            `).join('');
+            
+            resultsDiv.innerHTML = resultsHtml;
+        }
+
+        // Food comparison functionality
+        function addToComparison(fdcId, name) {
+            if (selectedFoodsForComparison.some(food => food.id === fdcId)) {
+                showAlert('Food already selected for comparison', 'error');
+                return;
+            }
+            
+            if (selectedFoodsForComparison.length >= 10) {
+                showAlert('Maximum 10 foods can be compared at once', 'error');
+                return;
+            }
+            
+            selectedFoodsForComparison.push({ id: fdcId, name: name });
+            updateSelectedFoodsDisplay();
+            showAlert(`Added "${name}" to comparison`);
+        }
+
+        function updateSelectedFoodsDisplay() {
+            const display = document.getElementById('selected-foods-display');
+            const list = document.getElementById('selected-foods-list');
+            
+            if (selectedFoodsForComparison.length === 0) {
+                display.style.display = 'none';
+                return;
+            }
+            
+            display.style.display = 'block';
+            list.innerHTML = selectedFoodsForComparison.map(food => `
+                <span class="selected-food-item">
+                    ${food.name}
+                    <span class="remove-food" onclick="removeFromComparison(${food.id})">×</span>
+                </span>
+            `).join('');
+        }
+
+        function removeFromComparison(fdcId) {
+            selectedFoodsForComparison = selectedFoodsForComparison.filter(food => food.id !== fdcId);
+            updateSelectedFoodsDisplay();
+        }
+
+        function clearSelectedFoods() {
+            selectedFoodsForComparison = [];
+            updateSelectedFoodsDisplay();
+        }
+
+        async function performComparison() {
+            if (selectedFoodsForComparison.length < 2) {
+                showAlert('Please select at least 2 foods to compare', 'error');
+                return;
+            }
+            
+            const fdcIds = selectedFoodsForComparison.map(food => food.id);
+            await compareFoods(fdcIds);
+        }
+
+        async function compareByIds() {
+            const idsInput = document.getElementById('compare-fdc-ids').value;
+            if (!idsInput) {
+                showAlert('Please enter FDC IDs', 'error');
+                return;
+            }
+            
+            const fdcIds = idsInput.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+            if (fdcIds.length < 2) {
+                showAlert('Please enter at least 2 valid FDC IDs', 'error');
+                return;
+            }
+            
+            await compareFood-ids(fdcIds);
+        }
+
+        async function compareFood(fdcIds) {
+            try {
+                const response = await fetch('/api/compare-foods', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        fdcIds: fdcIds
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayComparisonResults(data);
+                } else {
+                    showAlert(data.error, 'error');
+                }
+                
+            } catch (error) {
+                showAlert('Comparison failed: ' + error.message, 'error');
+            }
+        }
+
+        function displayComparisonResults(data) {
+            const resultsDiv = document.getElementById('comparison-results');
+            const tableContainer = document.getElementById('comparison-table-container');
+            
+            resultsDiv.style.display = 'block';
+            
+            if (!data.foods || data.foods.length === 0) {
+                tableContainer.innerHTML = '<p>No comparison data available.</p>';
+                return;
+            }
+            
+            // Create comparison table
+            const commonNutrients = [
+                { id: 1008, name: 'Energy (kcal)', unit: 'kcal' },
+                { id: 1003, name: 'Protein', unit: 'g' },
+                { id: 1004, name: 'Total Fat', unit: 'g' },
+                { id: 1005, name: 'Carbohydrates', unit: 'g' },
+                { id: 1079, name: 'Fiber', unit: 'g' },
+                { id: 2000, name: 'Sugars', unit: 'g' },
+                { id: 1093, name: 'Sodium', unit: 'mg' }
+            ];
+            
+            let tableHtml = '<table class="comparison-table"><thead><tr><th>Nutrient</th>';
+            data.foods.forEach(food => {
+                tableHtml += `<th>${food.description}</th>`;
+            });
+            tableHtml += '</tr></thead><tbody>';
+            
+            commonNutrients.forEach(nutrient => {
+                tableHtml += `<tr><td>${nutrient.name} (${nutrient.unit})</td>`;
+                data.foods.forEach(food => {
+                    const nutrientData = food.nutrients[nutrient.id];
+                    const value = nutrientData ? nutrientData.value?.toFixed(2) || '-' : '-';
+                    tableHtml += `<td>${value}</td>`;
+                });
+                tableHtml += '</tr>';
+            });
+            
+            tableHtml += '</tbody></table>';
+            tableContainer.innerHTML = tableHtml;
+        }
+
+        // Analytics functionality
+        async function generateAnalytics() {
+            // This would make requests to get counts for each data type
+            // For now, we'll show placeholder functionality
+            showAlert('Analytics feature would query database statistics', 'success');
+        }
+
+        // Helper functions
+        function getDataTypeBadge(dataType) {
+            const badges = {
+                'Foundation': 'badge-foundation',
+                'Branded': 'badge-branded',
+                'SR Legacy': 'badge-sr-legacy',
+                'Survey (FNDDS)': 'badge-survey',
+                'Experimental': 'badge-experimental'
+            };
+            
+            const badgeClass = badges[dataType] || 'badge-experimental';
+            return `<span class="data-type-badge ${badgeClass}">${dataType || 'Unknown'}</span>`;
+        }
+
+        function formatNutritionInfo(food) {
+            const info = [];
+            if (food.calories !== null && food.calories !== undefined) info.push(`${food.calories} cal`);
+            if (food.protein !== null && food.protein !== undefined) info.push(`${food.protein}g protein`);
+            if (food.carbs !== null && food.carbs !== undefined) info.push(`${food.carbs}g carbs`);
+            if (food.fat !== null && food.fat !== undefined) info.push(`${food.fat}g fat`);
+            return info.length > 0 ? info.join(' • ') : 'Nutrition data not available';
+        }
+
+        function createPagination(containerId, data, callback) {
+            const container = document.getElementById(containerId);
+            const currentPage = data.currentPage || 1;
+            const totalPages = data.totalPages || 1;
+            
+            if (totalPages <= 1) {
+                container.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'flex';
+            
+            let paginationHtml = `
+                <button onclick="${callback.name}(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>Previous</button>
+                <span class="current-page">Page ${currentPage} of ${totalPages}</span>
+                <button onclick="${callback.name}(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>
+            `;
+            
+            container.innerHTML = paginationHtml;
+        }
+
+        function showLoading(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<div class="loading show"><div class="spinner"></div>Loading...</div>';
+            container.style.display = 'block';
+        }
+
+        function hideLoading(containerId) {
+            // Loading will be replaced by actual results
+        }
+
+        function clearAdvancedSearch() {
+            document.getElementById('adv-search-query').value = '';
+            document.getElementById('brand-owner').value = '';
+            document.getElementById('sort-by').value = 'description';
+            document.getElementById('sort-order').value = 'asc';
+            document.querySelectorAll('#data-types-checkboxes input').forEach(cb => cb.checked = false);
+            document.getElementById('advanced-search-results').style.display = 'none';
+            document.getElementById('search-stats').style.display = 'none';
+            document.getElementById('search-pagination').style.display = 'none';
+        }
+
+        // Keep your existing showAlert and showFoodDetails functions
         function showAlert(message, type = 'success') {
             const alertsDiv = document.getElementById('alerts');
             const alert = document.createElement('div');
@@ -425,307 +848,11 @@
             }, 5000);
         }
 
-        async function loadProviders() {
-            try {
-                const response = await fetch('/api/providers');
-                const data = await response.json();
-                
-                currentProviders = data.available;
-                updateProviderList(data.available);
-            } catch (error) {
-                showAlert('Failed to load providers: ' + error.message, 'error');
-            }
-        }
-
-        function updateProviderList(providers) {
-            const list = document.getElementById('provider-list');
-            list.innerHTML = '';
-            
-            if (providers.length === 0) {
-                const item = document.createElement('li');
-                item.className = 'provider-item';
-                item.innerHTML = `
-                    <span class="status-indicator status-disconnected"></span>
-                    <span>No providers configured</span>
-                `;
-                list.appendChild(item);
-                return;
-            }
-            
-            providers.forEach(provider => {
-                const item = document.createElement('li');
-                item.className = 'provider-item';
-                item.innerHTML = `
-                    <div>
-                        <span class="status-indicator status-connected"></span>
-                        <span class="provider-name">${provider}</span>
-                    </div>
-                    <div>
-                        <button onclick="testConnection('${provider}')" class="btn btn-success" style="padding: 6px 12px; font-size: 14px;">Test</button>
-                        <button onclick="removeProvider('${provider}')" class="btn btn-danger" style="padding: 6px 12px; font-size: 14px;">Remove</button>
-                    </div>
-                `;
-                list.appendChild(item);
-            });
-        }
-
-        async function addProvider() {
-            const provider = document.getElementById('provider').value;
-            const apiKey = document.getElementById('api-key').value;
-            
-            if (!apiKey) {
-                showAlert('Please enter an API key', 'error');
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/add-provider', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        provider: provider,
-                        api_key: apiKey
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showAlert(data.message);
-                    document.getElementById('api-key').value = '';
-                    loadProviders();
-                } else {
-                    showAlert(data.error, 'error');
-                }
-            } catch (error) {
-                showAlert('Failed to add provider: ' + error.message, 'error');
-            }
-        }
-
-        async function removeProvider(provider) {
-            if (!confirm(`Are you sure you want to remove the ${provider} provider?`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/remove-provider', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        provider: provider
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showAlert(data.message);
-                    loadProviders();
-                } else {
-                    showAlert(data.error, 'error');
-                }
-            } catch (error) {
-                showAlert('Failed to remove provider: ' + error.message, 'error');
-            }
-        }
-
-        async function testConnection(provider) {
-            try {
-                const response = await fetch('/api/test-connection', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        provider: provider
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    showAlert(`${provider}: ${data.message}`);
-                } else {
-                    showAlert(`${provider}: ${data.message}`, 'error');
-                }
-            } catch (error) {
-                showAlert(`Failed to test ${provider}: ` + error.message, 'error');
-            }
-        }
-
-        async function testConnections() {
-            if (currentProviders.length === 0) {
-                showAlert('No providers configured', 'error');
-                return;
-            }
-            
-            for (const provider of currentProviders) {
-                await testConnection(provider);
-            }
-        }
-
-        async function searchFoods() {
-            const query = document.getElementById('search-query').value;
-            const limit = parseInt(document.getElementById('search-limit').value);
-            
-            if (!query) {
-                showAlert('Please enter a search query', 'error');
-                return;
-            }
-            
-            if (currentProviders.length === 0) {
-                showAlert('No providers configured', 'error');
-                return;
-            }
-            
-            const loadingDiv = document.getElementById('search-loading');
-            const resultsSection = document.getElementById('results-section');
-            const resultsDiv = document.getElementById('search-results');
-            
-            loadingDiv.classList.add('show');
-            resultsSection.style.display = 'none';
-            
-            try {
-                const response = await fetch('/api/search', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        query: query,
-                        limit: limit,
-                        providers: currentProviders
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    displaySearchResults(data.results);
-                    resultsSection.style.display = 'block';
-                } else {
-                    showAlert(data.error, 'error');
-                }
-            } catch (error) {
-                showAlert('Search failed: ' + error.message, 'error');
-            } finally {
-                loadingDiv.classList.remove('show');
-            }
-        }
-
-        function displaySearchResults(results) {
-            const resultsDiv = document.getElementById('search-results');
-            resultsDiv.innerHTML = '';
-            
-            if (Object.keys(results).length === 0) {
-                resultsDiv.innerHTML = '<p>No results found.</p>';
-                return;
-            }
-            
-            for (const [provider, foods] of Object.entries(results)) {
-                const providerSection = document.createElement('div');
-                providerSection.innerHTML = `<h3>${provider} (${foods.length} results)</h3>`;
-                
-                foods.forEach(food => {
-                    const foodItem = document.createElement('div');
-                    foodItem.className = 'food-item';
-                    foodItem.onclick = () => showFoodDetails(provider, food);
-                    
-                    const nutritionInfo = [];
-                    if (food.calories) nutritionInfo.push(`${food.calories} cal`);
-                    if (food.protein) nutritionInfo.push(`${food.protein}g protein`);
-                    if (food.carbs) nutritionInfo.push(`${food.carbs}g carbs`);
-                    if (food.fat) nutritionInfo.push(`${food.fat}g fat`);
-                    
-                    foodItem.innerHTML = `
-                        <div class="food-name">${food.name}</div>
-                        ${food.brand ? `<div class="food-brand">${food.brand}</div>` : ''}
-                        <div class="nutrition-info">${nutritionInfo.join(' • ')}</div>
-                    `;
-                    
-                    providerSection.appendChild(foodItem);
-                });
-                
-                resultsDiv.appendChild(providerSection);
-            }
-        }
-
-        async function showFoodDetails(provider, food) {
-            const modal = document.getElementById('food-modal');
-            const nameElement = document.getElementById('modal-food-name');
-            const detailsElement = document.getElementById('modal-food-details');
-            
-            nameElement.textContent = food.name;
-            detailsElement.innerHTML = '<div class="loading show"><div class="spinner"></div>Loading details...</div>';
-            
-            modal.style.display = 'block';
-            
-            try {
-                const response = await fetch('/api/food-details', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        provider: provider,
-                        food_id: food.food_id
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    displayFoodDetails(data);
-                } else {
-                    detailsElement.innerHTML = `<p class="alert alert-error">${data.error}</p>`;
-                }
-            } catch (error) {
-                detailsElement.innerHTML = `<p class="alert alert-error">Failed to load details: ${error.message}</p>`;
-            }
-        }
-
-        function displayFoodDetails(food) {
-            const detailsElement = document.getElementById('modal-food-details');
-            
-            const nutritionData = [
-                { label: 'Calories', value: food.calories, unit: '' },
-                { label: 'Protein', value: food.protein, unit: 'g' },
-                { label: 'Carbohydrates', value: food.carbs, unit: 'g' },
-                { label: 'Fat', value: food.fat, unit: 'g' },
-                { label: 'Fiber', value: food.fiber, unit: 'g' },
-                { label: 'Sugar', value: food.sugar, unit: 'g' },
-                { label: 'Sodium', value: food.sodium, unit: 'mg' }
-            ];
-            
-            let nutritionCards = '';
-            nutritionData.forEach(item => {
-                if (item.value !== null && item.value !== undefined) {
-                    nutritionCards += `
-                        <div class="nutrition-card">
-                            <div class="nutrition-value">${item.value}${item.unit}</div>
-                            <div class="nutrition-label">${item.label}</div>
-                        </div>
-                    `;
-                }
-            });
-            
-            detailsElement.innerHTML = `
-                <div style="margin-bottom: 16px;">
-                    ${food.brand ? `<p><strong>Brand:</strong> ${food.brand}</p>` : ''}
-                    ${food.serving_size ? `<p><strong>Serving Size:</strong> ${food.serving_size}</p>` : ''}
-                    <p><strong>Source:</strong> ${food.source}</p>
-                    <p><strong>Food ID:</strong> ${food.food_id}</p>
-                </div>
-                
-                <h3>Nutrition Information</h3>
-                <div class="nutrition-grid">
-                    ${nutritionCards}
-                </div>
-            `;
+        // Existing food details modal functionality would go here
+        async function showFoodDetails(provider, foodId) {
+            // Use your existing modal functionality
+            console.log(`Showing details for ${provider} food ID: ${foodId}`);
+            showAlert('Food details modal would open here');
         }
     </script>
 </body>

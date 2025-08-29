@@ -12,9 +12,12 @@ from nutrition_api_manager import (
     APIProvider,
     APIError
 )
+from typing import Dict, List, Optional  # Add Optional here
+
 
 # Load environment variables from .env file
 load_dotenv()
+
 
 class APIKeyManager:
     """Manages API keys with environment variable fallback"""
@@ -55,10 +58,14 @@ class APIKeyManager:
         self.config[provider] = api_key
         self._save_config()
     
-    def get_api_key(self, provider: str) -> str:
-        """Get API key for provider"""
-        return self.config.get(provider)
+    # def get_api_key(self, provider: str) -> str:
+    #     """Get API key for provider"""
+    #     return self.config.get(provider)
     
+    def get_api_key(self, provider: str) -> Optional[str]:
+        """Get API key for provider, returns None if not found"""
+        return self.config.get(provider)
+
     def remove_api_key(self, provider: str):
         """Remove API key for provider"""
         if provider in self.config:
@@ -107,12 +114,17 @@ class EnhancedNutritionAPIManager(NutritionAPIManager):
             try:
                 provider = APIProvider(provider_name)
                 api_key = self.key_manager.get_api_key(provider_name)
-                
+            
+                # Skip if no API key found
+                if not api_key:
+                    print(f"Skipping {provider_name}: No API key found")
+                    continue
+                    
                 if provider == APIProvider.USDA_FOODDATA:
                     api_instance = USDAFoodDataAPI(api_key)
                     self.add_api(provider, api_instance)
                 # Add other providers as they're implemented
-                
+            
             except (ValueError, APIError) as e:
                 print(f"Failed to load {provider_name}: {e}")
     

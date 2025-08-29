@@ -1,193 +1,360 @@
-from flask import Flask, render_template, request, jsonify
-""" from nutrition_api_manager import (
-    USDAFoodDataAPI,
-    APIProvider,
-    APIError,
-) """
-from enhanced_nutrition_api_manager import EnhancedNutritionAPIManager
+"""
+Enhanced Flask app with additional USDA API endpoints
+Add this to your existing app.py
+"""
+
+from flask import Flask, request, jsonify, render_template
+from nutrition_api_manager import (
+    EnhancedUSDAFoodDataAPI, 
+    EnhancedNutritionAPIManager,
+    SearchCriteria,
+    ListCriteria,
+    DataType,
+    SortBy,
+    APIError
+)
+import json
 
 app = Flask(__name__)
 
-# Use enhanced manager with persistence
+# Global manager instance
 manager = EnhancedNutritionAPIManager()
 
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html")
+    """Serve the main application page"""
+    return render_template('index.html')
 
-@app.route("/api/providers", methods=["GET"])
-def get_providers():
-    return jsonify({
-        "available": [provider.value for provider in manager.get_available_providers()],
-        "supported": [provider.value for provider in APIProvider],
-    })
+# Add these new routes to your existing app.py
 
-@app.route("/api/add-provider", methods=["POST"])
-def add_provider():
+@app.route('/api/advanced-search', methods=['POST'])
+def advanced_search():
+    """Advanced search with filtering options"""
     try:
         data = request.get_json()
-        provider_name = data.get("provider")
-        api_key = data.get("api_key")
-
-        if not provider_name or not api_key:
-            return jsonify({"error": "Provider and API key are required"}), 400
-
-        provider = APIProvider(provider_name)
-
-        if provider == APIProvider.USDA_FOODDATA:
-            # Use the new persistence method
-            manager.add_api_with_persistence(provider, api_key)
-            return jsonify({"message": f"Successfully added and saved {provider_name} API"})
-        else:
-            return jsonify({"error": f"Provider {provider_name} not yet implemented"}), 400
-
-    except ValueError:
-        return jsonify({"error": "Invalid provider name"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/api/remove-provider", methods=["POST"])
-def remove_provider():
-    try:
-        data = request.get_json()
-        provider_name = data.get("provider")
-
-        if not provider_name:
-            return jsonify({"error": "Provider name is required"}), 400
-
-        provider = APIProvider(provider_name)
-        # Use the new persistence method
-        manager.remove_api_with_persistence(provider)
-        return jsonify({"message": f"Successfully removed {provider_name} API and deleted saved key"})
-
-    except ValueError:
-        return jsonify({"error": "Invalid provider name"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Copy your existing routes here
-@app.route('/api/search', methods=['POST'])
-def search_foods():
-    try:
-        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+            
         query = data.get('query', '')
-        limit = data.get('limit', 10)
-        providers = data.get('providers', [])
+        data_types_str = data.get('dataTypes', [])
+        brand_owner = data.get('brandOwner')
+        sort_by_str = data.get('sortBy')
+        sort_order = data.get('sortOrder', 'asc')
+        page_size = data.get('pageSize', 25)
+        page_number = data.get('pageNumber', 1)
         
         if not query:
             return jsonify({'error': 'Query is required'}), 400
-            
-        provider_enums = []
-        if providers:
-            for provider_name in providers:
-                provider_enums.append(APIProvider(provider_name))
-        else:
-            provider_enums = None
-            
-        results = manager.search_foods(query, provider_enums, limit)
         
-        serialized_results = {}
-        for provider_name, foods in results.items():
-            serialized_results[provider_name] = []
-            for food in foods:
-                serialized_results[provider_name].append({
-                    'food_id': food.food_id,
-                    'name': food.name,
-                    'brand': food.brand,
-                    'serving_size': food.serving_size,
-                    'calories': food.calories,
-                    'protein': food.protein,
-                    'carbs': food.carbs,
-                    'fat': food.fat,
-                    'fiber': food.fiber,
-                    'sugar': food.sugar,
-                    'sodium': food.sodium,
-                    'source': food.source
-                })
-                
-        return jsonify({'results': serialized_results})
+        # Convert string data types to enum
+        data_types = []
+        if data_types_str:
+            type_mapping = {
+                'Foundation': DataType.FOUNDATION,
+                'SR Legacy': DataType.SR_LEGACY,
+                'Survey (FNDDS)': DataType.SURVEY,
+                'Branded': DataType.BRANDED,
+                'Experimental': DataType.EXPERIMENTAL
+            }
+            data_types = [type_mapping[dt] for dt in data_types_str if dt in type_mapping]
         
-    except APIError as e:
-        return jsonify({'error': f'API Error: {str(e)}'}), 503
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-
-@app.route('/api/food-details', methods=['POST'])
-def get_food_details():
-    try:
-        data = request.get_json()
-        provider_name = data.get('provider')
-        food_id = data.get('food_id')
+        # Convert sort by string to enum
+        sort_by = None
+        if sort_by_str:
+            sort_mapping = {
+                'dataType': SortBy.DATA_TYPE,
+                'description': SortBy.DESCRIPTION,
+                'fdcId': SortBy.FDC_ID,
+                'publishedDate': SortBy.PUBLISHED_DATE
+            }
+            sort_by = sort_mapping.get(sort_by_str)
         
-        if not provider_name or not food_id:
-            return jsonify({'error': 'Provider and food_id are required'}), 400
+        # Create search criteria
+        criteria = SearchCriteria(
+            query=query,
+            data_type=data_types if data_types else None,
+            brand_owner=brand_owner,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page_size=page_size,
+            page_number=page_number
+        )
+        
+        # Get API and perform search
+        if 'usda_enhanced' not in manager.apis:
+            return jsonify({'error': 'Enhanced USDA API not configured'}), 400
             
-        provider = APIProvider(provider_name)
-        food_details = manager.get_food_details(provider, food_id)
+        api = manager.apis['usda_enhanced']
+        results = api.search_foods(criteria)
         
-        if food_details is None:
-            return jsonify({'error': 'Food not found or API error'}), 404
-            
+        # Format results for UI
+        formatted_results = format_search_results(results)
+        
         return jsonify({
-            'food_id': food_details.food_id,
-            'name': food_details.name,
-            'brand': food_details.brand,
-            'serving_size': food_details.serving_size,
-            'calories': food_details.calories,
-            'protein': food_details.protein,
-            'carbs': food_details.carbs,
-            'fat': food_details.fat,
-            'fiber': food_details.fiber,
-            'sugar': food_details.sugar,
-            'sodium': food_details.sodium,
-            'source': food_details.source,
-            'raw_data': food_details.raw_data
+            'results': formatted_results,
+            'totalHits': results.get('totalHits', 0),
+            'currentPage': results.get('currentPage', 1),
+            'totalPages': results.get('totalPages', 1)
         })
         
     except APIError as e:
-        return jsonify({'error': f'API Error: {str(e)}'}), 503
-    except ValueError:
-        return jsonify({'error': 'Invalid provider name'}), 400
+        return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+
+@app.route('/api/foods-list', methods=['POST'])
+def get_foods_list():
+    """Get paginated list of foods by category"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+            
+        data_types_str = data.get('dataTypes', [])
+        sort_by_str = data.get('sortBy', 'description')
+        sort_order = data.get('sortOrder', 'asc')
+        page_size = data.get('pageSize', 20)
+        page_number = data.get('pageNumber', 1)
+        
+        # Convert data types
+        data_types = []
+        if data_types_str:
+            type_mapping = {
+                'Foundation': DataType.FOUNDATION,
+                'SR Legacy': DataType.SR_LEGACY,
+                'Survey (FNDDS)': DataType.SURVEY,
+                'Branded': DataType.BRANDED,
+                'Experimental': DataType.EXPERIMENTAL
+            }
+            data_types = [type_mapping[dt] for dt in data_types_str if dt in type_mapping]
+        
+        # Convert sort by
+        sort_mapping = {
+            'dataType': SortBy.DATA_TYPE,
+            'description': SortBy.DESCRIPTION,
+            'fdcId': SortBy.FDC_ID,
+            'publishedDate': SortBy.PUBLISHED_DATE
+        }
+        sort_by = sort_mapping.get(sort_by_str, SortBy.DESCRIPTION)
+        
+        # Create list criteria
+        criteria = ListCriteria(
+            data_type=data_types if data_types else None,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            page_size=page_size,
+            page_number=page_number
+        )
+        
+        # Get API and perform request
+        if 'usda_enhanced' not in manager.apis:
+            return jsonify({'error': 'Enhanced USDA API not configured'}), 400
+            
+        api = manager.apis['usda_enhanced']
+        results = api.get_foods_list(criteria)
+        
+        # Format results
+        formatted_results = format_foods_list(results)
+        
+        return jsonify({
+            'foods': formatted_results,
+            'totalHits': results.get('totalHits', 0),
+            'currentPage': results.get('currentPage', 1),
+            'totalPages': results.get('totalPages', 1)
+        })
+        
+    except APIError as e:
+        return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+
+@app.route('/api/compare-foods', methods=['POST'])
+def compare_foods():
+    """Compare multiple foods by FDC IDs"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+            
+        fdc_ids = data.get('fdcIds', [])
+        nutrients = data.get('nutrients')  # Optional list of nutrient IDs
+        
+        if not fdc_ids:
+            return jsonify({'error': 'FDC IDs are required'}), 400
+        
+        # Validate FDC IDs
+        try:
+            fdc_ids = [int(fdc_id) for fdc_id in fdc_ids]
+        except ValueError:
+            return jsonify({'error': 'Invalid FDC ID format'}), 400
+        
+        if len(fdc_ids) > 20:
+            return jsonify({'error': 'Maximum 20 foods can be compared at once'}), 400
+        
+        # Get API and perform comparison
+        if 'usda_enhanced' not in manager.apis:
+            return jsonify({'error': 'Enhanced USDA API not configured'}), 400
+            
+        api = manager.apis['usda_enhanced']
+        results = api.get_multiple_foods(fdc_ids, nutrients)
+        
+        # Format results for comparison
+        comparison_data = format_food_comparison(results)
+        
+        return jsonify({
+            'foods': comparison_data,
+            'count': len(comparison_data)
+        })
+        
+    except APIError as e:
+        return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+
+@app.route('/api/data-types', methods=['GET'])
+def get_data_types():
+    """Get available data types"""
+    return jsonify({
+        'dataTypes': [
+            {'value': 'Foundation', 'label': 'Foundation Foods'},
+            {'value': 'SR Legacy', 'label': 'SR Legacy'},
+            {'value': 'Survey (FNDDS)', 'label': 'Survey (FNDDS)'},
+            {'value': 'Branded', 'label': 'Branded Foods'},
+            {'value': 'Experimental', 'label': 'Experimental Foods'}
+        ]
+    })
+
+@app.route('/api/nutrients-list', methods=['GET'])
+def get_nutrients_list():
+    """Get list of common nutrients for filtering"""
+    # Common nutrients with their IDs from USDA database
+    common_nutrients = [
+        {'id': 1008, 'name': 'Energy (kcal)', 'unit': 'kcal'},
+        {'id': 1003, 'name': 'Protein', 'unit': 'g'},
+        {'id': 1004, 'name': 'Total lipid (fat)', 'unit': 'g'},
+        {'id': 1005, 'name': 'Carbohydrate, by difference', 'unit': 'g'},
+        {'id': 1079, 'name': 'Fiber, total dietary', 'unit': 'g'},
+        {'id': 2000, 'name': 'Sugars, total including NLEA', 'unit': 'g'},
+        {'id': 1093, 'name': 'Sodium, Na', 'unit': 'mg'},
+        {'id': 1087, 'name': 'Calcium, Ca', 'unit': 'mg'},
+        {'id': 1089, 'name': 'Iron, Fe', 'unit': 'mg'},
+        {'id': 1106, 'name': 'Vitamin A, RAE', 'unit': 'µg'},
+        {'id': 1162, 'name': 'Vitamin C, total ascorbic acid', 'unit': 'mg'},
+    ]
+    
+    return jsonify({'nutrients': common_nutrients})
+
+@app.route('/api/add-enhanced-provider', methods=['POST'])
+def add_enhanced_provider():
+    """Add enhanced USDA provider with all endpoints"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid JSON data'}), 400
+            
+        api_key = data.get('api_key')
+        
+        if not api_key:
+            return jsonify({'error': 'API key is required'}), 400
+        
+        # Add enhanced API
+        api = manager.add_enhanced_usda_api(api_key)
+        
+        # Test connection
+        if api.test_connection():
+            return jsonify({
+                'message': 'Enhanced USDA API added successfully',
+                'provider': 'usda_enhanced',
+                'endpoints': [
+                    'foods/search (enhanced)',
+                    'foods/list',
+                    'foods (multiple)',
+                    'food/{id} (enhanced)'
+                ]
+            })
+        else:
+            return jsonify({'error': 'Failed to connect to USDA API'}), 400
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Helper functions for formatting results
 
-@app.route("/api/test-connection", methods=["POST"])
-def test_connection():
-    try:
-        data = request.get_json()
-        provider_name = data.get("provider")
-
-        if not provider_name:
-            return jsonify({"error": "Provider name is required"}), 400
-
-        provider = APIProvider(provider_name)
-
-        if provider not in manager.apis:
-            return jsonify({"error": f"Provider {provider_name} not configured"}), 400
-
-        test_results = manager.search_foods("test", [provider], 1)
-
-        if provider_name in test_results and isinstance(
-            test_results[provider_name], list
-        ):
-            return jsonify({
-                "status": "success",
-                "message": f"{provider_name} API is working correctly",
-                "test_results_count": len(test_results[provider_name]),
-            })
-        else:
-            return jsonify({
-                "status": "error", 
-                "message": f"{provider_name} API test failed"
-            })
-
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)})
+def format_search_results(results):
+    """Format search results for UI display"""
+    if 'foods' not in results:
+        return []
     
+    formatted = []
+    for food in results['foods']:
+        formatted_food = {
+            'food_id': food.get('fdcId'),
+            'name': food.get('description', 'Unknown'),
+            'brand': food.get('brandOwner'),
+            'data_type': food.get('dataType'),
+            'published_date': food.get('publishedDate'),
+            'ingredients': food.get('ingredients'),
+            'calories': None,
+            'protein': None,
+            'carbs': None,
+            'fat': None
+        }
+        
+        # Extract basic nutrients if available
+        nutrients = food.get('foodNutrients', [])
+        for nutrient in nutrients:
+            nutrient_id = nutrient.get('nutrientId')
+            value = nutrient.get('value')
+            
+            if nutrient_id == 1008:  # Energy
+                formatted_food['calories'] = value
+            elif nutrient_id == 1003:  # Protein
+                formatted_food['protein'] = value
+            elif nutrient_id == 1005:  # Carbs
+                formatted_food['carbs'] = value
+            elif nutrient_id == 1004:  # Fat
+                formatted_food['fat'] = value
+        
+        formatted.append(formatted_food)
+    
+    return formatted
 
-if __name__ == "__main__":
-    # Load any existing API keys on startup
-    print(f"Loaded {len(manager.get_available_providers())} API providers from configuration")
-    app.run(debug=True, host="0.0.0.0", port=5000)
+def format_foods_list(results):
+    """Format foods list results for UI"""
+    return format_search_results(results)  # Same format
+
+def format_food_comparison(results):
+    """Format food comparison results"""
+    if not results:
+        return []
+    
+    formatted = []
+    for food in results:
+        food_data = {
+            'fdc_id': food.get('fdcId'),
+            'description': food.get('description'),
+            'data_type': food.get('dataType'),
+            'brand_owner': food.get('brandOwner'),
+            'nutrients': {}
+        }
+        
+        # Extract all nutrients
+        for nutrient in food.get('foodNutrients', []):
+            nutrient_id = nutrient.get('nutrient', {}).get('id')
+            nutrient_name = nutrient.get('nutrient', {}).get('name')
+            value = nutrient.get('amount')
+            unit = nutrient.get('nutrient', {}).get('unitName')
+            
+            if nutrient_id:
+                food_data['nutrients'][nutrient_id] = {
+                    'name': nutrient_name,
+                    'value': value,
+                    'unit': unit
+                }
+        
+        formatted.append(food_data)
+    
+    return formatted
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)

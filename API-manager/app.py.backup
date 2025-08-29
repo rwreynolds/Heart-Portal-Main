@@ -1,13 +1,11 @@
 from flask import Flask, render_template, request, jsonify
-from nutrition_api_manager import (
-    NutritionAPIManager,
-    USDAFoodDataAPI,
-    APIProvider,
-    APIError,
-)
+from nutrition_api_manager import APIProvider, APIError  # Removed USDAFoodDataAPI
+from enhanced_nutrition_api_manager import EnhancedNutritionAPIManager
+
 app = Flask(__name__)
 
-manager = NutritionAPIManager()
+# Use enhanced manager with persistence
+manager = EnhancedNutritionAPIManager()
 
 
 @app.route("/")
@@ -17,14 +15,10 @@ def index():
 
 @app.route("/api/providers", methods=["GET"])
 def get_providers():
-    return jsonify(
-        {
-            "available": [
-                provider.value for provider in manager.get_available_providers()
-            ],
-            "supported": [provider.value for provider in APIProvider],
-        }
-    )
+    return jsonify({
+        "available": [provider.value for provider in manager.get_available_providers()],
+        "supported": [provider.value for provider in APIProvider],
+    })
 
 
 @app.route("/api/add-provider", methods=["POST"])
@@ -40,14 +34,14 @@ def add_provider():
         provider = APIProvider(provider_name)
 
         if provider == APIProvider.USDA_FOODDATA:
-            api_instance = USDAFoodDataAPI(api_key)
-            manager.add_api(provider, api_instance)
-            return jsonify({"message": f"Successfully added {provider_name} API"})
+            manager.add_api_with_persistence(provider, api_key)
+            return jsonify(
+                {"message": f"Successfully added and saved {provider_name} API"}
+                )
         else:
-            return (
-                jsonify({"error": f"Provider {provider_name} not yet implemented"}),
-                400,
-            )
+            return jsonify(
+                {"error": f"Provider {provider_name} not yet implemented"}
+                ), 400
 
     except ValueError:
         return jsonify({"error": "Invalid provider name"}), 400
@@ -65,8 +59,11 @@ def remove_provider():
             return jsonify({"error": "Provider name is required"}), 400
 
         provider = APIProvider(provider_name)
-        manager.remove_api(provider)
-        return jsonify({"message": f"Successfully removed {provider_name} API"})
+        manager.remove_api_with_persistence(provider)
+        return jsonify(
+            {"message": 
+             f"Successfully removed {provider_name} API and deleted saved key"}
+             )
 
     except ValueError:
         return jsonify({"error": "Invalid provider name"}), 400
@@ -179,22 +176,24 @@ def test_connection():
 
         if provider_name in test_results and isinstance(
             test_results[provider_name], list
-        ):
-            return jsonify(
-                {
-                    "status": "success",
-                    "message": f"{provider_name} API is working correctly",
-                    "test_results_count": len(test_results[provider_name]),
-                }
-            )
+                ):
+            return jsonify({
+                "status": "success",
+                "message": f"{provider_name} API is working correctly",
+                "test_results_count": len(test_results[provider_name]),
+            })
         else:
-            return jsonify(
-                {"status": "error", "message": f"{provider_name} API test failed"}
-            )
+            return jsonify({
+                "status": "error", 
+                "message": f"{provider_name} API test failed"
+            })
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
-
+    
 
 if __name__ == "__main__":
+    print(
+        f"Loaded {len(manager.get_available_providers())}"
+        + "API providers from configuration")
     app.run(debug=True, host="0.0.0.0", port=5000)
