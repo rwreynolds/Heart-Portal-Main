@@ -153,14 +153,19 @@ def get_foods_list():
         api = manager.apis['usda_enhanced']
         results = api.get_foods_list(criteria)
         
-        # Format results
+        # Format results - handle different API response structure
         formatted_results = format_foods_list(results)
+        
+        # Handle different response structures from foods/list vs foods/search
+        total_hits = results.get('totalHits', len(formatted_results)) if isinstance(results, dict) else len(formatted_results)
+        current_page = results.get('currentPage', page_number) if isinstance(results, dict) else page_number
+        total_pages = results.get('totalPages', 1) if isinstance(results, dict) else max(1, (total_hits + page_size - 1) // page_size)
         
         return jsonify({
             'foods': formatted_results,
-            'totalHits': results.get('totalHits', 0),
-            'currentPage': results.get('currentPage', 1),
-            'totalPages': results.get('totalPages', 1)
+            'totalHits': total_hits,
+            'currentPage': current_page,
+            'totalPages': total_pages
         })
         
     except APIError as e:
@@ -297,7 +302,10 @@ def format_search_results(results):
             'calories': None,
             'protein': None,
             'carbs': None,
-            'fat': None
+            'fat': None,
+            'sodium': None,
+            'serving_size': None,
+            'serving_unit': None
         }
         
         # Extract basic nutrients if available
@@ -314,14 +322,90 @@ def format_search_results(results):
                 formatted_food['carbs'] = value
             elif nutrient_id == 1004:  # Fat
                 formatted_food['fat'] = value
+            elif nutrient_id == 1093:  # Sodium
+                formatted_food['sodium'] = value
+        
+        # Extract serving size information
+        # Check for food portions (serving sizes)
+        food_portions = food.get('foodPortions', [])
+        if food_portions:
+            # Use the first portion as default serving size
+            portion = food_portions[0]
+            formatted_food['serving_size'] = portion.get('amount')
+            formatted_food['serving_unit'] = portion.get('modifier', 'serving')
+        else:
+            # Fallback to 100g as standard serving if no portions available
+            formatted_food['serving_size'] = 100
+            formatted_food['serving_unit'] = 'g'
         
         formatted.append(formatted_food)
     
     return formatted
 
 def format_foods_list(results):
-    """Format foods list results for UI"""
-    return format_search_results(results)  # Same format
+    """Format foods list results for UI - handles different API response structure"""
+    # foods/list returns a list directly, while foods/search returns {'foods': [...]}
+    if isinstance(results, list):
+        # Direct list from foods/list endpoint
+        foods_list = results
+    elif isinstance(results, dict) and 'foods' in results:
+        # foods/search format
+        foods_list = results['foods']
+    elif isinstance(results, dict):
+        # Sometimes the response might be a dict but structured differently
+        foods_list = results.get('foods', [results])
+    else:
+        # Fallback
+        foods_list = []
+    
+    if not foods_list:
+        return []
+    
+    formatted = []
+    for food in foods_list:
+        formatted_food = {
+            'food_id': food.get('fdcId'),
+            'name': food.get('description', 'Unknown'),
+            'brand': food.get('brandOwner'),
+            'data_type': food.get('dataType'),
+            'published_date': food.get('publishedDate'),
+            'ingredients': food.get('ingredients'),
+            'calories': None,
+            'protein': None,
+            'carbs': None,
+            'fat': None,
+            'sodium': None,
+            'serving_size': 100,  # Default for browse
+            'serving_unit': 'g'   # Default for browse
+        }
+        
+        # Extract basic nutrients if available (foods/list has limited nutrient data)
+        nutrients = food.get('foodNutrients', [])
+        for nutrient in nutrients:
+            nutrient_id = nutrient.get('nutrientId')
+            value = nutrient.get('value')
+            
+            if nutrient_id == 1008:  # Energy
+                formatted_food['calories'] = value
+            elif nutrient_id == 1003:  # Protein
+                formatted_food['protein'] = value
+            elif nutrient_id == 1005:  # Carbs
+                formatted_food['carbs'] = value
+            elif nutrient_id == 1004:  # Fat
+                formatted_food['fat'] = value
+            elif nutrient_id == 1093:  # Sodium
+                formatted_food['sodium'] = value
+        
+        # Extract serving size information if available
+        food_portions = food.get('foodPortions', [])
+        if food_portions:
+            portion = food_portions[0]
+            formatted_food['serving_size'] = portion.get('amount', 100)
+            formatted_food['serving_unit'] = portion.get('modifier', 'g')
+        
+        formatted.append(formatted_food)
+    
+    return formatted
 
 def format_food_comparison(results):
     """Format food comparison results"""

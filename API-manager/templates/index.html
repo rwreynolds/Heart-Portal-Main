@@ -190,6 +190,32 @@
             font-size: 0.9rem;
             color: #86868b;
         }
+        
+        /* Food item separation styles */
+        .food-item {
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .food-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-color: #007aff;
+        }
+        
+        .food-item:not(:last-child) {
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .food-separator {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #d1d1d6, transparent);
+            margin: 12px 0;
+        }
     </style>
 </head>
 <body>
@@ -519,7 +545,7 @@
                 return;
             }
             
-            const resultsHtml = data.results.map(food => `
+            const resultsHtml = data.results.map((food, index) => `
                 <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
                     <div class="food-name">
                         ${food.name}
@@ -531,10 +557,17 @@
                     </div>
                     ${food.brand ? `<div class="food-brand">${food.brand}</div>` : ''}
                     ${food.published_date ? `<div style="font-size: 0.8rem; color: #86868b;">Published: ${new Date(food.published_date).toLocaleDateString()}</div>` : ''}
+                    <div style="font-size: 0.8rem; color: #86868b; margin-bottom: 4px;">
+                        FDC ID: ${food.food_id}
+                    </div>
+                    <div class="serving-info" style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">
+                        Per ${food.serving_size} ${food.serving_unit}:
+                    </div>
                     <div class="nutrition-info">
                         ${formatNutritionInfo(food)}
                     </div>
                 </div>
+                ${index < data.results.length - 1 ? '<div class="food-separator"></div>' : ''}
             `).join('');
             
             resultsDiv.innerHTML = resultsHtml;
@@ -605,7 +638,7 @@
                 return;
             }
             
-            const resultsHtml = data.foods.map(food => `
+            const resultsHtml = data.foods.map((food, index) => `
                 <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
                     <div class="food-name">
                         ${food.name}
@@ -616,10 +649,17 @@
                         </button>
                     </div>
                     ${food.brand ? `<div class="food-brand">${food.brand}</div>` : ''}
+                    <div style="font-size: 0.8rem; color: #86868b; margin-bottom: 4px;">
+                        FDC ID: ${food.food_id}
+                    </div>
+                    <div class="serving-info" style="font-size: 0.85rem; color: #666; margin-bottom: 4px;">
+                        Per ${food.serving_size} ${food.serving_unit}:
+                    </div>
                     <div class="nutrition-info">
                         ${formatNutritionInfo(food)}
                     </div>
                 </div>
+                ${index < data.foods.length - 1 ? '<div class="food-separator"></div>' : ''}
             `).join('');
             
             resultsDiv.innerHTML = resultsHtml;
@@ -790,6 +830,7 @@
             if (food.protein !== null && food.protein !== undefined) info.push(`${food.protein}g protein`);
             if (food.carbs !== null && food.carbs !== undefined) info.push(`${food.carbs}g carbs`);
             if (food.fat !== null && food.fat !== undefined) info.push(`${food.fat}g fat`);
+            if (food.sodium !== null && food.sodium !== undefined) info.push(`${food.sodium}mg sodium`);
             return info.length > 0 ? info.join(' • ') : 'Nutrition data not available';
         }
 

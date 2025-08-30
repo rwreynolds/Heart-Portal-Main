@@ -183,9 +183,9 @@ class EnhancedUSDAFoodDataAPI:
     
     def get_foods_list(self, criteria: ListCriteria) -> Dict[str, Any]:
         """
-        Get paginated list of foods using foods/list endpoint
+        Get paginated list of foods using foods/list endpoint (GET request)
         """
-        list_data = {
+        params = {
             "pageSize": criteria.page_size,
             "pageNumber": criteria.page_number,
             "sortOrder": criteria.sort_order
@@ -193,12 +193,12 @@ class EnhancedUSDAFoodDataAPI:
         
         # Add optional parameters
         if criteria.data_type:
-            list_data["dataType"] = [dt.value for dt in criteria.data_type]
+            params["dataType"] = ",".join([dt.value for dt in criteria.data_type])
             
         if criteria.sort_by:
-            list_data["sortBy"] = criteria.sort_by.value
+            params["sortBy"] = criteria.sort_by.value
         
-        return self._make_request("foods/list", method="POST", data=list_data)
+        return self._make_request("foods/list", method="GET", params=params)
     
     def get_multiple_foods(self, fdc_ids: List[int], nutrients: Optional[List[int]] = None) -> Dict[str, Any]:
         """
