@@ -200,11 +200,19 @@
             background: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
         }
         
         .food-item:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             border-color: #007aff;
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+        
+        .food-item:hover .food-name {
+            color: #007aff;
         }
         
         .food-item:not(:last-child) {
@@ -215,6 +223,38 @@
             height: 1px;
             background: linear-gradient(to right, transparent, #d1d1d6, transparent);
             margin: 12px 0;
+        }
+        
+        .click-hint {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 122, 255, 0.1);
+            color: #007aff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        
+        .food-item:hover .click-hint {
+            opacity: 1;
+        }
+        
+        .food-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            transition: color 0.2s ease;
+        }
+        
+        .nutrient-highlight {
+            background: rgba(0, 122, 255, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+            color: #007aff;
         }
     </style>
 </head>
@@ -260,6 +300,7 @@
                     <div class="form-group">
                         <label for="sort-by">Sort By</label>
                         <select id="sort-by" class="form-control">
+                            <option value="relevance">Relevance (Default)</option>
                             <option value="description">Description</option>
                             <option value="dataType">Data Type</option>
                             <option value="fdcId">FDC ID</option>
@@ -271,6 +312,30 @@
                         <select id="sort-order" class="form-control">
                             <option value="asc">Ascending</option>
                             <option value="desc">Descending</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <h4 style="margin: 0 0 12px 0; color: #007aff;">Secondary Sorting (Client-Side)</h4>
+                    <div class="form-group">
+                        <label for="nutrient-sort">Sort by Nutrient</label>
+                        <select id="nutrient-sort" class="form-control" onchange="reorderResultsByNutrient()">
+                            <option value="">No Nutrient Sorting</option>
+                            <option value="calories">Calories (Energy)</option>
+                            <option value="protein">Protein (g)</option>
+                            <option value="carbs">Carbohydrates (g)</option>
+                            <option value="fat">Total Fat (g)</option>
+                            <option value="sodium">Sodium (mg)</option>
+                            <option value="fiber">Fiber (g)</option>
+                            <option value="sugar">Sugar (g)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="nutrient-sort-order">Nutrient Sort Order</label>
+                        <select id="nutrient-sort-order" class="form-control" onchange="reorderResultsByNutrient()">
+                            <option value="desc">Highest First</option>
+                            <option value="asc">Lowest First</option>
                         </select>
                     </div>
                 </div>
@@ -547,6 +612,7 @@
             
             const resultsHtml = data.results.map((food, index) => `
                 <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
+                    <div class="click-hint">Click for details</div>
                     <div class="food-name">
                         ${food.name}
                         ${getDataTypeBadge(food.data_type)}
@@ -640,6 +706,7 @@
             
             const resultsHtml = data.foods.map((food, index) => `
                 <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
+                    <div class="click-hint">Click for details</div>
                     <div class="food-name">
                         ${food.name}
                         ${getDataTypeBadge(food.data_type)}
@@ -826,11 +893,11 @@
 
         function formatNutritionInfo(food) {
             const info = [];
-            if (food.calories !== null && food.calories !== undefined) info.push(`${food.calories} cal`);
-            if (food.protein !== null && food.protein !== undefined) info.push(`${food.protein}g protein`);
-            if (food.carbs !== null && food.carbs !== undefined) info.push(`${food.carbs}g carbs`);
-            if (food.fat !== null && food.fat !== undefined) info.push(`${food.fat}g fat`);
-            if (food.sodium !== null && food.sodium !== undefined) info.push(`${food.sodium}mg sodium`);
+            if (food.calories !== null && food.calories !== undefined) info.push(`<span data-nutrient="calories">${food.calories} cal</span>`);
+            if (food.protein !== null && food.protein !== undefined) info.push(`<span data-nutrient="protein">${food.protein}g protein</span>`);
+            if (food.carbs !== null && food.carbs !== undefined) info.push(`<span data-nutrient="carbs">${food.carbs}g carbs</span>`);
+            if (food.fat !== null && food.fat !== undefined) info.push(`<span data-nutrient="fat">${food.fat}g fat</span>`);
+            if (food.sodium !== null && food.sodium !== undefined) info.push(`<span data-nutrient="sodium">${food.sodium}mg sodium</span>`);
             return info.length > 0 ? info.join(' • ') : 'Nutrition data not available';
         }
 
@@ -868,12 +935,100 @@
         function clearAdvancedSearch() {
             document.getElementById('adv-search-query').value = '';
             document.getElementById('brand-owner').value = '';
-            document.getElementById('sort-by').value = 'description';
+            document.getElementById('sort-by').value = 'relevance';
             document.getElementById('sort-order').value = 'asc';
+            document.getElementById('nutrient-sort').value = '';
+            document.getElementById('nutrient-sort-order').value = 'desc';
             document.querySelectorAll('#data-types-checkboxes input').forEach(cb => cb.checked = false);
             document.getElementById('advanced-search-results').style.display = 'none';
             document.getElementById('search-stats').style.display = 'none';
             document.getElementById('search-pagination').style.display = 'none';
+        }
+        
+        function reorderResultsByNutrient() {
+            if (!currentSearchResults || !currentSearchResults.results) return;
+            
+            const nutrientSort = document.getElementById('nutrient-sort').value;
+            const sortOrder = document.getElementById('nutrient-sort-order').value;
+            
+            if (!nutrientSort) {
+                // If no nutrient sorting, display original results
+                displayAdvancedSearchResults(currentSearchResults);
+                highlightSortedNutrient(''); // Remove highlights
+                return;
+            }
+            
+            // Create a copy of the results to sort
+            const sortedResults = [...currentSearchResults.results];
+            
+            // Sort by the selected nutrient
+            sortedResults.sort((a, b) => {
+                const aValue = getNutrientValue(a, nutrientSort);
+                const bValue = getNutrientValue(b, nutrientSort);
+                
+                // Handle null/undefined values - put them at the end
+                if (aValue === null && bValue === null) return 0;
+                if (aValue === null) return 1;
+                if (bValue === null) return -1;
+                
+                // Sort based on order preference
+                if (sortOrder === 'desc') {
+                    return bValue - aValue; // Descending (highest first)
+                } else {
+                    return aValue - bValue; // Ascending (lowest first)
+                }
+            });
+            
+            // Display the sorted results
+            const sortedData = {
+                ...currentSearchResults,
+                results: sortedResults
+            };
+            displayAdvancedSearchResults(sortedData);
+            
+            // Highlight the sorted nutrient values
+            highlightSortedNutrient(nutrientSort);
+            
+            // Show sorting indicator
+            showAlert(`Results sorted by ${nutrientSort} (${sortOrder === 'desc' ? 'highest first' : 'lowest first'})`);
+        }
+        
+        function getNutrientValue(food, nutrientType) {
+            // Map nutrient types to food properties
+            switch (nutrientType) {
+                case 'calories':
+                    return food.calories !== null ? food.calories : null;
+                case 'protein':
+                    return food.protein !== null ? food.protein : null;
+                case 'carbs':
+                    return food.carbs !== null ? food.carbs : null;
+                case 'fat':
+                    return food.fat !== null ? food.fat : null;
+                case 'sodium':
+                    return food.sodium !== null ? food.sodium : null;
+                case 'fiber':
+                    return food.fiber !== null ? food.fiber : null;
+                case 'sugar':
+                    return food.sugar !== null ? food.sugar : null;
+                default:
+                    return null;
+            }
+        }
+        
+        function highlightSortedNutrient(nutrientType) {
+            // Remove existing highlights
+            document.querySelectorAll('.nutrient-highlight').forEach(el => {
+                el.classList.remove('nutrient-highlight');
+            });
+            
+            if (!nutrientType) return;
+            
+            // Add highlight to the sorted nutrient
+            setTimeout(() => {
+                document.querySelectorAll(`[data-nutrient="${nutrientType}"]`).forEach(el => {
+                    el.classList.add('nutrient-highlight');
+                });
+            }, 100);
         }
 
         // Keep your existing showAlert and showFoodDetails functions
@@ -889,11 +1044,256 @@
             }, 5000);
         }
 
-        // Existing food details modal functionality would go here
+        // Food details modal functionality
         async function showFoodDetails(provider, foodId) {
-            // Use your existing modal functionality
-            console.log(`Showing details for ${provider} food ID: ${foodId}`);
-            showAlert('Food details modal would open here');
+            try {
+                // Fetch detailed food information
+                const response = await fetch(`/api/food-details/${foodId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch food details');
+                }
+                
+                const foodData = await response.json();
+                displayFoodDetailsModal(foodData);
+                
+            } catch (error) {
+                console.error('Error fetching food details:', error);
+                showAlert('Unable to load food details. Please try again.', 'error');
+            }
+        }
+        
+        function displayFoodDetailsModal(food) {
+            // Store food data globally for calculations
+            currentFoodData = food;
+            
+            // Determine default portion from food portions or use 100g
+            let defaultAmount = 100;
+            let defaultUnit = 'g';
+            
+            // Check if food has portion information
+            if (food.foodPortions && food.foodPortions.length > 0) {
+                const portion = food.foodPortions[0];
+                defaultAmount = portion.amount || 100;
+                defaultUnit = portion.modifier === 'cup' ? 'cup' : 
+                             portion.modifier === 'oz' ? 'oz' :
+                             portion.modifier?.includes('serving') ? 'serving' : 'g';
+            }
+            
+            // Create and show a modal with food details
+            const modalHtml = `
+                <div id="food-modal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.5);
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                " onclick="closeFoodModal()">
+                    <div style="
+                        background: white;
+                        padding: 24px;
+                        border-radius: 12px;
+                        max-width: 600px;
+                        max-height: 80vh;
+                        overflow-y: auto;
+                        margin: 20px;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    " onclick="event.stopPropagation()">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h2 style="margin: 0; color: #333;">${food.description || 'Food Details'}</h2>
+                            <button onclick="closeFoodModal()" style="
+                                background: none;
+                                border: none;
+                                font-size: 24px;
+                                cursor: pointer;
+                                color: #666;
+                            ">×</button>
+                        </div>
+                        <div style="font-size: 14px; color: #666; margin-bottom: 16px;">
+                            <strong>FDC ID:</strong> ${food.fdcId}<br>
+                            <strong>Data Type:</strong> ${food.dataType || 'Unknown'}<br>
+                            ${food.brandOwner ? `<strong>Brand:</strong> ${food.brandOwner}<br>` : ''}
+                            ${food.publishedDate ? `<strong>Published:</strong> ${new Date(food.publishedDate).toLocaleDateString()}<br>` : ''}
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                            <h3 style="color: #007aff; margin: 0 0 12px 0;">Portion Size Calculator</h3>
+                            <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
+                                <div style="flex: 1;">
+                                    <label style="display: block; font-weight: 600; margin-bottom: 4px;">Amount:</label>
+                                    <input type="number" id="portion-amount" value="${defaultAmount}" min="0.1" step="0.1" 
+                                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                           onchange="recalculateNutrients()">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label style="display: block; font-weight: 600; margin-bottom: 4px;">Unit:</label>
+                                    <select id="portion-unit" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                            onchange="recalculateNutrients()">
+                                        <option value="g" ${defaultUnit === 'g' ? 'selected' : ''}>grams (g)</option>
+                                        <option value="oz" ${defaultUnit === 'oz' ? 'selected' : ''}>ounces (oz)</option>
+                                        <option value="lb" ${defaultUnit === 'lb' ? 'selected' : ''}>pounds (lb)</option>
+                                        <option value="kg" ${defaultUnit === 'kg' ? 'selected' : ''}>kilograms (kg)</option>
+                                        <option value="cup" ${defaultUnit === 'cup' ? 'selected' : ''}>cup</option>
+                                        <option value="tbsp" ${defaultUnit === 'tbsp' ? 'selected' : ''}>tablespoon</option>
+                                        <option value="tsp" ${defaultUnit === 'tsp' ? 'selected' : ''}>teaspoon</option>
+                                        <option value="serving" ${defaultUnit === 'serving' ? 'selected' : ''}>serving</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 0;">
+                                    <button onclick="recalculateNutrients()" style="
+                                        background: #007aff;
+                                        color: white;
+                                        border: none;
+                                        padding: 10px 16px;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        margin-top: 20px;
+                                    ">Calculate</button>
+                                </div>
+                            </div>
+                            <div style="font-size: 12px; color: #666;">
+                                <strong>Note:</strong> Nutritional values are calculated per 100g. Portion calculator adjusts values proportionally.
+                            </div>
+                        </div>
+                        <div id="nutrients-section">
+                            <h3 style="color: #007aff; margin-bottom: 12px;">Nutritional Information</h3>
+                            <div id="nutrients-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <!-- Will be populated by recalculateNutrients() -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Trigger initial calculation with default values
+            setTimeout(() => {
+                recalculateNutrients();
+            }, 100);
+        }
+        
+        function formatNutrientsForModal(nutrients) {
+            if (!nutrients || nutrients.length === 0) {
+                return '<p style="grid-column: 1/-1; color: #666;">No nutritional data available</p>';
+            }
+            
+            // Show most important nutrients first
+            const importantNutrients = [1008, 1003, 1004, 1005, 1079, 2000, 1093, 1087, 1089];
+            const sortedNutrients = nutrients.sort((a, b) => {
+                const aIndex = importantNutrients.indexOf(a.nutrient?.id || a.nutrientId);
+                const bIndex = importantNutrients.indexOf(b.nutrient?.id || b.nutrientId);
+                if (aIndex === -1 && bIndex === -1) return 0;
+                if (aIndex === -1) return 1;
+                if (bIndex === -1) return -1;
+                return aIndex - bIndex;
+            });
+            
+            return sortedNutrients.slice(0, 20).map(nutrient => {
+                const name = nutrient.nutrient?.name || nutrient.name || 'Unknown';
+                const amount = nutrient.amount || nutrient.value || 0;
+                const unit = nutrient.nutrient?.unitName || nutrient.unit || '';
+                
+                return `
+                    <div style="padding: 8px; border: 1px solid #eee; border-radius: 4px;">
+                        <strong>${name}</strong><br>
+                        <span style="color: #007aff;">${amount.toFixed(2)} ${unit}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function closeFoodModal() {
+            const modal = document.getElementById('food-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Global variable to store original food data
+        let currentFoodData = null;
+        
+        // Unit conversion factors (everything converted to grams)
+        const unitConversions = {
+            'g': 1,
+            'kg': 1000,
+            'oz': 28.3495,
+            'lb': 453.592,
+            'cup': 240,      // Approximate for liquids/general
+            'tbsp': 15,      // Approximate
+            'tsp': 5,        // Approximate
+            'serving': 100   // Default serving size
+        };
+        
+        function recalculateNutrients() {
+            if (!currentFoodData) return;
+            
+            const amount = parseFloat(document.getElementById('portion-amount').value) || 100;
+            const unit = document.getElementById('portion-unit').value;
+            
+            // Convert input to grams
+            const gramsAmount = amount * unitConversions[unit];
+            
+            // Calculate multiplier (USDA data is per 100g)
+            const multiplier = gramsAmount / 100;
+            
+            // Update the display
+            updateNutrientsDisplay(currentFoodData.foodNutrients || [], multiplier, amount, unit);
+        }
+        
+        function updateNutrientsDisplay(nutrients, multiplier, displayAmount, displayUnit) {
+            const nutrientsList = document.getElementById('nutrients-list');
+            if (!nutrientsList) return;
+            
+            if (!nutrients || nutrients.length === 0) {
+                nutrientsList.innerHTML = '<p style="grid-column: 1/-1; color: #666;">No nutritional data available</p>';
+                return;
+            }
+            
+            // Show most important nutrients first
+            const importantNutrients = [1008, 1003, 1004, 1005, 1079, 2000, 1093, 1087, 1089];
+            const sortedNutrients = nutrients.sort((a, b) => {
+                const aIndex = importantNutrients.indexOf(a.nutrient?.id || a.nutrientId);
+                const bIndex = importantNutrients.indexOf(b.nutrient?.id || b.nutrientId);
+                if (aIndex === -1 && bIndex === -1) return 0;
+                if (aIndex === -1) return 1;
+                if (bIndex === -1) return -1;
+                return aIndex - bIndex;
+            });
+            
+            const nutrientsHtml = sortedNutrients.slice(0, 20).map(nutrient => {
+                const name = nutrient.nutrient?.name || nutrient.name || 'Unknown';
+                const originalAmount = nutrient.amount || nutrient.value || 0;
+                const calculatedAmount = originalAmount * multiplier;
+                const unit = nutrient.nutrient?.unitName || nutrient.unit || '';
+                
+                return `
+                    <div style="padding: 8px; border: 1px solid #eee; border-radius: 4px; position: relative;">
+                        <strong>${name}</strong><br>
+                        <span style="color: #007aff; font-size: 16px;">${calculatedAmount.toFixed(2)} ${unit}</span>
+                        <div style="font-size: 11px; color: #888; margin-top: 2px;">
+                            per ${displayAmount} ${displayUnit}
+                        </div>
+                        ${multiplier !== 1 ? `
+                            <div style="font-size: 10px; color: #aaa;">
+                                (orig: ${originalAmount.toFixed(2)} ${unit}/100g)
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            nutrientsList.innerHTML = nutrientsHtml;
         }
     </script>
 </body>

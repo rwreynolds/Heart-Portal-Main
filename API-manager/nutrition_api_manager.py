@@ -100,6 +100,7 @@ class DataType(Enum):
 
 class SortBy(Enum):
     """Available sort options"""
+    RELEVANCE = None  # No sort parameter = relevance sorting
     DATA_TYPE = "dataType.keyword"
     DESCRIPTION = "lowercaseDescription.keyword"
     FDC_ID = "fdcId"
@@ -173,7 +174,7 @@ class EnhancedUSDAFoodDataAPI:
         if criteria.data_type:
             search_data["dataType"] = [dt.value for dt in criteria.data_type]
         
-        if criteria.sort_by:
+        if criteria.sort_by and criteria.sort_by.value is not None:
             search_data["sortBy"] = criteria.sort_by.value
             
         if criteria.brand_owner:

@@ -62,6 +62,7 @@ def advanced_search():
         sort_by = None
         if sort_by_str:
             sort_mapping = {
+                'relevance': SortBy.RELEVANCE,
                 'dataType': SortBy.DATA_TYPE,
                 'description': SortBy.DESCRIPTION,
                 'fdcId': SortBy.FDC_ID,
@@ -130,12 +131,13 @@ def get_foods_list():
         
         # Convert sort by
         sort_mapping = {
+            'relevance': SortBy.RELEVANCE,
             'dataType': SortBy.DATA_TYPE,
             'description': SortBy.DESCRIPTION,
             'fdcId': SortBy.FDC_ID,
             'publishedDate': SortBy.PUBLISHED_DATE
         }
-        sort_by = sort_mapping.get(sort_by_str, SortBy.DESCRIPTION)
+        sort_by = sort_mapping.get(sort_by_str, SortBy.RELEVANCE)
         
         # Create list criteria
         criteria = ListCriteria(
@@ -248,6 +250,24 @@ def get_nutrients_list():
     ]
     
     return jsonify({'nutrients': common_nutrients})
+
+@app.route('/api/food-details/<int:fdc_id>', methods=['GET'])
+def get_food_details(fdc_id):
+    """Get detailed food information by FDC ID"""
+    try:
+        # Get API and fetch food details
+        if 'usda_enhanced' not in manager.apis:
+            return jsonify({'error': 'Enhanced USDA API not configured'}), 400
+            
+        api = manager.apis['usda_enhanced']
+        food_details = api.get_food_details(fdc_id)
+        
+        return jsonify(food_details)
+        
+    except APIError as e:
+        return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 @app.route('/api/add-enhanced-provider', methods=['POST'])
 def add_enhanced_provider():
