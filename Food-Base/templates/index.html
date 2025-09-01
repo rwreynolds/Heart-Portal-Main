@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food-Base - Your Nutrition Database</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 1px solid #e5e5e7;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #007aff;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            color: #86868b;
+            font-weight: 500;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+        
+        .sidebar {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+        
+        .sidebar h3 {
+            color: #007aff;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+        
+        .sidebar .menu-item {
+            display: block;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            text-decoration: none;
+            color: #1d1d1f;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        
+        .sidebar .menu-item:hover {
+            background: #f0f0f0;
+            border-color: #007aff;
+        }
+        
+        .sidebar .menu-item.active {
+            background: #007aff;
+            color: white;
+        }
+        
+        .foods-section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            color: #1d1d1f;
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #1d1d1f;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .search-bar {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+        
+        .foods-list {
+            min-height: 300px;
+        }
+        
+        .food-item {
+            padding: 16px;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .food-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-color: #007aff;
+        }
+        
+        .food-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+        
+        .food-meta {
+            font-size: 0.9rem;
+            color: #86868b;
+            margin-bottom: 8px;
+        }
+        
+        .food-nutrients {
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: #1d1d1f;
+        }
+        
+        .empty-state p {
+            font-size: 1rem;
+            margin-bottom: 24px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #86868b;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        
+        .alert-success {
+            background: #d1eddb;
+            color: #0f5132;
+            border: 1px solid #b3d7c7;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c2c7;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90%;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: translateY(30px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            position: relative;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .modal-subtitle {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .modal-content {
+            padding: 0;
+            max-height: calc(90vh - 120px);
+            overflow-y: auto;
+        }
+        
+        .food-details-section {
+            padding: 24px;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        
+        .food-details-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #1d1d1f;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+        
+        .detail-item {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .detail-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            font-size: 1rem;
+            color: #1d1d1f;
+            font-weight: 500;
+        }
+        
+        .nutrients-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        
+        .nutrient-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .nutrient-name {
+            font-size: 0.9rem;
+            color: #495057;
+            flex: 1;
+        }
+        
+        .nutrient-value {
+            font-weight: 600;
+            color: #007aff;
+            white-space: nowrap;
+            margin-left: 12px;
+        }
+        
+        .portions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .portion-item {
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .portion-desc {
+            color: #495057;
+        }
+        
+        .portion-weight {
+            font-weight: 600;
+            color: #007aff;
+        }
+        
+        .ingredients-text {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #495057;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .loading-modal {
+            text-align: center;
+            padding: 60px 24px;
+            color: #6c757d;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e9ecef;
+            border-top: 3px solid #007aff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Action buttons in modal header */
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+            margin-right: 60px; /* Space for close button */
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn-edit {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-edit:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-delete {
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            background: rgba(220, 53, 69, 1);
+        }
+        
+        /* Edit form styles */
+        .edit-form {
+            display: none;
+            padding: 24px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e5e7;
+        }
+        
+        .edit-form.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #495057;
+            font-size: 0.9rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            transition: border-color 0.2s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+        }
+        
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        
+        .form-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-save {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-save:hover {
+            background: #0056b3;
+        }
+        
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background: #545b62;
+        }
+        
+        /* Confirmation dialog styles */
+        .confirm-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .confirm-dialog.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .confirm-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        
+        .confirm-dialog.active .confirm-content {
+            transform: scale(1);
+        }
+        
+        .confirm-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 12px;
+        }
+        
+        .confirm-message {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .confirm-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        /* Bulk selection styles */
+        .bulk-header {
+            display: none;
+            background: #f8f9fa;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e5e7;
+            border-radius: 12px 12px 0 0;
+            margin-bottom: 20px;
+        }
+        
+        .bulk-header.active {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .bulk-info {
+            color: #007aff;
+            font-weight: 500;
+        }
+        
+        .bulk-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .bulk-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .bulk-btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .bulk-btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .bulk-btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .bulk-btn-cancel:hover {
+            background: #545b62;
+        }
+        
+        .food-item-checkbox {
+            display: none;
+            margin-right: 12px;
+        }
+        
+        .bulk-mode .food-item-checkbox {
+            display: block;
+        }
+        
+        .food-item.selected {
+            background: #e7f3ff;
+            border-color: #007aff;
+        }
+        
+        .select-all-container {
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e5e7;
+            margin-bottom: 12px;
+            display: none;
+        }
+        
+        .bulk-mode .select-all-container {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🍎 Food-Base</h1>
+            <p>Your personal nutrition database - Store, organize, and analyze saved foods</p>
+        </div>
+        
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stat-card">
+                <div id="total-foods" class="stat-value">{{ food_count }}</div>
+                <div class="stat-label">Saved Foods</div>
+            </div>
+            <div class="stat-card">
+                <div id="total-brands" class="stat-value">-</div>
+                <div class="stat-label">Unique Brands</div>
+            </div>
+            <div class="stat-card">
+                <div id="last-saved" class="stat-value">-</div>
+                <div class="stat-label">Last Saved</div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <h3>Navigation</h3>
+                <a href="#" class="menu-item active" onclick="showAllFoods()">All Foods</a>
+                <a href="#" class="menu-item" onclick="showByCategory('Foundation')">Foundation Foods</a>
+                <a href="#" class="menu-item" onclick="showByCategory('Branded')">Branded Foods</a>
+                <a href="#" class="menu-item" onclick="showByCategory('SR Legacy')">SR Legacy</a>
+                <a href="#" class="menu-item" onclick="showRecentlyAdded()">Recently Added</a>
+                
+                <h3 style="margin-top: 24px;">Actions</h3>
+                <a href="#" class="menu-item" onclick="exportData()">Export Data</a>
+                <a href="#" class="menu-item" onclick="clearAllFoods()">Clear All</a>
+            </div>
+            
+            <!-- Foods Section -->
+            <div class="foods-section">
+                <div class="section-header">
+                    <h2 class="section-title">Saved Foods</h2>
+                    <div>
+                        <button class="btn btn-secondary" id="bulk-toggle" onclick="toggleBulkMode()">Select Multiple</button>
+                        <button class="btn" onclick="refreshFoods()">Refresh</button>
+                    </div>
+                </div>
+                
+                <!-- Bulk Selection Header -->
+                <div id="bulk-header" class="bulk-header">
+                    <div class="bulk-info" id="bulk-info">0 foods selected</div>
+                    <div class="bulk-actions">
+                        <button class="bulk-btn bulk-btn-delete" onclick="bulkDeleteFoods()">
+                            🗑️ Delete Selected
+                        </button>
+                        <button class="bulk-btn bulk-btn-cancel" onclick="exitBulkMode()">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                
+                <input type="text" class="search-bar" id="search-input" 
+                       placeholder="Search saved foods..." onkeyup="filterFoods()">
+                
+                <div id="alerts"></div>
+                
+                <div id="foods-list" class="foods-list">
+                    <div class="select-all-container">
+                        <label>
+                            <input type="checkbox" id="select-all" onchange="toggleSelectAll()"> 
+                            Select All
+                        </label>
+                    </div>
+                    <div class="loading">Loading saved foods...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Food Details Modal -->
+    <div id="food-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="modal-title">Loading...</div>
+                    <div class="modal-subtitle" id="modal-subtitle"></div>
+                </div>
+                <div class="modal-actions" id="modal-actions" style="display: none;">
+                    <button class="action-btn btn-edit" onclick="toggleEditMode()">
+                        ✏️ Edit
+                    </button>
+                    <button class="action-btn btn-delete" onclick="confirmDeleteFood()">
+                        🗑️ Delete
+                    </button>
+                </div>
+                <button class="modal-close" onclick="closeFoodModal()">&times;</button>
+            </div>
+            
+            <!-- Edit Form -->
+            <div id="edit-form" class="edit-form">
+                <h3 style="margin-bottom: 20px; color: #1d1d1f;">Edit Food Information</h3>
+                <form onsubmit="saveFood(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="edit-description">Description</label>
+                        <input type="text" class="form-input" id="edit-description" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-brand">Brand Owner</label>
+                        <input type="text" class="form-input" id="edit-brand">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-brand-name">Brand Name</label>
+                        <input type="text" class="form-input" id="edit-brand-name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-ingredients">Ingredients</label>
+                        <textarea class="form-input form-textarea" id="edit-ingredients" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="edit-market-country">Market Country</label>
+                        <input type="text" class="form-input" id="edit-market-country">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="form-btn btn-cancel" onclick="cancelEdit()">Cancel</button>
+                        <button type="submit" class="form-btn btn-save">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-content" id="modal-content">
+                <div class="loading-modal">
+                    <div class="loading-spinner"></div>
+                    <p>Loading food details...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Confirmation Dialog -->
+    <div id="confirm-dialog" class="confirm-dialog">
+        <div class="confirm-content">
+            <div class="confirm-title" id="confirm-title">Confirm Action</div>
+            <div class="confirm-message" id="confirm-message">Are you sure you want to proceed?</div>
+            <div class="confirm-actions">
+                <button class="form-btn btn-cancel" onclick="closeConfirmDialog()">Cancel</button>
+                <button class="form-btn btn-delete" id="confirm-action" onclick="executeConfirmedAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allFoods = [];
+        let filteredFoods = [];
+        let currentFood = null;
+        let isEditMode = false;
+        let confirmAction = null;
+        let isBulkMode = false;
+        let selectedFoods = new Set();
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedFoods();
+            setupModalEventListeners();
+        });
+        
+        // Setup modal event listeners
+        function setupModalEventListeners() {
+            const modal = document.getElementById('food-modal');
+            const confirmDialog = document.getElementById('confirm-dialog');
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeFoodModal();
+                }
+            });
+            
+            // Close confirm dialog when clicking outside
+            confirmDialog.addEventListener('click', function(e) {
+                if (e.target === confirmDialog) {
+                    closeConfirmDialog();
+                }
+            });
+            
+            // Keyboard event handling
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    if (confirmDialog.classList.contains('active')) {
+                        closeConfirmDialog();
+                    } else if (modal.classList.contains('active')) {
+                        if (isEditMode) {
+                            cancelEdit();
+                        } else {
+                            closeFoodModal();
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load saved foods from API
+        async function loadSavedFoods() {
+            try {
+                const response = await fetch('/api/foods');
+                const data = await response.json();
+                
+                allFoods = data.foods || [];
+                filteredFoods = allFoods;
+                
+                displayFoods(filteredFoods);
+                updateStats();
+                
+            } catch (error) {
+                showAlert('Failed to load saved foods: ' + error.message, 'error');
+                displayEmptyState('Failed to load foods');
+            }
+        }
+        
+        // Display foods list
+        function displayFoods(foods) {
+            const container = document.getElementById('foods-list');
+            
+            if (!foods || foods.length === 0) {
+                displayEmptyState();
+                return;
+            }
+            
+            const foodsHtml = foods.map((food, index) => {
+                const name = food.description || food.name || 'Unknown Food';
+                const brand = food.brandOwner || food.brand || '';
+                const dataType = food.dataType || food.data_type || 'Unknown';
+                const savedDate = food.saved_at ? new Date(food.saved_at).toLocaleDateString() : '';
+                const fdcId = food.fdcId || food.food_id || '';
+                
+                // Format basic nutrients
+                const nutrients = [];
+                if (food.calories !== null && food.calories !== undefined) nutrients.push(`${food.calories} cal`);
+                if (food.protein !== null && food.protein !== undefined) nutrients.push(`${food.protein}g protein`);
+                if (food.fat !== null && food.fat !== undefined) nutrients.push(`${food.fat}g fat`);
+                if (food.carbs !== null && food.carbs !== undefined) nutrients.push(`${food.carbs}g carbs`);
+                
+                const isSelected = selectedFoods.has(food.id);
+                const clickHandler = isBulkMode ? `toggleFoodSelection(${food.id}, event)` : `showFoodDetails(${food.id})`;
+                
+                return `
+                    <div class="food-item ${isSelected ? 'selected' : ''}" onclick="${clickHandler}">
+                        <input type="checkbox" class="food-item-checkbox" ${isSelected ? 'checked' : ''} 
+                               onchange="toggleFoodSelection(${food.id}, event)" onclick="event.stopPropagation()">
+                        <div>
+                            <div class="food-name">${name}</div>
+                            <div class="food-meta">
+                                ${brand ? `<strong>Brand:</strong> ${brand} • ` : ''}
+                                <strong>Type:</strong> ${dataType}
+                                ${fdcId ? ` • <strong>FDC ID:</strong> ${fdcId}` : ''}
+                                ${savedDate ? ` • <strong>Saved:</strong> ${savedDate}` : ''}
+                            </div>
+                            <div class="food-nutrients">
+                                ${nutrients.length > 0 ? nutrients.join(' • ') : 'Nutritional data available'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = foodsHtml;
+        }
+        
+        // Display empty state
+        function displayEmptyState(message = null) {
+            const container = document.getElementById('foods-list');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <h3>${message || 'No Foods Saved Yet'}</h3>
+                    <p>Start by using the API-Manager to search for foods and save them here.</p>
+                    <button class="btn" onclick="window.open('http://localhost:5000', '_blank')">
+                        Open API-Manager
+                    </button>
+                </div>
+            `;
+        }
+        
+        // Update statistics
+        function updateStats() {
+            document.getElementById('total-foods').textContent = allFoods.length;
+            
+            // Count unique brands
+            const brands = new Set(allFoods.map(f => f.brandOwner || f.brand).filter(b => b));
+            document.getElementById('total-brands').textContent = brands.size || '-';
+            
+            // Last saved date
+            const lastSaved = allFoods
+                .filter(f => f.saved_at)
+                .map(f => new Date(f.saved_at))
+                .sort((a, b) => b - a)[0];
+            
+            document.getElementById('last-saved').textContent = 
+                lastSaved ? lastSaved.toLocaleDateString() : '-';
+        }
+        
+        // Filter foods based on search
+        function filterFoods() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            
+            if (!query) {
+                filteredFoods = allFoods;
+            } else {
+                filteredFoods = allFoods.filter(food => {
+                    const name = (food.description || food.name || '').toLowerCase();
+                    const brand = (food.brandOwner || food.brand || '').toLowerCase();
+                    return name.includes(query) || brand.includes(query);
+                });
+            }
+            
+            displayFoods(filteredFoods);
+        }
+        
+        // Navigation functions
+        function showAllFoods() {
+            filteredFoods = allFoods;
+            displayFoods(filteredFoods);
+            updateActiveMenuItem(0);
+        }
+        
+        function showByCategory(category) {
+            filteredFoods = allFoods.filter(food => 
+                (food.dataType || food.data_type) === category
+            );
+            displayFoods(filteredFoods);
+        }
+        
+        function showRecentlyAdded() {
+            filteredFoods = [...allFoods]
+                .filter(f => f.saved_at)
+                .sort((a, b) => new Date(b.saved_at) - new Date(a.saved_at))
+                .slice(0, 20);
+            displayFoods(filteredFoods);
+        }
+        
+        function updateActiveMenuItem(index) {
+            document.querySelectorAll('.menu-item').forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+        
+        // Action functions
+        function refreshFoods() {
+            loadSavedFoods();
+            showAlert('Foods refreshed successfully');
+        }
+        
+        function exportData() {
+            if (allFoods.length === 0) {
+                showAlert('No foods to export', 'error');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(allFoods, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `food-base-export-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            showAlert('Data exported successfully');
+        }
+        
+        function clearAllFoods() {
+            if (!confirm('Are you sure you want to delete all saved foods? This cannot be undone.')) {
+                return;
+            }
+            
+            // TODO: Implement clear all functionality
+            showAlert('Clear all functionality will be implemented with database', 'error');
+        }
+        
+        async function showFoodDetails(foodId) {
+            try {
+                // Show modal with loading state
+                openFoodModal();
+                
+                // Fetch detailed food data
+                const response = await fetch(`/api/foods/${foodId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const food = await response.json();
+                displayFoodDetails(food);
+                
+            } catch (error) {
+                console.error('Error loading food details:', error);
+                showModalError('Failed to load food details: ' + error.message);
+            }
+        }
+        
+        function openFoodModal() {
+            const modal = document.getElementById('food-modal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+        
+        function closeFoodModal() {
+            const modal = document.getElementById('food-modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restore scrolling
+            
+            // Reset states
+            currentFood = null;
+            isEditMode = false;
+            document.getElementById('edit-form').classList.remove('active');
+            document.getElementById('modal-content').style.display = 'block';
+            document.getElementById('modal-actions').style.display = 'none';
+        }
+        
+        function displayFoodDetails(food) {
+            // Store current food for editing/deleting
+            currentFood = food;
+            
+            // Update modal title
+            document.getElementById('modal-title').textContent = food.description || food.name || 'Unknown Food';
+            document.getElementById('modal-subtitle').textContent = 
+                `${food.brandOwner || food.brand || 'No Brand'} • ${food.dataType || food.data_type || 'Unknown Type'}`;
+            
+            // Show action buttons
+            document.getElementById('modal-actions').style.display = 'flex';
+            
+            // Reset edit mode
+            isEditMode = false;
+            document.getElementById('edit-form').classList.remove('active');
+            
+            // Build content sections
+            const content = document.getElementById('modal-content');
+            content.innerHTML = buildFoodDetailsContent(food);
+        }
+        
+        function buildFoodDetailsContent(food) {
+            let content = '';
+            
+            // Basic Information Section
+            content += `
+                <div class="food-details-section">
+                    <h3 class="section-title">📋 Basic Information</h3>
+                    <div class="details-grid">
+                        ${buildDetailItem('FDC ID', food.fdcId || food.fdc_id || 'N/A')}
+                        ${buildDetailItem('Data Type', food.dataType || food.data_type || 'N/A')}
+                        ${buildDetailItem('Food Category', food.food_category || 'N/A')}
+                        ${buildDetailItem('Published Date', food.publishedDate || food.published_date ? 
+                            new Date(food.publishedDate || food.published_date).toLocaleDateString() : 'N/A')}
+                        ${buildDetailItem('Market Country', food.market_country || 'N/A')}
+                        ${buildDetailItem('Saved Date', food.saved_at ? 
+                            new Date(food.saved_at).toLocaleString() : 'N/A')}
+                    </div>
+                </div>
+            `;
+            
+            // Nutritional Information Section
+            if (food.nutrients && food.nutrients.length > 0) {
+                content += `
+                    <div class="food-details-section">
+                        <h3 class="section-title">🥗 Nutritional Information</h3>
+                        <div class="nutrients-grid">
+                `;
+                
+                // Sort nutrients by importance (calories, macros first, then alphabetically)
+                const sortedNutrients = [...food.nutrients].sort((a, b) => {
+                    const importantNutrients = {
+                        'Energy': 1,
+                        'Protein': 2,
+                        'Total lipid (fat)': 3,
+                        'Carbohydrate, by difference': 4,
+                        'Fiber, total dietary': 5,
+                        'Sugars, Total': 6,
+                        'Sodium, Na': 7
+                    };
+                    
+                    const aName = a.name || a.nutrient?.name || '';
+                    const bName = b.name || b.nutrient?.name || '';
+                    
+                    const aImportance = importantNutrients[aName] || 999;
+                    const bImportance = importantNutrients[bName] || 999;
+                    
+                    if (aImportance !== bImportance) {
+                        return aImportance - bImportance;
+                    }
+                    
+                    return aName.localeCompare(bName);
+                });
+                
+                sortedNutrients.forEach(nutrient => {
+                    const name = nutrient.name || nutrient.nutrient?.name || 'Unknown Nutrient';
+                    const unit = nutrient.unit || nutrient.nutrient?.unitName || '';
+                    const value = nutrient.amount || nutrient.value || 0;
+                    
+                    content += `
+                        <div class="nutrient-item">
+                            <span class="nutrient-name">${name}</span>
+                            <span class="nutrient-value">${value}${unit}</span>
+                        </div>
+                    `;
+                });
+                
+                content += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Serving Portions Section
+            if (food.portions && food.portions.length > 0) {
+                content += `
+                    <div class="food-details-section">
+                        <h3 class="section-title">📏 Serving Portions</h3>
+                        <div class="portions-list">
+                `;
+                
+                food.portions.forEach(portion => {
+                    const amount = portion.amount || 1;
+                    const unit = portion.measure_unit_name || portion.modifier || 'serving';
+                    const weight = portion.gram_weight || 0;
+                    
+                    content += `
+                        <div class="portion-item">
+                            <span class="portion-desc">${amount} ${unit}</span>
+                            <span class="portion-weight">${weight}g</span>
+                        </div>
+                    `;
+                });
+                
+                content += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Ingredients Section
+            if (food.ingredients) {
+                content += `
+                    <div class="food-details-section">
+                        <h3 class="section-title">🧾 Ingredients</h3>
+                        <div class="ingredients-text">${food.ingredients}</div>
+                    </div>
+                `;
+            }
+            
+            return content;
+        }
+        
+        function buildDetailItem(label, value) {
+            return `
+                <div class="detail-item">
+                    <div class="detail-label">${label}</div>
+                    <div class="detail-value">${value}</div>
+                </div>
+            `;
+        }
+        
+        function showModalError(message) {
+            document.getElementById('modal-title').textContent = 'Error';
+            document.getElementById('modal-subtitle').textContent = '';
+            document.getElementById('modal-actions').style.display = 'none';
+            document.getElementById('modal-content').innerHTML = `
+                <div class="food-details-section">
+                    <div class="alert alert-error" style="margin: 0;">
+                        ${message}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Edit functionality
+        function toggleEditMode() {
+            if (!currentFood) return;
+            
+            isEditMode = !isEditMode;
+            const editForm = document.getElementById('edit-form');
+            const content = document.getElementById('modal-content');
+            
+            if (isEditMode) {
+                // Populate form fields
+                document.getElementById('edit-description').value = currentFood.description || '';
+                document.getElementById('edit-brand').value = currentFood.brand_owner || '';
+                document.getElementById('edit-brand-name').value = currentFood.brand_name || '';
+                document.getElementById('edit-ingredients').value = currentFood.ingredients || '';
+                document.getElementById('edit-market-country').value = currentFood.market_country || '';
+                
+                // Show form, hide content
+                editForm.classList.add('active');
+                content.style.display = 'none';
+                
+                // Update button text
+                document.querySelector('.btn-edit').innerHTML = '👁️ View';
+            } else {
+                // Hide form, show content
+                editForm.classList.remove('active');
+                content.style.display = 'block';
+                
+                // Update button text
+                document.querySelector('.btn-edit').innerHTML = '✏️ Edit';
+            }
+        }
+        
+        function cancelEdit() {
+            isEditMode = false;
+            document.getElementById('edit-form').classList.remove('active');
+            document.getElementById('modal-content').style.display = 'block';
+            document.querySelector('.btn-edit').innerHTML = '✏️ Edit';
+        }
+        
+        async function saveFood(event) {
+            event.preventDefault();
+            
+            if (!currentFood) return;
+            
+            const updateData = {
+                description: document.getElementById('edit-description').value,
+                brand_owner: document.getElementById('edit-brand').value || null,
+                brand_name: document.getElementById('edit-brand-name').value || null,
+                ingredients: document.getElementById('edit-ingredients').value || null,
+                market_country: document.getElementById('edit-market-country').value || null
+            };
+            
+            try {
+                const response = await fetch(`/api/foods/${currentFood.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to update food');
+                }
+                
+                const result = await response.json();
+                
+                // Update current food data
+                currentFood = result.food;
+                
+                // Refresh the modal display
+                displayFoodDetails(currentFood);
+                
+                // Refresh the foods list
+                loadSavedFoods();
+                
+                showAlert(`Food updated successfully! Updated: ${result.updated_fields.join(', ')}`);
+                
+            } catch (error) {
+                console.error('Error updating food:', error);
+                showAlert('Failed to update food: ' + error.message, 'error');
+            }
+        }
+        
+        // Delete functionality
+        function confirmDeleteFood() {
+            if (!currentFood) return;
+            
+            confirmAction = deleteCurrentFood;
+            document.getElementById('confirm-title').textContent = 'Delete Food';
+            document.getElementById('confirm-message').textContent = 
+                `Are you sure you want to delete "${currentFood.description || 'this food'}"? This action cannot be undone.`;
+            document.getElementById('confirm-action').textContent = 'Delete';
+            document.getElementById('confirm-dialog').classList.add('active');
+        }
+        
+        async function deleteCurrentFood() {
+            if (!currentFood) return;
+            
+            try {
+                const response = await fetch(`/api/foods/${currentFood.id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to delete food');
+                }
+                
+                // Close modal and refresh list
+                closeFoodModal();
+                loadSavedFoods();
+                
+                showAlert('Food deleted successfully');
+                
+            } catch (error) {
+                console.error('Error deleting food:', error);
+                showAlert('Failed to delete food: ' + error.message, 'error');
+            }
+        }
+        
+        // Confirmation dialog
+        function closeConfirmDialog() {
+            document.getElementById('confirm-dialog').classList.remove('active');
+            confirmAction = null;
+        }
+        
+        function executeConfirmedAction() {
+            if (confirmAction) {
+                confirmAction();
+            }
+            closeConfirmDialog();
+        }
+        
+        // Bulk operations functionality
+        function toggleBulkMode() {
+            isBulkMode = !isBulkMode;
+            const container = document.getElementById('foods-list');
+            const bulkHeader = document.getElementById('bulk-header');
+            const bulkToggle = document.getElementById('bulk-toggle');
+            
+            if (isBulkMode) {
+                container.classList.add('bulk-mode');
+                bulkHeader.classList.add('active');
+                bulkToggle.textContent = 'Exit Selection';
+                bulkToggle.classList.remove('btn-secondary');
+                bulkToggle.classList.add('btn-primary');
+            } else {
+                container.classList.remove('bulk-mode');
+                bulkHeader.classList.remove('active');
+                bulkToggle.textContent = 'Select Multiple';
+                bulkToggle.classList.remove('btn-primary');
+                bulkToggle.classList.add('btn-secondary');
+                selectedFoods.clear();
+                updateBulkInfo();
+            }
+            
+            // Refresh display to show/hide checkboxes
+            displayFoods(filteredFoods);
+        }
+        
+        function exitBulkMode() {
+            if (isBulkMode) {
+                toggleBulkMode();
+            }
+        }
+        
+        function toggleFoodSelection(foodId, event) {
+            event?.stopPropagation();
+            
+            if (selectedFoods.has(foodId)) {
+                selectedFoods.delete(foodId);
+            } else {
+                selectedFoods.add(foodId);
+            }
+            
+            updateBulkInfo();
+            displayFoods(filteredFoods); // Refresh to update selection styles
+        }
+        
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('select-all');
+            
+            if (selectAll.checked) {
+                // Select all visible foods
+                filteredFoods.forEach(food => selectedFoods.add(food.id));
+            } else {
+                // Deselect all
+                selectedFoods.clear();
+            }
+            
+            updateBulkInfo();
+            displayFoods(filteredFoods);
+        }
+        
+        function updateBulkInfo() {
+            const count = selectedFoods.size;
+            const bulkInfo = document.getElementById('bulk-info');
+            bulkInfo.textContent = `${count} food${count !== 1 ? 's' : ''} selected`;
+            
+            // Update select-all checkbox state
+            const selectAll = document.getElementById('select-all');
+            if (count === 0) {
+                selectAll.indeterminate = false;
+                selectAll.checked = false;
+            } else if (count === filteredFoods.length) {
+                selectAll.indeterminate = false;
+                selectAll.checked = true;
+            } else {
+                selectAll.indeterminate = true;
+            }
+        }
+        
+        function bulkDeleteFoods() {
+            if (selectedFoods.size === 0) {
+                showAlert('No foods selected for deletion', 'error');
+                return;
+            }
+            
+            const count = selectedFoods.size;
+            const foodNames = Array.from(selectedFoods)
+                .map(id => {
+                    const food = allFoods.find(f => f.id === id);
+                    return food?.description || food?.name || 'Unknown';
+                })
+                .slice(0, 3); // Show first 3 names
+            
+            let message = `Are you sure you want to delete ${count} food${count !== 1 ? 's' : ''}?`;
+            if (foodNames.length > 0) {
+                message += `\n\nIncluding: ${foodNames.join(', ')}`;
+                if (count > 3) {
+                    message += ` and ${count - 3} more...`;
+                }
+            }
+            message += '\n\nThis action cannot be undone.';
+            
+            confirmAction = executeBulkDelete;
+            document.getElementById('confirm-title').textContent = 'Delete Multiple Foods';
+            document.getElementById('confirm-message').textContent = message;
+            document.getElementById('confirm-action').textContent = `Delete ${count} Food${count !== 1 ? 's' : ''}`;
+            document.getElementById('confirm-dialog').classList.add('active');
+        }
+        
+        async function executeBulkDelete() {
+            const foodIds = Array.from(selectedFoods);
+            let deleteCount = 0;
+            let errors = [];
+            
+            // Delete foods one by one
+            for (const foodId of foodIds) {
+                try {
+                    const response = await fetch(`/api/foods/${foodId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        deleteCount++;
+                    } else {
+                        const error = await response.json();
+                        errors.push(`Food ID ${foodId}: ${error.error}`);
+                    }
+                } catch (error) {
+                    errors.push(`Food ID ${foodId}: ${error.message}`);
+                }
+            }
+            
+            // Clear selection and refresh
+            selectedFoods.clear();
+            exitBulkMode();
+            loadSavedFoods();
+            
+            // Show results
+            if (deleteCount > 0) {
+                showAlert(`Successfully deleted ${deleteCount} food${deleteCount !== 1 ? 's' : ''}`);
+            }
+            
+            if (errors.length > 0) {
+                console.error('Bulk delete errors:', errors);
+                showAlert(`${errors.length} deletion${errors.length !== 1 ? 's' : ''} failed. Check console for details.`, 'error');
+            }
+        }
+        
+        // Utility functions
+        function showAlert(message, type = 'success') {
+            const alertsContainer = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            alertsContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

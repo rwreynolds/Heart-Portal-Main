@@ -14,20 +14,80 @@ from nutrition_api_manager import (
     APIError
 )
 import json
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 
-# Global manager instance
+# Global manager instance with API key management
 manager = EnhancedNutritionAPIManager()
+
+# API Key management
+def get_usda_api_key():
+    """Get USDA API key from environment or return None"""
+    return os.getenv('USDA_API_KEY')
+
+def is_api_configured():
+    """Check if USDA API key is configured"""
+    api_key = get_usda_api_key()
+    return api_key and api_key.strip() != '' and api_key != 'your_actual_usda_api_key_here'
+
+def initialize_apis():
+    """Initialize API instances if keys are available"""
+    try:
+        if is_api_configured():
+            api_key = get_usda_api_key()
+            if api_key:  # Additional type check to satisfy type checker
+                manager.add_enhanced_usda_api(api_key)
+                print(f"✅ USDA API initialized successfully")
+                return True
+            else:
+                print("⚠️ USDA API key is None after configuration check")
+                return False
+        else:
+            print("⚠️ USDA API key not configured. Please set USDA_API_KEY in .env file")
+            return False
+    except Exception as e:
+        print(f"❌ Failed to initialize USDA API: {e}")
+        return False
+
+# Initialize APIs on startup
+api_initialized = initialize_apis()
+
+def require_api_key(f):
+    """Decorator to check if API is configured before processing requests"""
+    def wrapper(*args, **kwargs):
+        if not is_api_configured():
+            return jsonify({
+                'error': 'USDA API key not configured',
+                'message': 'Please configure your USDA API key in the .env file',
+                'configured': False
+            }), 503  # Service Unavailable
+        return f(*args, **kwargs)
+    wrapper.__name__ = f.__name__
+    return wrapper
 
 @app.route('/')
 def index():
     """Serve the main application page"""
     return render_template('index.html')
 
+@app.route('/api/status')
+def api_status():
+    """Get API configuration status"""
+    return jsonify({
+        'configured': is_api_configured(),
+        'apis_available': ['USDA FoodData Central'] if is_api_configured() else [],
+        'message': 'API is ready' if is_api_configured() else 'Please configure USDA API key in .env file'
+    })
+
 # Add these new routes to your existing app.py
 
 @app.route('/api/advanced-search', methods=['POST'])
+@require_api_key
 def advanced_search():
     """Advanced search with filtering options"""
     try:
@@ -104,6 +164,7 @@ def advanced_search():
         return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 @app.route('/api/foods-list', methods=['POST'])
+@require_api_key
 def get_foods_list():
     """Get paginated list of foods by category"""
     try:
@@ -176,6 +237,7 @@ def get_foods_list():
         return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 @app.route('/api/compare-foods', methods=['POST'])
+@require_api_key
 def compare_foods():
     """Compare multiple foods by FDC IDs"""
     try:
@@ -219,6 +281,7 @@ def compare_foods():
         return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
 
 @app.route('/api/data-types', methods=['GET'])
+@require_api_key
 def get_data_types():
     """Get available data types"""
     return jsonify({
@@ -232,6 +295,7 @@ def get_data_types():
     })
 
 @app.route('/api/nutrients-list', methods=['GET'])
+@require_api_key
 def get_nutrients_list():
     """Get list of common nutrients for filtering"""
     # Common nutrients with their IDs from USDA database
@@ -252,6 +316,7 @@ def get_nutrients_list():
     return jsonify({'nutrients': common_nutrients})
 
 @app.route('/api/food-details/<int:fdc_id>', methods=['GET'])
+@require_api_key
 def get_food_details(fdc_id):
     """Get detailed food information by FDC ID"""
     try:
@@ -268,6 +333,108 @@ def get_food_details(fdc_id):
         return jsonify({'error': str(e)}), 500
     except Exception as e:
         return jsonify({'error': f'Unexpected error: {str(e)}'}), 500
+
+@app.route('/api/save-to-foodbase', methods=['POST'])
+def save_to_foodbase():
+    """Save a food item to Food-Base component"""
+    import requests
+    
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        fdc_id = data.get('fdc_id')
+        if not fdc_id:
+            return jsonify({'error': 'FDC ID is required'}), 400
+        
+        # Get enhanced API instance
+        if 'usda_enhanced' not in manager.apis:
+            return jsonify({'error': 'Enhanced USDA API not configured'}), 400
+        
+        api = manager.apis['usda_enhanced']
+        
+        # Fetch complete food details from USDA API
+        complete_food_data = api.get_food_details(fdc_id)
+        
+        # Send to Food-Base component
+        FOOD_BASE_URL = 'http://localhost:5001'  # Food-Base component URL
+        
+        response = requests.post(
+            f'{FOOD_BASE_URL}/api/foods',
+            json=complete_food_data,
+            timeout=10,
+            headers={'Content-Type': 'application/json'}
+        )
+        
+        if response.status_code in [200, 201]:
+            result = response.json()
+            return jsonify({
+                'success': True,
+                'message': result.get('message', 'Food saved successfully'),
+                'duplicate': result.get('duplicate', False),
+                'food': result.get('food', {})
+            })
+        else:
+            error_data = response.json() if response.headers.get('content-type', '').startswith('application/json') else {}
+            return jsonify({
+                'success': False,
+                'error': error_data.get('error', f'Food-Base returned status {response.status_code}')
+            }), response.status_code
+            
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'success': False,
+            'error': 'Could not connect to Food-Base component. Make sure it is running on port 5001.'
+        }), 503
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'success': False,
+            'error': 'Request to Food-Base timed out. Please try again.'
+        }), 504
+    except APIError as e:
+        return jsonify({
+            'success': False,
+            'error': f'Failed to fetch food details: {str(e)}'
+        }), 500
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}'
+        }), 500
+
+@app.route('/api/check-foodbase-connection', methods=['GET'])
+def check_foodbase_connection():
+    """Check if Food-Base component is available"""
+    import requests
+    
+    try:
+        FOOD_BASE_URL = 'http://localhost:5001'
+        response = requests.get(f'{FOOD_BASE_URL}/api/health', timeout=5)
+        
+        if response.status_code == 200:
+            health_data = response.json()
+            return jsonify({
+                'connected': True,
+                'status': health_data.get('status', 'unknown'),
+                'foods_stored': health_data.get('foods_stored', 0)
+            })
+        else:
+            return jsonify({
+                'connected': False,
+                'error': f'Food-Base returned status {response.status_code}'
+            })
+            
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'connected': False,
+            'error': 'Could not connect to Food-Base component'
+        })
+    except Exception as e:
+        return jsonify({
+            'connected': False,
+            'error': str(e)
+        })
 
 @app.route('/api/add-enhanced-provider', methods=['POST'])
 def add_enhanced_provider():
@@ -461,4 +628,6 @@ def format_food_comparison(results):
     return formatted
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    import os
+port = int(os.environ.get('PORT', 5000))
+app.run(debug=True, port=port)
