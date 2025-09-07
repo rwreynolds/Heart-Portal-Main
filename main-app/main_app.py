@@ -3,7 +3,7 @@ Main Flask Application for Heart Failure Portal
 Serves landing page, blog, about pages
 """
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 from datetime import datetime
 import os
 
@@ -71,6 +71,32 @@ def contact():
         return jsonify({'success': True, 'message': 'Thank you for your message!'})
     
     return render_template('contact.html')
+
+@app.route('/redirect/api')
+def redirect_to_api():
+    """Redirect to API Manager - environment-aware"""
+    # Check if we're running in production (server has heartfailureportal.com in hostname)
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com:5000')
+    
+    # Local development
+    return redirect('http://localhost:5000')
+
+@app.route('/redirect/foodbase')
+def redirect_to_foodbase():
+    """Redirect to Food-Base - environment-aware"""
+    # Check if we're running in production (server has heartfailureportal.com in hostname)
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com:5001')
+    
+    # Local development
+    return redirect('http://localhost:5001')
 
 @app.errorhandler(404)
 def page_not_found(e):
