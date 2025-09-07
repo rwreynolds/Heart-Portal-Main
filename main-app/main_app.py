@@ -80,7 +80,7 @@ def redirect_to_api():
         with open('/etc/hostname', 'r') as f:
             hostname = f.read().strip()
         if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com:5000')
+            return redirect('http://heartfailureportal.com/api-manager/')
     
     # Local development
     return redirect('http://localhost:5000')
@@ -93,7 +93,7 @@ def redirect_to_foodbase():
         with open('/etc/hostname', 'r') as f:
             hostname = f.read().strip()
         if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com:5001')
+            return redirect('http://heartfailureportal.com/food-base/')
     
     # Local development
     return redirect('http://localhost:5001')
