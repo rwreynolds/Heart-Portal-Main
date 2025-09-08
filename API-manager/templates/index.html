@@ -499,7 +499,7 @@
         
         async function checkApiStatus() {
             try {
-                const response = await fetch('/api/status');
+                const response = await fetch('./api/status');
                 const status = await response.json();
                 apiKeyConfigured = status.configured;
                 updateApiStatusDisplay(status);
@@ -581,7 +581,7 @@
             }
             
             try {
-                const response = await fetch('/api/add-enhanced-provider', {
+                const response = await fetch('./api/add-enhanced-provider', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -608,7 +608,7 @@
         // Load available data types
         async function loadDataTypes() {
             try {
-                const response = await fetch('/api/data-types');
+                const response = await fetch('./api/data-types');
                 const data = await response.json();
                 
                 currentDataTypes = data.dataTypes;
@@ -671,7 +671,7 @@
             try {
                 showLoading('advanced-search-results');
                 
-                const response = await fetch('/api/advanced-search', {
+                const response = await fetch('./api/advanced-search', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -774,7 +774,7 @@
             try {
                 showLoading('browse-results');
                 
-                const response = await fetch('/api/foods-list', {
+                const response = await fetch('./api/foods-list', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -908,7 +908,7 @@
 
         async function compareFood(fdcIds) {
             try {
-                const response = await fetch('/api/compare-foods', {
+                const response = await fetch('./api/compare-foods', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1333,7 +1333,7 @@
         
         async function checkFoodBaseConnection() {
             try {
-                const response = await fetch('/api/check-foodbase-connection');
+                const response = await fetch('./api/check-foodbase-connection');
                 const data = await response.json();
                 
                 foodBaseConnection = data;
@@ -1383,7 +1383,7 @@
             buttonElement.disabled = true;
             
             try {
-                const response = await fetch('/api/save-to-foodbase', {
+                const response = await fetch('./api/save-to-foodbase', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

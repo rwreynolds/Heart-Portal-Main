@@ -931,7 +931,7 @@
         // Load saved foods from API
         async function loadSavedFoods() {
             try {
-                const response = await fetch('/api/foods');
+                const response = await fetch('./api/foods');
                 const data = await response.json();
                 
                 allFoods = data.foods || [];
@@ -1111,7 +1111,7 @@
                 openFoodModal();
                 
                 // Fetch detailed food data
-                const response = await fetch(`/api/foods/${foodId}`);
+                const response = await fetch(`./api/foods/${foodId}`);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
@@ -1352,7 +1352,7 @@
             };
             
             try {
-                const response = await fetch(`/api/foods/${currentFood.id}`, {
+                const response = await fetch(`./api/foods/${currentFood.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1400,7 +1400,7 @@
             if (!currentFood) return;
             
             try {
-                const response = await fetch(`/api/foods/${currentFood.id}`, {
+                const response = await fetch(`./api/foods/${currentFood.id}`, {
                     method: 'DELETE'
                 });
                 
@@ -1551,7 +1551,7 @@
             // Delete foods one by one
             for (const foodId of foodIds) {
                 try {
-                    const response = await fetch(`/api/foods/${foodId}`, {
+                    const response = await fetch(`./api/foods/${foodId}`, {
                         method: 'DELETE'
                     });
                     

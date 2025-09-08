@@ -358,7 +358,7 @@ def save_to_foodbase():
         complete_food_data = api.get_food_details(fdc_id)
         
         # Send to Food-Base component
-        FOOD_BASE_URL = 'http://localhost:5001'  # Food-Base component URL
+        FOOD_BASE_URL = 'http://127.0.0.1:5001'  # Food-Base component URL
         
         response = requests.post(
             f'{FOOD_BASE_URL}/api/foods',
@@ -409,7 +409,7 @@ def check_foodbase_connection():
     import requests
     
     try:
-        FOOD_BASE_URL = 'http://localhost:5001'
+        FOOD_BASE_URL = 'http://127.0.0.1:5001'
         response = requests.get(f'{FOOD_BASE_URL}/api/health', timeout=5)
         
         if response.status_code == 200:
