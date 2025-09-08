@@ -1460,8 +1460,8 @@
                 if (!existingLink) {
                     const link = document.createElement('a');
                     link.className = 'foodbase-link';
-                    link.href = '/food-base/';
-                    link.target = '_blank';
+                    link.href = '../food-base/';
+                    // Remove target='_blank' to open in same window
                     link.style.cssText = 'display: inline-block; margin-top: 12px; padding: 8px 16px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-size: 0.9rem;';
                     link.textContent = '🍎 Open Food-Base';
                     header.appendChild(link);
