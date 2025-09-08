@@ -99,7 +99,7 @@ deploy_to_server() {
     fi
     
     # Execute deployment on server
-    ssh -i "$SSH_KEY" root@"$SERVER_HOST" "cd $PROJECT_DIR && ./deploy.sh"
+    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" root@"$SERVER_HOST" "cd $PROJECT_DIR && ./deploy.sh"
 }
 
 # Main deployment process
