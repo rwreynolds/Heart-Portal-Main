@@ -33,6 +33,32 @@ error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+# Check development environment
+check_environment() {
+    log "Checking development environment..."
+    
+    # Check if we're in the correct directory
+    local current_dir=$(pwd)
+    local expected_path="/Users/mrrobot/VSCodeProjects/Heart-Portal-Main"
+    
+    if [[ "$current_dir" != "$expected_path" ]]; then
+        error "Wrong directory! You're in: $current_dir"
+        error "Should be in: $expected_path"
+        echo "Run: cd $expected_path"
+        return 1
+    fi
+    
+    # Check that we're not on the server
+    local hostname=$(hostname)
+    if [[ "$hostname" == *"ubuntu"* ]] || [[ "$hostname" == *"heartfailure"* ]]; then
+        error "WARNING: You appear to be on the server!"
+        error "Never deploy from the server. Work locally instead."
+        return 1
+    fi
+    
+    success "Environment check passed - you're working locally"
+}
+
 # Check if there are uncommitted changes
 check_git_status() {
     log "Checking git status..."
@@ -82,6 +108,11 @@ main() {
     echo "🚀 Heart Portal Deployment"
     echo "========================================"
     echo
+    
+    # Check development environment
+    if ! check_environment; then
+        exit 1
+    fi
     
     # Check git status
     if ! check_git_status; then
