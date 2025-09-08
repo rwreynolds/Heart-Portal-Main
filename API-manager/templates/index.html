@@ -1460,8 +1460,12 @@
                 if (!existingLink) {
                     const link = document.createElement('a');
                     link.className = 'foodbase-link';
-                    link.href = '../food-base/';
-                    // Remove target='_blank' to open in same window
+                    // Environment-aware URL
+                    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                        link.href = 'http://localhost:5001'; // Local development
+                    } else {
+                        link.href = '/food-base/'; // Production via nginx proxy
+                    }
                     link.style.cssText = 'display: inline-block; margin-top: 12px; padding: 8px 16px; background: #28a745; color: white; text-decoration: none; border-radius: 6px; font-size: 0.9rem;';
                     link.textContent = '🍎 Open Food-Base';
                     header.appendChild(link);
