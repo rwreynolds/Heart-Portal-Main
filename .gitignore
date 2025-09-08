@@ -4,6 +4,12 @@
 # API configuration (may contain sensitive data)
 api_config.json
 
+# Database files (local data should not be deployed)
+*.db
+*.sqlite
+*.sqlite3
+Food-Base/database/food_base.db
+
 # Python
 __pycache__/
 *.py[cod]
