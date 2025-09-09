@@ -12,7 +12,7 @@ Environment=PATH=/opt/heart-portal/main-app/venv/bin
 Environment=FLASK_APP=main_app.py
 Environment=FLASK_ENV=production
 Environment=FLASK_DEBUG=0
-ExecStartPre=+/bin/bash -c 'lsof -ti :3000 | xargs kill -9 || true'
+ExecStartPre=+/bin/bash -c '/usr/bin/lsof -ti :3000 | /usr/bin/xargs kill -9 || true'
 ExecStart=/opt/heart-portal/main-app/venv/bin/python main_app.py
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=mixed
