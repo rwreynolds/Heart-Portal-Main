@@ -90,4 +90,6 @@ def internal_server_error(e):
     return render_template('500.html'), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=3000, host='0.0.0.0')
+    # Use debug=False in production, True for development
+    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
+    app.run(debug=debug_mode, port=3000, host='0.0.0.0')
