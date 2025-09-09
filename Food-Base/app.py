@@ -13,6 +13,42 @@ from food_storage import FoodStorageService
 
 app = Flask(__name__)
 
+def get_main_app_url():
+    """Get the main app URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com'
+    return 'http://localhost:3000'
+
+def get_blog_url():
+    """Get the blog URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/blog-manager/'
+    return 'http://localhost:5002'
+
+def get_nutrition_url():
+    """Get the Nutrition Database URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/nutrition-database/'
+    return 'http://localhost:5000'
+
+# Make functions available in templates
+@app.context_processor
+def utility_processor():
+    return dict(
+        get_main_app_url=get_main_app_url,
+        get_blog_url=get_blog_url,
+        get_nutrition_url=get_nutrition_url
+    )
+
 # Initialize database
 db = init_database(app)
 

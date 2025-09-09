@@ -1,0 +1,26 @@
+# Heart Portal - Shared Base Requirements
+# Common packages used across all components
+
+# Flask Framework
+flask>=3.1.0
+werkzeug>=3.1.0
+jinja2>=3.1.0
+
+# HTTP Requests
+requests>=2.31.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# Date/Time Utilities
+python-dateutil>=2.8.0
+
+# JSON/Data Handling
+click>=8.1.0
+
+# Security
+itsdangerous>=2.2.0
+markupsafe>=2.1.0
+
+# Template Engine Support
+blinker>=1.6.0

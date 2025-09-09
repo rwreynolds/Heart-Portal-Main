@@ -71,8 +71,9 @@ check_local_files() {
         "deploy.sh"
         "download-database.sh"
         "DEPLOYMENT.md"
-        "API-manager/app.py"
+        "Nutrition-Database/app.py"
         "Food-Base/app.py"
+        "Blog-Manager/app.py"
         "main-app/main_app.py"
     )
     
@@ -133,13 +134,15 @@ show_local_servers() {
     echo "🖥️  Local Development Servers:"
     echo "================================"
     echo "Main App:     http://localhost:3000"
-    echo "API Manager:  http://localhost:5000"  
+    echo "Nutrition-DB: http://localhost:5000"  
     echo "Food-Base:    http://localhost:5001"
+    echo "Blog-Manager: http://localhost:5002"
     echo
     echo "Production URLs (for reference only):"
     echo "Main Site:    https://heartfailureportal.com"
-    echo "API Manager:  https://heartfailureportal.com/api-manager/"
+    echo "Nutrition-DB: https://heartfailureportal.com/nutrition-database/"
     echo "Food-Base:    https://heartfailureportal.com/food-base/"
+    echo "Blog-Manager: https://heartfailureportal.com/blog-manager/"
 }
 
 # Main check function

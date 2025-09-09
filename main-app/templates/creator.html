@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator - Heart Failure Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .header {
+            background: #dc2626;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: #fecaca;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #dc2626;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            top: 100%;
+            right: 0;
+        }
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 5px;
+        }
+        .dropdown-content a:hover {
+            background-color: #b91c1c;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .content {
+            background: white;
+            margin: 40px 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .content-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .content-header h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .content-header p {
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .content-body {
+            padding: 60px 40px;
+            line-height: 1.8;
+        }
+        .content-body h2 {
+            color: #667eea;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .content-body h3 {
+            color: #555;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .creator-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 40px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border-left: 4px solid #667eea;
+        }
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .tech-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+        .tech-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+        }
+        @media (max-width: 768px) {
+            .content-header {
+                padding: 40px 20px;
+            }
+            .content-header h1 {
+                font-size: 2rem;
+            }
+            .content-body {
+                padding: 40px 20px;
+            }
+            .creator-info {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">❤️ Heart Portal</div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog">Blog</a></li>
+                    <li class="dropdown">
+                        <a href="#">Tools</a>
+                        <div class="dropdown-content">
+                            <a href="{{ url_for('redirect_to_nutrition') }}">🔍 Nutrition Database</a>
+                            <a href="{{ url_for('redirect_to_foodbase') }}">🍎 Food Storage</a>
+                        </div>
+                    </li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/creator">Creator</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content">
+            <div class="content-header">
+                <h1>About the Creator</h1>
+                <p>Passionate about improving heart health through technology</p>
+            </div>
+            
+            <div class="content-body">
+                <div class="creator-info">
+                    <h2>👋 Hello! I'm the creator of Heart Portal</h2>
+                    <p>Heart Portal was born from a passion for combining technology with healthcare to make a meaningful difference in people's lives. As someone deeply interested in both software development and health advocacy, I recognized the need for specialized tools that could help heart failure patients better manage their nutrition.</p>
+                </div>
+
+                <h2>Why I Built Heart Portal</h2>
+                <p>Heart failure affects millions of people worldwide, and nutrition management is a critical but often challenging aspect of care. I wanted to create a platform that would:</p>
+                
+                <ul>
+                    <li><strong>Simplify complex nutritional information</strong> - Making USDA data accessible and heart-failure focused</li>
+                    <li><strong>Provide practical tools</strong> - Not just information, but actionable resources for daily use</li>
+                    <li><strong>Educate and empower</strong> - Helping users understand the 'why' behind dietary recommendations</li>
+                    <li><strong>Support the community</strong> - Creating a resource specifically designed for the heart failure community</li>
+                </ul>
+
+                <h2>Technical Approach</h2>
+                <p>Heart Portal is built with modern web technologies, focusing on reliability, accessibility, and user experience. The platform uses a microservices architecture to ensure scalability and maintainability.</p>
+
+                <div class="tech-stack">
+                    <div class="tech-item">
+                        <h4>🌐 Frontend</h4>
+                        <p>Clean, responsive HTML/CSS with JavaScript for interactive features</p>
+                    </div>
+                    <div class="tech-item">
+                        <h4>⚙️ Backend</h4>
+                        <p>Python Flask framework with modular component architecture</p>
+                    </div>
+                    <div class="tech-item">
+                        <h4>🗄️ Database</h4>
+                        <p>SQLite for reliable local storage with easy deployment</p>
+                    </div>
+                    <div class="tech-item">
+                        <h4>🔌 APIs</h4>
+                        <p>USDA Food Data Central integration for comprehensive nutrition data</p>
+                    </div>
+                </div>
+
+                <h2>Design Philosophy</h2>
+                <h3>User-Centered Design</h3>
+                <p>Every feature is designed with the end user in mind - heart failure patients who need practical, easy-to-use tools for managing their nutrition.</p>
+                
+                <h3>Evidence-Based Information</h3>
+                <p>All content and recommendations are based on established medical guidelines and reputable sources, with clear disclaimers about the importance of professional medical care.</p>
+                
+                <h3>Accessibility First</h3>
+                <p>The platform is designed to be accessible to users of all technical skill levels, with clear navigation and intuitive interfaces.</p>
+
+                <h2>Continuous Improvement</h2>
+                <p>Heart Portal is continuously evolving based on user needs and the latest developments in heart failure care and nutrition science. I'm committed to maintaining and improving this resource to serve the heart failure community better.</p>
+
+                <h2>A Personal Note</h2>
+                <p>Creating Heart Portal has been both a technical challenge and a deeply meaningful project. I hope this platform serves as a valuable resource in your heart health journey. Remember, while technology can provide helpful tools and information, your healthcare team remains your most important resource.</p>
+                
+                <p><em>Stay heart-healthy!</em> ❤️</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Heart Failure Portal. Created to support heart health through better nutrition.</p>
+            <p>Always consult with your healthcare provider before making dietary changes.</p>
+        </div>
+    </footer>
+</body>
+</html>

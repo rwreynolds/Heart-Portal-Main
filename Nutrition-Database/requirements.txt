@@ -1,0 +1,16 @@
+# Nutrition Database - USDA Food Data Central Interface
+# Inherits base requirements and adds API-specific packages
+
+# Shared base packages
+-r ../requirements-base.txt
+
+# USDA API and data processing packages
+requests-cache>=1.1.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Data validation
+marshmallow>=3.19.0
+
+# Rate limiting for API calls
+ratelimit>=2.2.0

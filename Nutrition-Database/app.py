@@ -22,6 +22,42 @@ load_dotenv()
 
 app = Flask(__name__)
 
+def get_main_app_url():
+    """Get the main app URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com'
+    return 'http://localhost:3000'
+
+def get_blog_url():
+    """Get the blog URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/blog-manager/'
+    return 'http://localhost:5002'
+
+def get_foodbase_url():
+    """Get the Food-Base URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/food-base/'
+    return 'http://localhost:5001'
+
+# Make functions available in templates
+@app.context_processor
+def utility_processor():
+    return dict(
+        get_main_app_url=get_main_app_url,
+        get_blog_url=get_blog_url,
+        get_foodbase_url=get_foodbase_url
+    )
+
 # Global manager instance with API key management
 manager = EnhancedNutritionAPIManager()
 

@@ -1,0 +1,8 @@
+# Main App - Heart Portal Navigation Hub
+# Inherits base requirements and adds specific packages
+
+# Shared base packages
+-r ../requirements-base.txt
+
+# Main app specific packages (currently none needed)
+# Add any main-app specific dependencies here

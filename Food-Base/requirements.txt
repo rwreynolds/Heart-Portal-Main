@@ -1,4 +1,19 @@
-Flask==3.0.3
-Flask-SQLAlchemy==3.1.1
-SQLAlchemy==2.0.36
-Werkzeug==3.1.3
+# Food-Base - Personal Food Storage System
+# Inherits base requirements and adds database-specific packages
+
+# Shared base packages
+-r ../requirements-base.txt
+
+# Database packages
+flask-sqlalchemy>=3.0.0
+sqlalchemy>=2.0.0
+
+# Database migrations
+flask-migrate>=4.0.0
+
+# Food/nutrition data processing
+pandas>=2.0.0
+
+# Data validation
+wtforms>=3.0.0
+flask-wtf>=1.1.0

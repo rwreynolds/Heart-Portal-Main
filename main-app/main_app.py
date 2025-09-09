@@ -9,25 +9,6 @@ import os
 
 app = Flask(__name__)
 
-# Sample blog posts data (you'll want to use a database later)
-BLOG_POSTS = [
-    {
-        'id': 1,
-        'title': 'Understanding Heart Failure and Nutrition',
-        'content': 'Heart failure affects millions of people worldwide. Proper nutrition plays a crucial role in managing symptoms and improving quality of life...',
-        'date': datetime(2025, 1, 15),
-        'author': 'Your Name',
-        'excerpt': 'Learn how nutrition impacts heart failure management and daily living.'
-    },
-    {
-        'id': 2,
-        'title': 'The USDA Database: A Powerful Tool for Heart Health',
-        'content': 'The USDA Food Data Central provides comprehensive nutritional information that can help heart failure patients make informed dietary choices...',
-        'date': datetime(2025, 1, 10),
-        'author': 'Your Name',
-        'excerpt': 'Discover how to use nutritional data to support heart-healthy eating.'
-    }
-]
 
 @app.route('/')
 def landing_page():
@@ -35,17 +16,17 @@ def landing_page():
     return render_template('landing.html')
 
 @app.route('/blog')
-def blog_list():
-    """Blog post listing page"""
-    return render_template('blog.html', posts=BLOG_POSTS)
-
-@app.route('/blog/<int:post_id>')
-def blog_post(post_id):
-    """Individual blog post page"""
-    post = next((p for p in BLOG_POSTS if p['id'] == post_id), None)
-    if not post:
-        return render_template('404.html'), 404
-    return render_template('blog_post.html', post=post)
+def redirect_to_blog():
+    """Redirect to Blog Manager - environment-aware"""
+    # Check if we're running in production (server has heartfailureportal.com in hostname)
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/blog-manager/')
+    
+    # Local development
+    return redirect('http://localhost:5002')
 
 @app.route('/about')
 def about_portal():
@@ -72,15 +53,15 @@ def contact():
     
     return render_template('contact.html')
 
-@app.route('/redirect/api')
-def redirect_to_api():
-    """Redirect to API Manager - environment-aware"""
+@app.route('/redirect/nutrition')
+def redirect_to_nutrition():
+    """Redirect to Nutrition Database - environment-aware"""
     # Check if we're running in production (server has heartfailureportal.com in hostname)
     if os.path.exists('/etc/hostname'):
         with open('/etc/hostname', 'r') as f:
             hostname = f.read().strip()
         if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/api-manager/')
+            return redirect('http://heartfailureportal.com/nutrition-database/')
     
     # Local development
     return redirect('http://localhost:5000')

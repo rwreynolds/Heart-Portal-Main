@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - Heart Failure Portal</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .header {
+            background: #dc2626;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: #fecaca;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #dc2626;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            top: 100%;
+            right: 0;
+        }
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 5px;
+        }
+        .dropdown-content a:hover {
+            background-color: #b91c1c;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .content {
+            background: white;
+            margin: 40px 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .content-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+        .content-header h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .content-header p {
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .content-body {
+            padding: 60px 40px;
+            line-height: 1.8;
+        }
+        .content-body h2 {
+            color: #667eea;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .content-body h3 {
+            color: #555;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .feature-card h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+        }
+        @media (max-width: 768px) {
+            .content-header {
+                padding: 40px 20px;
+            }
+            .content-header h1 {
+                font-size: 2rem;
+            }
+            .content-body {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <div class="logo">❤️ Heart Portal</div>
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/blog">Blog</a></li>
+                    <li class="dropdown">
+                        <a href="#">Tools</a>
+                        <div class="dropdown-content">
+                            <a href="{{ url_for('redirect_to_nutrition') }}">🔍 Nutrition Database</a>
+                            <a href="{{ url_for('redirect_to_foodbase') }}">🍎 Food Storage</a>
+                        </div>
+                    </li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/creator">Creator</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content">
+            <div class="content-header">
+                <h1>About Heart Portal</h1>
+                <p>Empowering heart failure patients through comprehensive nutrition management</p>
+            </div>
+            
+            <div class="content-body">
+                <h2>Our Mission</h2>
+                <p>Heart Portal is designed specifically for individuals living with heart failure, providing comprehensive tools and resources to help manage nutrition and improve quality of life. We believe that proper nutrition education and management are crucial components of heart failure care.</p>
+                
+                <h2>What We Offer</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🔍 Nutrition Database</h4>
+                        <p>Access comprehensive nutritional information from the USDA Food Data Central, specifically focused on nutrients important for heart health management.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🍎 Food Storage</h4>
+                        <p>Save and organize your favorite heart-healthy foods with detailed nutritional profiles for easy meal planning and dietary tracking.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📚 Educational Blog</h4>
+                        <p>Expert insights, practical tips, and evidence-based guidance for living well with heart failure through proper nutrition.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🎯 Heart-Focused Approach</h4>
+                        <p>Every feature is designed with heart failure management in mind, focusing on sodium restriction, fluid management, and heart-healthy eating.</p>
+                    </div>
+                </div>
+
+                <h2>Why Heart Portal?</h2>
+                <p>Living with heart failure requires careful attention to diet and nutrition. Our platform brings together the tools and information you need in one place, making it easier to:</p>
+                
+                <h3>Make Informed Food Choices</h3>
+                <p>Access detailed nutritional information to help you stay within recommended guidelines for sodium, fluid intake, and other important nutrients.</p>
+                
+                <h3>Plan Heart-Healthy Meals</h3>
+                <p>Save your favorite low-sodium foods and recipes, making meal planning simpler and more effective.</p>
+                
+                <h3>Learn and Grow</h3>
+                <p>Stay informed with our educational content, written specifically for the heart failure community.</p>
+
+                <h2>Important Medical Disclaimer</h2>
+                <p><strong>Heart Portal is an educational resource and should not replace professional medical advice.</strong> Always consult with your healthcare provider, cardiologist, or registered dietitian before making significant changes to your diet or treatment plan. Every person's heart failure journey is unique, and your medical team is best positioned to provide personalized guidance.</p>
+                
+                <h2>Our Commitment</h2>
+                <p>We are committed to providing accurate, up-to-date nutritional information and resources. Our platform is continuously updated to reflect the latest guidelines and best practices in heart failure nutrition management.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Heart Failure Portal. Created to support heart health through better nutrition.</p>
+            <p>Always consult with your healthcare provider before making dietary changes.</p>
+        </div>
+    </footer>
+</body>
+</html>

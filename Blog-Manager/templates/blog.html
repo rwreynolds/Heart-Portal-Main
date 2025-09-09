@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heart Failure Portal - Nutrition & Wellness</title>
+    <title>Blog - Heart Failure Portal</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -11,6 +11,7 @@
             padding: 0;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #333;
+            min-height: 100vh;
         }
         .container {
             max-width: 1200px;
@@ -76,92 +77,75 @@
         .dropdown:hover .dropdown-content {
             display: block;
         }
-        .hero {
+        .blog-header {
             text-align: center;
-            padding: 80px 0;
+            padding: 60px 0 40px;
             color: white;
         }
-        .hero h1 {
-            font-size: 3.5rem;
+        .blog-header h1 {
+            font-size: 3rem;
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+        .blog-header p {
+            font-size: 1.2rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
-        .cta-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            text-decoration: none;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .btn-primary {
+        .blog-content {
             background: white;
-            color: #667eea;
+            padding: 60px 0;
+            min-height: calc(100vh - 400px);
         }
-        .btn-secondary {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid white;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .features {
-            background: white;
-            padding: 80px 0;
-        }
-        .features-grid {
+        .blog-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 40px;
-            margin-top: 50px;
+            margin-top: 40px;
         }
-        .feature-card {
-            text-align: center;
-            padding: 40px 20px;
+        .blog-card {
+            background: white;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
         }
-        .feature-card:hover {
+        .blog-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
+        .blog-card-content {
+            padding: 30px;
         }
-        .feature-card h3 {
+        .blog-card h3 {
             color: #667eea;
             margin-bottom: 15px;
+            font-size: 1.4rem;
         }
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: #333;
+        .blog-card h3 a {
+            text-decoration: none;
+            color: inherit;
         }
-        .section-subtitle {
-            text-align: center;
-            font-size: 1.2rem;
+        .blog-card h3 a:hover {
+            color: #5a67d8;
+        }
+        .blog-meta {
             color: #666;
-            max-width: 600px;
-            margin: 0 auto;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .blog-excerpt {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .read-more {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .read-more:hover {
+            color: #5a67d8;
         }
         .footer {
             background: #333;
@@ -177,8 +161,8 @@
             <nav class="nav">
                 <div class="logo">❤️ Heart Portal</div>
                 <ul class="nav-links">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/blog">Blog</a></li>
+                    <li><a href="{{ get_main_app_url() }}">Home</a></li>
+                    <li><a href="/">Blog</a></li>
                     <li class="dropdown">
                         <a href="#">Tools</a>
                         <div class="dropdown-content">
@@ -186,44 +170,36 @@
                             <a href="{{ url_for('redirect_to_foodbase') }}">🍎 Food Storage</a>
                         </div>
                     </li>
-                    <li><a href="/about">About</a></li>
-                    <li><a href="/creator">Creator</a></li>
-                    <li><a href="/contact">Contact</a></li>
+                    <li><a href="{{ get_main_app_url() }}/about">About</a></li>
+                    <li><a href="{{ get_main_app_url() }}/creator">Creator</a></li>
+                    <li><a href="{{ get_main_app_url() }}/contact">Contact</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <section class="hero">
+    <section class="blog-header">
         <div class="container">
-            <h1>Heart Failure Portal</h1>
-            <p>Your comprehensive resource for nutrition guidance, wellness tips, and empowering information to help you live well with heart failure.</p>
+            <h1>Heart Health Blog</h1>
+            <p>Expert insights, tips, and guidance for living well with heart failure</p>
         </div>
     </section>
 
-    <section class="features">
+    <section class="blog-content">
         <div class="container">
-            <h2 class="section-title">Comprehensive Heart Health Tools</h2>
-            <p class="section-subtitle">Everything you need to manage your nutrition and wellness journey</p>
-            
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
-                    <h3>USDA Nutrition Database</h3>
-                    <p>Access comprehensive nutritional information from the USDA Food Data Central to make informed dietary choices for your heart health.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🍎</div>
-                    <h3>Personal Food Storage</h3>
-                    <p>Save and organize your favorite heart-healthy foods with detailed nutritional profiles for easy meal planning.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Nutritional Analysis</h3>
-                    <p>Compare foods, track nutrients important for heart health like sodium, and make better choices for your condition.</p>
-                </div>
+            <div class="blog-grid">
+                {% for post in posts %}
+                <article class="blog-card">
+                    <div class="blog-card-content">
+                        <h3><a href="/post/{{ post.id }}">{{ post.title }}</a></h3>
+                        <div class="blog-meta">
+                            By {{ post.author }} • {{ post.date.strftime('%B %d, %Y') }}
+                        </div>
+                        <p class="blog-excerpt">{{ post.excerpt }}</p>
+                        <a href="/post/{{ post.id }}" class="read-more">Read more →</a>
+                    </div>
+                </article>
+                {% endfor %}
             </div>
         </div>
     </section>

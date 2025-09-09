@@ -1,0 +1,20 @@
+# Blog-Manager - Heart Health Blog System
+# Inherits base requirements and adds blog-specific packages
+
+# Shared base packages
+-r ../requirements-base.txt
+
+# Markdown processing for blog posts
+markdown>=3.4.0
+
+# HTML sanitization for user content
+bleach>=6.0.0
+
+# Rich text formatting
+mistune>=3.0.0
+
+# Blog-specific utilities
+python-slugify>=8.0.0
+
+# Date formatting for blog posts
+babel>=2.12.0
