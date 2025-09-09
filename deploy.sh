@@ -99,10 +99,48 @@ deploy_to_server() {
     fi
     
     # Execute deployment on server
-    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" root@"$SERVER_HOST" "cd $PROJECT_DIR && ./deploy.sh"
+    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" root@"$SERVER_HOST" "cd $PROJECT_DIR && ./deploy.sh server"
 }
 
-# Main deployment process
+# Server-side deployment process (runs on production server)
+server_deploy() {
+    echo "========================================"
+    echo "🔄 Server-side Deployment"
+    echo "========================================"
+    echo
+    
+    log "Pulling latest changes from GitHub..."
+    git pull origin main
+    
+    log "Stopping Heart Portal services..."
+    systemctl stop heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog || true
+    
+    log "Installing/updating dependencies..."
+    # Update each component's dependencies if requirements changed
+    cd main-app && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    cd Nutrition-Database && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    cd Food-Base && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    cd Blog-Manager && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    
+    log "Starting Heart Portal services..."
+    systemctl start heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog
+    
+    log "Waiting for services to start..."
+    sleep 5
+    
+    log "Checking service status..."
+    if systemctl is-active --quiet heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog; then
+        success "All services started successfully!"
+    else
+        error "Some services failed to start. Check systemctl status."
+        systemctl status heart-portal-* --no-pager
+        return 1
+    fi
+    
+    success "Server deployment completed! ✅"
+}
+
+# Main deployment process (runs locally)
 main() {
     echo "========================================"
     echo "🚀 Heart Portal Deployment"
@@ -130,13 +168,18 @@ main() {
     echo
     echo "Your Heart Portal is now live at:"
     echo "🌐 Main Site: https://heartfailureportal.com"
-    echo "🔍 API Manager: https://heartfailureportal.com/api-manager/"
+    echo "🔍 Nutrition-DB: https://heartfailureportal.com/nutrition-database/"
     echo "🍎 Food-Base: https://heartfailureportal.com/food-base/"
+    echo "📝 Blog: https://heartfailureportal.com/blog-manager/"
     echo
 }
 
 # Handle command line arguments
 case "${1:-}" in
+    "server")
+        # Server-side deployment mode (called via SSH)
+        server_deploy
+        ;;
     "help"|"-h"|"--help")
         echo "Heart Portal Deployment Script"
         echo
@@ -144,6 +187,7 @@ case "${1:-}" in
         echo
         echo "Commands:"
         echo "  help        Show this help message"
+        echo "  server      Server-side deployment (internal use)"
         echo "  (no args)   Deploy to production server"
         echo
         echo "This script will:"
