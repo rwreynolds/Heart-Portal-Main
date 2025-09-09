@@ -1,0 +1,23 @@
+[Unit]
+Description=Heart Portal Blog Manager (Heart Health Blog)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=heartportal
+Group=heartportal
+WorkingDirectory=/opt/heart-portal/Blog-Manager
+Environment=PATH=/opt/heart-portal/Blog-Manager/venv/bin
+Environment=FLASK_APP=app.py
+Environment=FLASK_ENV=production
+ExecStart=/opt/heart-portal/Blog-Manager/venv/bin/python app.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

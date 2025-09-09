@@ -1,0 +1,23 @@
+[Unit]
+Description=Heart Portal Main App (Landing Page & Navigation)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=heartportal
+Group=heartportal
+WorkingDirectory=/opt/heart-portal/main-app
+Environment=PATH=/opt/heart-portal/main-app/venv/bin
+Environment=FLASK_APP=main_app.py
+Environment=FLASK_ENV=production
+ExecStart=/opt/heart-portal/main-app/venv/bin/python main_app.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

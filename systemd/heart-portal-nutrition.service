@@ -1,0 +1,23 @@
+[Unit]
+Description=Heart Portal Nutrition Database (USDA API Interface)
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=heartportal
+Group=heartportal
+WorkingDirectory=/opt/heart-portal/Nutrition-Database
+Environment=PATH=/opt/heart-portal/Nutrition-Database/venv/bin
+Environment=FLASK_APP=app.py
+Environment=FLASK_ENV=production
+ExecStart=/opt/heart-portal/Nutrition-Database/venv/bin/python app.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
