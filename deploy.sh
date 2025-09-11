@@ -6,7 +6,7 @@
 set -e  # Exit on any error
 
 SERVER_HOST="129.212.181.161"
-SSH_KEY="./Food-Base/heart_portal_key"
+SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
 PROJECT_DIR="/opt/heart-portal"
 
 # Colors for output
@@ -110,13 +110,19 @@ server_deploy() {
     echo
     
     log "Pulling latest changes from GitHub..."
+    cd /home/heartportal
     git pull origin main
+    
+    log "Syncing code to production directory..."
+    sudo rsync -av --exclude='.git' --exclude='*.pyc' --exclude='__pycache__' /home/heartportal/ /opt/heart-portal/
+    sudo chown -R heartportal:heartportal /opt/heart-portal
     
     log "Stopping Heart Portal services..."
     systemctl stop heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog || true
     
     log "Installing/updating dependencies..."
     # Update each component's dependencies if requirements changed
+    cd /opt/heart-portal
     cd main-app && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
     cd Nutrition-Database && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
     cd Food-Base && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..

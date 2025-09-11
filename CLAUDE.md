@@ -3,6 +3,13 @@
 ## Overview
 Multi-component Flask application for heart failure nutrition management with USDA API integration.
 
+## New Claude Session Quick Start
+**For Claude to help with server tasks, just tell Claude:**
+1. "Check the server status" → I'll use the connection details below
+2. "Deploy SSL" → I'll use `./deploy.sh` then guide you through server setup
+3. "Monitor services" → I'll help run `./monitor-services.sh` on server
+4. Server connection: `ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161`
+
 ## Architecture
 - **Main App** (port 3000): Landing page, about pages, navigation hub
 - **Nutrition-Database** (port 5000): USDA Food Data Central API interface
@@ -24,8 +31,15 @@ Multi-component Flask application for heart failure nutrition management with US
 ## Server Details
 - Host: 129.212.181.161
 - SSH Key: ./Food-Base/heart_portal_key
+- User: heartportal
 - Project Path: /opt/heart-portal
 - Services: Managed via systemctl (heart-portal-main, heart-portal-nutrition, heart-portal-food, heart-portal-blog)
+
+### Server Connection
+```bash
+./connect-server.sh                    # Quick SSH connection
+ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
+```
 
 ## Development Workflow
 **CRITICAL: All changes must be made locally, never on the server**
@@ -53,6 +67,13 @@ Multi-component Flask application for heart failure nutrition management with US
 - `deploy.sh`: Local deployment script
 - `dev-check.sh`: Environment verification
 - `download-database.sh`: Database sync script
+
+## SSL/HTTPS Configuration
+- `nginx/heart-portal.conf`: Nginx reverse proxy configuration
+- `setup-ssl.sh`: One-time SSL setup script (run on server)
+- `renew-ssl.sh`: Manual SSL certificate renewal
+- `test-ssl.sh`: SSL/HTTPS testing and verification
+- `monitor-services.sh`: Health monitoring for all services
 
 ## Environment Variables
 - USDA API Key required in `.env` files for each component
@@ -93,9 +114,30 @@ Multi-component Flask application for heart failure nutrition management with US
 - `/redirect/nutrition` - Redirects to API Manager
 - `/redirect/foodbase` - Redirects to Food-Base
 
+## SSL Setup Instructions
+**One-time setup on server (after deploying scripts):**
+```bash
+# Deploy SSL configuration files
+./deploy.sh
+
+# SSH to server and run SSL setup
+ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
+sudo ./setup-ssl.sh
+```
+
+**SSL Management Commands:**
+```bash
+./monitor-services.sh    # Check all services including HTTPS
+./test-ssl.sh           # Comprehensive SSL testing
+./renew-ssl.sh          # Manual certificate renewal
+./renew-ssl.sh --force  # Force renewal
+```
+
 ## Troubleshooting
 - Use `./dev-check.sh` to verify environment
 - Check service status on server: `systemctl status heart-portal-*`
 - Database issues: Use `./download-database.sh` to sync from production
 - Deployment hanging: SSH connection uses BatchMode and ConnectTimeout
 - Template errors: Check template files exist in correct directories
+- SSL issues: Use `./test-ssl.sh` to diagnose problems
+- Certificate problems: Check `/var/log/heart-portal-ssl-renewal.log`
