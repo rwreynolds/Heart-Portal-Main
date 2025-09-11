@@ -99,7 +99,7 @@ deploy_to_server() {
     fi
     
     # Execute deployment on server
-    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" heartportal@"$SERVER_HOST" "cd /home/heartportal && ./deploy.sh server"
+    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" heartportal@"$SERVER_HOST" "cd /opt/heart-portal && ./deploy.sh server"
 }
 
 # Server-side deployment process (runs on production server)
@@ -110,12 +110,8 @@ server_deploy() {
     echo
     
     log "Pulling latest changes from GitHub..."
-    cd /home/heartportal
+    cd /opt/heart-portal
     git pull origin main
-    
-    log "Syncing code to production directory..."
-    sudo rsync -av --exclude='.git' --exclude='*.pyc' --exclude='__pycache__' /home/heartportal/ /opt/heart-portal/
-    sudo chown -R heartportal:heartportal /opt/heart-portal
     
     log "Stopping Heart Portal services..."
     sudo systemctl stop heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog || true
