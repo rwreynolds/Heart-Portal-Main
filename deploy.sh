@@ -99,7 +99,7 @@ deploy_to_server() {
     fi
     
     # Execute deployment on server
-    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" root@"$SERVER_HOST" "cd $PROJECT_DIR && ./deploy.sh server"
+    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" heartportal@"$SERVER_HOST" "cd /home/heartportal && ./deploy.sh server"
 }
 
 # Server-side deployment process (runs on production server)
@@ -118,7 +118,7 @@ server_deploy() {
     sudo chown -R heartportal:heartportal /opt/heart-portal
     
     log "Stopping Heart Portal services..."
-    systemctl stop heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog || true
+    sudo systemctl stop heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog || true
     
     log "Installing/updating dependencies..."
     # Update each component's dependencies if requirements changed
@@ -129,17 +129,17 @@ server_deploy() {
     cd Blog-Manager && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
     
     log "Starting Heart Portal services..."
-    systemctl start heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog
+    sudo systemctl start heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog
     
     log "Waiting for services to start..."
     sleep 5
     
     log "Checking service status..."
-    if systemctl is-active --quiet heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog; then
+    if sudo systemctl is-active --quiet heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog; then
         success "All services started successfully!"
     else
         error "Some services failed to start. Check systemctl status."
-        systemctl status heart-portal-* --no-pager
+        sudo systemctl status heart-portal-* --no-pager
         return 1
     fi
     
