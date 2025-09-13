@@ -41,8 +41,8 @@ cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main/main-app
 python main_app.py
 # Runs on: http://localhost:3000
 
-# Terminal 2: API Manager
-cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main/API-manager  
+# Terminal 2: Nutrition Database
+cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main/Nutrition-Database  
 python app.py
 # Runs on: http://localhost:5000
 
@@ -50,6 +50,11 @@ python app.py
 cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main/Food-Base
 python app.py  
 # Runs on: http://localhost:5001
+
+# Terminal 4: Blog Manager
+cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main/Blog-Manager
+python app.py
+# Runs on: http://localhost:5002
 ```
 
 ## 🔄 Proper Development Workflow
@@ -66,7 +71,7 @@ cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main
 - Test with local development servers
 
 ### 3. **Test Changes**
-- Visit http://localhost:3000, :5000, :5001
+- Visit http://localhost:3000, :5000, :5001, :5002
 - Verify your changes work correctly
 - Add/remove test data in local database
 
@@ -81,15 +86,29 @@ git commit -m "Description of your changes"
 ./deploy.sh  # Deploys code only, preserves production database
 ```
 
+### 6. **Test Production Deployment**
+```bash
+./monitor-services.sh  # Check all services are healthy
+```
+
+### 7. **If Issues Found - Rollback**
+```bash
+./rollback.sh         # Quick rollback to previous version
+./rollback.sh --force  # Force rollback without safety checks
+```
+
 ## 📁 Directory Structure Guide
 
 **Your Local Project:**
 ```
 /Users/mrrobot/VSCodeProjects/Heart-Portal-Main/
-├── 📁 API-manager/           # Edit these files locally
+├── 📁 Nutrition-Database/    # Edit these files locally
 ├── 📁 Food-Base/            
-├── 📁 main-app/             
+├── 📁 main-app/
+├── 📁 Blog-Manager/             
 ├── 🚀 deploy.sh             # Deploy to production
+├── 🔄 rollback.sh           # Rollback production server
+├── 📊 monitor-services.sh    # Check server health
 ├── 📥 download-database.sh   # Get production data
 ├── 🔍 dev-check.sh          # Verify environment
 └── 📚 *.md                  # Documentation
@@ -135,15 +154,15 @@ cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main  # Go to local project
 
 ### ❌ Wrong: Editing on Server
 ```bash
-ssh root@129.212.181.161
+ssh heartportal@129.212.181.161
 cd /opt/heart-portal
-nano API-manager/app.py  # DON'T DO THIS!
+nano Nutrition-Database/app.py  # DON'T DO THIS!
 ```
 
 ### ✅ Right: Editing Locally  
 ```bash
 cd /Users/mrrobot/VSCodeProjects/Heart-Portal-Main
-code API-manager/app.py  # Edit in VSCode locally
+code Nutrition-Database/app.py  # Edit in VSCode locally
 ```
 
 ### ❌ Wrong: Server Git Commands
@@ -169,6 +188,8 @@ git add . && git commit -m "changes"
 | Test changes | http://localhost:* | Local |
 | Commit changes | `git commit` | Local |
 | Deploy changes | `./deploy.sh` | Local |
+| Check server health | `./monitor-services.sh` | Local |
+| Rollback deployment | `./rollback.sh` | Local |
 | Get production data | `./download-database.sh` | Local |
 
 ## 🆘 Need Help?

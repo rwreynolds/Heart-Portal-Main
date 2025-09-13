@@ -1,6 +1,6 @@
-# Nutrition API Manager
+# Nutrition Database
 
-A comprehensive management interface for testing and managing multiple nutrition data API endpoints.
+A comprehensive management interface for accessing USDA Food Data Central with Heart Portal integration.
 
 ## Features
 
@@ -62,12 +62,12 @@ To use the nutrition APIs, you'll need to obtain API keys:
 ## File Structure
 
 ```
-API-manager/
+Nutrition-Database/
 ├── app.py                      # Flask web application
 ├── nutrition_api_manager.py    # Core nutrition API classes
 ├── requirements.txt           # Python dependencies
 ├── templates/
-│   └── index.html            # Web interface template
+│   └── index.html            # Web interface template with sticky navigation
 └── Test.py                   # Example usage script
 ```
 

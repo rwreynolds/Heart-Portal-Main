@@ -1,4 +1,4 @@
-# 🍎 Enhanced Nutrition API Manager - User Guide
+# 🍎 Nutrition Database - User Guide
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -14,7 +14,7 @@
 
 ## Overview
 
-The Enhanced Nutrition API Manager is a comprehensive Flask web application for accessing and managing nutrition data from the USDA FoodData Central API. It provides an intuitive web interface for searching, browsing, and comparing food nutrition information.
+The Nutrition Database is a comprehensive Flask web application for accessing and managing nutrition data from the USDA FoodData Central API as part of the Heart Portal project. It provides an intuitive web interface for searching, browsing, and comparing food nutrition information.
 
 ### Key Features
 - 🔍 **Advanced Search** - Search foods with multiple filters
@@ -36,7 +36,7 @@ The Enhanced Nutrition API Manager is a comprehensive Flask web application for 
 
 1. **Clone/Download the Project**
    ```bash
-   cd /path/to/Heart-Portal-Main/API-manager
+   cd /path/to/Heart-Portal-Main/Nutrition-Database
    ```
 
 2. **Install Dependencies**
@@ -63,7 +63,7 @@ The Enhanced Nutrition API Manager is a comprehensive Flask web application for 
 
 1. **Access the Application**
    - Open your browser and go to `http://127.0.0.1:5000`
-   - You'll see the Enhanced Nutrition API Manager interface
+   - You'll see the Nutrition Database interface with sticky navigation
 
 2. **Configure API Access**
    - In the "Enhanced API Providers" section
@@ -85,7 +85,7 @@ The Enhanced Nutrition API Manager is a comprehensive Flask web application for 
 3. API key is automatically saved for future sessions
 
 ### Method 2: Environment Variables
-Create a `.env` file in the API-manager directory:
+Create a `.env` file in the Nutrition-Database directory:
 ```env
 USDA_API_KEY=your_api_key_here
 ```
@@ -236,7 +236,7 @@ fetch('/api/compare-foods', {
 #### 2. "Import could not be resolved" Error
 **Problem**: Module import issues
 **Solutions**:
-- Ensure you're in the correct directory: `API-manager/`
+- Ensure you're in the correct directory: `Nutrition-Database/`
 - Install required packages: `pip install flask requests python-dotenv`
 - Check Python path and virtual environment
 

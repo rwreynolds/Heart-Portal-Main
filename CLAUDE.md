@@ -8,7 +8,7 @@ Multi-component Flask application for heart failure nutrition management with US
 1. "Check the server status" → I'll use the connection details below
 2. "Deploy SSL" → I'll use `./deploy.sh` then guide you through server setup
 3. "Monitor services" → I'll help run `./monitor-services.sh` on server
-4. Server connection: `ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161`
+4. Server connection: `ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161`
 
 ## Architecture
 - **Main App** (port 3000): Landing page, about pages, navigation hub
@@ -30,7 +30,7 @@ Multi-component Flask application for heart failure nutrition management with US
 
 ## Server Details
 - Host: 129.212.181.161
-- SSH Key: ./Food-Base/heart_portal_key
+- SSH Key: /Users/mrrobot/.ssh/id_ed25519
 - User: heartportal
 - Project Path: /opt/heart-portal
 - Services: Managed via systemctl (heart-portal-main, heart-portal-nutrition, heart-portal-food, heart-portal-blog)
@@ -38,7 +38,7 @@ Multi-component Flask application for heart failure nutrition management with US
 ### Server Connection
 ```bash
 ./connect-server.sh                    # Quick SSH connection
-ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
+ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 ```
 
 ## Development Workflow
@@ -54,6 +54,13 @@ ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
 ./deploy.sh     # Push to GitHub and deploy to server
 ```
 
+### Production Rollback
+```bash
+./rollback.sh              # Rollback to previous version
+./rollback.sh --force      # Force rollback without safety checks
+./rollback.sh --commit abc123  # Rollback to specific commit
+```
+
 ### Database Management
 ```bash
 ./download-database.sh  # Download production database to local
@@ -65,6 +72,7 @@ ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
 - `Food-Base/app.py`: Food storage Flask app
 - `Blog-Manager/app.py`: Blog system Flask app
 - `deploy.sh`: Local deployment script
+- `rollback.sh`: Production rollback script
 - `dev-check.sh`: Environment verification
 - `download-database.sh`: Database sync script
 
@@ -86,23 +94,35 @@ ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
 - Git workflow enforcement
 
 ## Recent Changes
+- ✅ **Production Rollback System** - `rollback.sh` script with safety checks and recovery tags
+- ✅ **Enhanced Monitoring** - `monitor-services.sh` works locally to monitor remote server
+- ✅ **SSL/HTTPS fully configured** with Let's Encrypt certificates
+- ✅ **Sticky navigation** implemented across all applications
+- ✅ **Fixed deployment script** with correct SSH key paths and server sync
+- ✅ **All error templates created** (404.html, 500.html) for all applications
 - Header background changed to red (#dc2626) in main app
 - Environment-aware JavaScript for local/production compatibility
 - Fixed deployment script syntax errors
 - Implemented database-safe deployment workflow
 
 ## Current Issues
-- Missing error templates (404.html, 500.html) referenced in main_app.py
 - Contact form exists but may need testing
+- Consider upgrading to production WSGI server (currently using Flask dev server)
 
 ## Templates Status
 ### Main App Templates (main-app/templates/)
-- ✅ landing.html - Main landing page with red header
-- ✅ about.html - About the portal page  
-- ✅ creator.html - About creator page
-- ✅ contact.html - Contact form page
-- ❌ 404.html - Missing (referenced in error handler)
-- ❌ 500.html - Missing (referenced in error handler)
+- ✅ landing.html - Main landing page with red header & sticky navigation
+- ✅ about.html - About the portal page with sticky navigation
+- ✅ creator.html - About creator page with sticky navigation
+- ✅ contact.html - Contact form page with sticky navigation
+- ✅ 404.html - Error page with sticky navigation
+- ✅ 500.html - Error page with sticky navigation
+
+### All Applications Feature Status
+- ✅ **Sticky Navigation** - Fixed header across all apps and pages
+- ✅ **HTTPS/SSL** - Let's Encrypt certificates configured
+- ✅ **Error Pages** - 404/500 templates in all applications
+- ✅ **Responsive Design** - Mobile-friendly layouts
 
 ## Application Routes
 ### Main App (main-app/main_app.py)
@@ -121,7 +141,7 @@ ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
 ./deploy.sh
 
 # SSH to server and run SSL setup
-ssh -i ./Food-Base/heart_portal_key heartportal@129.212.181.161
+ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 sudo ./setup-ssl.sh
 ```
 
@@ -131,6 +151,27 @@ sudo ./setup-ssl.sh
 ./test-ssl.sh           # Comprehensive SSL testing
 ./renew-ssl.sh          # Manual certificate renewal
 ./renew-ssl.sh --force  # Force renewal
+```
+
+## Complete Deploy → Test → Rollback Workflow
+**All commands run from local machine:**
+
+### 1. Deploy & Test
+```bash
+./deploy.sh              # Deploy changes to production
+./monitor-services.sh    # Verify all services are healthy
+```
+
+### 2. If Issues Found - Rollback
+```bash
+./rollback.sh            # Quick rollback to previous version
+./rollback.sh --force    # Force rollback without health checks
+```
+
+### 3. Fix Locally & Redeploy
+```bash
+# Fix issues in local development
+./deploy.sh              # Deploy fixed version
 ```
 
 ## Troubleshooting

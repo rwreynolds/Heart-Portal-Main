@@ -6,7 +6,7 @@
 set -e  # Exit on any error
 
 SERVER_HOST="129.212.181.161"
-SSH_KEY="./Food-Base/heart_portal_key"
+SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
 SERVER_DB_PATH="/opt/heart-portal/Food-Base/database/food_base.db"
 LOCAL_DB_PATH="./Food-Base/database/food_base.db"
 
@@ -62,7 +62,7 @@ download_database() {
     mkdir -p "./Food-Base/database"
     
     # Download the database file
-    scp -i "$SSH_KEY" "root@$SERVER_HOST:$SERVER_DB_PATH" "$LOCAL_DB_PATH"
+    scp -i "$SSH_KEY" "heartportal@$SERVER_HOST:$SERVER_DB_PATH" "$LOCAL_DB_PATH"
     
     success "Database downloaded successfully"
 }
@@ -72,7 +72,7 @@ show_database_info() {
     log "Checking database information..."
     
     # Get server database info
-    local server_info=$(ssh -i "$SSH_KEY" root@"$SERVER_HOST" "
+    local server_info=$(ssh -i "$SSH_KEY" heartportal@"$SERVER_HOST" "
         if [ -f '$SERVER_DB_PATH' ]; then
             echo \"Size: \$(du -h '$SERVER_DB_PATH' | cut -f1)\"
             echo \"Modified: \$(date -r '$SERVER_DB_PATH')\"

@@ -13,7 +13,7 @@ NC='\033[0m'
 # Server configuration
 SERVER_HOST="129.212.181.161"
 SERVER_USER="heartportal"
-SSH_KEY="./Food-Base/heart_portal_key"
+SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
 PROJECT_DIR="/opt/heart-portal"
 
 echo -e "${BLUE}🔗 Connecting to Heart Portal server...${NC}"

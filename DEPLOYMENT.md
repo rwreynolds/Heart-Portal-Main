@@ -12,11 +12,30 @@ For most deployments, simply run:
 
 This will automatically:
 1. ✅ Check for uncommitted changes
-2. ✅ Push commits to GitHub 
+2. ✅ Push commits to GitHub
 3. ✅ Deploy to production server (CODE ONLY)
 4. ✅ Restart all services
 5. ✅ Verify deployment health
 6. ✅ **Preserve production database** (no data loss)
+
+## Production Rollback
+
+If deployment causes issues, quickly rollback:
+
+```bash
+./rollback.sh              # Rollback to previous version
+./rollback.sh --force      # Force rollback without safety checks
+./rollback.sh --commit abc123  # Rollback to specific commit
+```
+
+This will automatically:
+1. ✅ Check current service health (unless --force)
+2. ✅ Create recovery tag for easy restoration
+3. ✅ Stop all services
+4. ✅ Checkout previous/target commit
+5. ✅ Reinstall dependencies
+6. ✅ Restart all services
+7. ✅ Verify rollback success
 
 ## Database Management
 
@@ -48,11 +67,14 @@ This will:
   # Terminal 1: Main App
   cd main-app && python main_app.py
   
-  # Terminal 2: API Manager  
-  cd API-manager && python app.py
+  # Terminal 2: Nutrition Database  
+  cd Nutrition-Database && python app.py
   
   # Terminal 3: Food-Base
   cd Food-Base && python app.py
+  
+  # Terminal 4: Blog Manager
+  cd Blog-Manager && python app.py
   ```
 
 ### 2. Commit Changes
@@ -66,6 +88,16 @@ git commit -m "Description of your changes"
 ./deploy.sh
 ```
 
+### 4. Test Deployment
+```bash
+./monitor-services.sh      # Check all services are healthy
+```
+
+### 5. If Issues Found - Rollback
+```bash
+./rollback.sh              # Quick rollback to previous version
+```
+
 ## Manual Deployment (if needed)
 
 If you need to deploy manually:
@@ -75,9 +107,9 @@ If you need to deploy manually:
 git push origin main
 
 # 2. Deploy on server
-ssh -i ./Food-Base/heart_portal_key root@129.212.181.161
+ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 cd /opt/heart-portal
-./deploy.sh
+./deploy.sh server
 ```
 
 ## Production URLs
@@ -85,38 +117,78 @@ cd /opt/heart-portal
 After deployment, your Heart Portal will be available at:
 
 - **🌐 Main Site**: https://heartfailureportal.com
-- **🔍 API Manager**: https://heartfailureportal.com/api-manager/
+- **🔍 Nutrition Database**: https://heartfailureportal.com/nutrition-database/
 - **🍎 Food-Base**: https://heartfailureportal.com/food-base/
+- **📝 Blog Manager**: https://heartfailureportal.com/blog-manager/
+
+## Complete Deploy → Test → Rollback Workflow
+
+### Normal Deployment Flow
+```bash
+# 1. Make changes locally, test, commit
+git add . && git commit -m "Your changes"
+
+# 2. Deploy to production
+./deploy.sh
+
+# 3. Verify deployment
+./monitor-services.sh
+
+# 4. If everything looks good, you're done! ✅
+```
+
+### Emergency Rollback Flow
+```bash
+# If deployment causes issues:
+./rollback.sh              # Quick rollback
+
+# Fix issues locally while production runs on previous version
+# Then redeploy when ready:
+./deploy.sh
+```
+
+### Recovery from Failed Rollback
+If rollback fails, manual recovery options:
+```bash
+ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
+cd /opt/heart-portal
+git tag                     # Find rollback tag
+git checkout rollback-from-<hash>-<timestamp>
+sudo systemctl restart heart-portal-*
+```
 
 ## Troubleshooting
 
-### Check Deployment Logs
+### Check Service Status
 ```bash
-ssh -i ./Food-Base/heart_portal_key root@129.212.181.161
-tail -f /tmp/heart-portal-deploy.log
+./monitor-services.sh       # Local command to check remote server
+# OR manually:
+ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
+sudo systemctl status heart-portal-*
 ```
 
 ### Check Service Logs
 ```bash
-# Main app logs
-tail -f /tmp/main-app.log
+# All services logs
+sudo journalctl -u heart-portal-* --lines=50
 
-# API Manager logs  
-tail -f /tmp/api-manager.log
-
-# Food-Base logs
-tail -f /tmp/food-base.log
+# Individual service logs
+sudo journalctl -u heart-portal-main --lines=20
+sudo journalctl -u heart-portal-nutrition --lines=20
+sudo journalctl -u heart-portal-food --lines=20
+sudo journalctl -u heart-portal-blog --lines=20
 ```
 
 ### Restart Individual Services
 ```bash
-# Stop all services
-pkill -f "python.*app.py"
+# Restart all services
+sudo systemctl restart heart-portal-*
 
-# Start services manually
-cd /opt/heart-portal/main-app && nohup ./venv/bin/python main_app.py > /tmp/main-app.log 2>&1 &
-cd /opt/heart-portal/API-manager && nohup ./venv/bin/python app.py > /tmp/api-manager.log 2>&1 &
-cd /opt/heart-portal/Food-Base && nohup ./venv/bin/python app.py > /tmp/food-base.log 2>&1 &
+# Restart individual services
+sudo systemctl restart heart-portal-main
+sudo systemctl restart heart-portal-nutrition
+sudo systemctl restart heart-portal-food
+sudo systemctl restart heart-portal-blog
 ```
 
 ## Server Details
@@ -124,13 +196,19 @@ cd /opt/heart-portal/Food-Base && nohup ./venv/bin/python app.py > /tmp/food-bas
 - **Server**: heartfailureportal.com (129.212.181.161)
 - **Project Directory**: `/opt/heart-portal`
 - **User**: `heartportal`
-- **Services**: nginx (port 80), main-app (port 3000), API-manager (port 5000), Food-Base (port 5001)
+- **Services**: 
+  - nginx (port 80/443 - HTTPS/SSL enabled)
+  - heart-portal-main (port 3000)
+  - heart-portal-nutrition (port 5000) 
+  - heart-portal-food (port 5001)
+  - heart-portal-blog (port 5002)
 
 ## Environment Variables
 
 The production server uses:
-- **USDA_API_KEY**: Set in `/opt/heart-portal/API-manager/.env`
+- **USDA_API_KEY**: Set in `/opt/heart-portal/Nutrition-Database/.env`
 - All other environment variables are configured automatically
+- SSL certificates managed automatically via Let's Encrypt
 
 ## Best Practices
 

@@ -59,19 +59,39 @@ check_environment() {
     success "Environment check passed - you're working locally"
 }
 
-# Check if there are uncommitted changes
+# Check if there are uncommitted changes and handle auto-commit
 check_git_status() {
     log "Checking git status..."
-    
+
     if ! git diff-index --quiet HEAD --; then
-        warning "You have uncommitted changes. Please commit them first:"
+        warning "You have uncommitted changes:"
         git status --porcelain
         echo
-        echo "Run: git add . && git commit -m \"Your commit message\""
-        return 1
+
+        # Prompt for auto-commit
+        read -p "Would you like to commit these changes now? (y/n): " -r
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo
+            read -p "Enter commit message: " commit_message
+
+            if [ -z "$commit_message" ]; then
+                error "Commit message cannot be empty"
+                return 1
+            fi
+
+            log "Adding and committing changes..."
+            git add .
+            git commit -m "$commit_message"
+            success "Changes committed successfully"
+        else
+            echo
+            echo "Please commit your changes manually before deploying:"
+            echo "Run: git add . && git commit -m \"Your commit message\""
+            return 1
+        fi
+    else
+        success "No uncommitted changes found"
     fi
-    
-    success "No uncommitted changes found"
 }
 
 # Push to GitHub

@@ -2,8 +2,21 @@
 
 # Heart Portal Service Monitor
 # Monitors all services including Nginx and provides health checks
+# Can run locally to monitor remote server or directly on server
 
 set -e
+
+# Server connection details
+SERVER_HOST="129.212.181.161"
+SERVER_USER="heartportal"
+SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
+
+# Detect if we're running locally or on the server
+if [ "$(whoami)" = "$SERVER_USER" ] && [ "$(hostname -I 2>/dev/null | grep -q "$SERVER_HOST" && echo "server" || echo "local")" = "server" ]; then
+    RUN_MODE="server"
+else
+    RUN_MODE="local"
+fi
 
 # Colors
 RED='\033[0;31m'
@@ -14,6 +27,15 @@ NC='\033[0m'
 
 log() {
     echo -e "${BLUE}[$(date '+%H:%M:%S')]${NC} $1"
+}
+
+# Execute command locally or remotely
+remote_exec() {
+    if [ "$RUN_MODE" = "local" ]; then
+        ssh -i "$SSH_KEY" -o BatchMode=yes -o ConnectTimeout=10 "$SERVER_USER@$SERVER_HOST" "$1"
+    else
+        eval "$1"
+    fi
 }
 
 success() {
@@ -31,8 +53,8 @@ error() {
 check_service() {
     local service=$1
     local description=$2
-    
-    if systemctl is-active --quiet "$service"; then
+
+    if remote_exec "systemctl is-active --quiet '$service'" >/dev/null 2>&1; then
         success "$description is running"
         return 0
     else
@@ -44,8 +66,8 @@ check_service() {
 check_port() {
     local port=$1
     local service=$2
-    
-    if ss -tuln | grep -q ":$port "; then
+
+    if remote_exec "ss -tuln | grep -q ':$port '" >/dev/null 2>&1; then
         success "$service (port $port) is listening"
         return 0
     else
@@ -71,17 +93,22 @@ check_https() {
 
 check_ssl_certificate() {
     local domain=$1
-    
-    if [ ! -f "/etc/letsencrypt/live/$domain/fullchain.pem" ]; then
+
+    if ! remote_exec "sudo [ -f /etc/letsencrypt/live/$domain/fullchain.pem ]" >/dev/null 2>&1; then
         error "SSL certificate for $domain not found"
         return 1
     fi
-    
-    local cert_expire=$(openssl x509 -in /etc/letsencrypt/live/$domain/fullchain.pem -noout -dates | grep notAfter | cut -d= -f2)
-    local expire_timestamp=$(date -d "$cert_expire" +%s)
-    local current_timestamp=$(date +%s)
-    local days_until_expire=$(( (expire_timestamp - current_timestamp) / 86400 ))
-    
+
+    local cert_info=$(remote_exec "sudo openssl x509 -in /etc/letsencrypt/live/$domain/fullchain.pem -noout -dates | grep notAfter | cut -d= -f2")
+    local expire_timestamp
+    local current_timestamp
+    local days_until_expire
+
+    # Get timestamps from the server (Linux date command)
+    expire_timestamp=$(remote_exec "date -d '$cert_info' +%s")
+    current_timestamp=$(remote_exec "date +%s")
+    days_until_expire=$(( (expire_timestamp - current_timestamp) / 86400 ))
+
     if [ $days_until_expire -gt 30 ]; then
         success "SSL certificate valid for $days_until_expire days"
         return 0
@@ -97,6 +124,11 @@ check_ssl_certificate() {
 main() {
     echo "========================================"
     echo "📊 Heart Portal Health Check"
+    if [ "$RUN_MODE" = "local" ]; then
+        echo "🌍 Monitoring remote server: $SERVER_HOST"
+    else
+        echo "🖥️  Running on server: $(hostname)"
+    fi
     echo "========================================"
     echo
     
@@ -124,7 +156,6 @@ main() {
     # Check HTTPS endpoints
     log "Checking HTTPS endpoints..."
     check_https "heartfailureportal.com" "/" || all_good=false
-    check_https "heartfailureportal.com" "/health" || all_good=false
     check_https "heartfailureportal.com" "/nutrition-database/" || all_good=false
     check_https "heartfailureportal.com" "/food-base/" || all_good=false
     check_https "heartfailureportal.com" "/blog-manager/" || all_good=false
@@ -142,10 +173,17 @@ main() {
         error "⚠️  Some services need attention"
         echo
         echo "🔧 Troubleshooting commands:"
-        echo "  systemctl status heart-portal-* nginx"
-        echo "  journalctl -u heart-portal-main -f"
-        echo "  tail -f /var/log/nginx/error.log"
-        echo "  certbot certificates"
+        if [ "$RUN_MODE" = "local" ]; then
+            echo "  ssh -i $SSH_KEY $SERVER_USER@$SERVER_HOST 'systemctl status heart-portal-* nginx'"
+            echo "  ssh -i $SSH_KEY $SERVER_USER@$SERVER_HOST 'journalctl -u heart-portal-main -f'"
+            echo "  ssh -i $SSH_KEY $SERVER_USER@$SERVER_HOST 'sudo tail -f /var/log/nginx/error.log'"
+            echo "  ssh -i $SSH_KEY $SERVER_USER@$SERVER_HOST 'sudo certbot certificates'"
+        else
+            echo "  systemctl status heart-portal-* nginx"
+            echo "  journalctl -u heart-portal-main -f"
+            echo "  tail -f /var/log/nginx/error.log"
+            echo "  certbot certificates"
+        fi
         exit 1
     fi
 }

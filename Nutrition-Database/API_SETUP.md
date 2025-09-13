@@ -2,7 +2,7 @@
 
 ## USDA FoodData Central API Key
 
-The API-Manager component requires a USDA FoodData Central API key to function properly.
+The Nutrition Database component requires a USDA FoodData Central API key to function properly.
 
 ### Getting Your API Key
 
@@ -16,7 +16,7 @@ The API-Manager component requires a USDA FoodData Central API key to function p
    - You'll receive your API key immediately via email
 
 3. **Configure Your API Key:**
-   - Open the `.env` file in the API-manager folder
+   - Open the `.env` file in the Nutrition-Database folder
    - Replace `your_actual_usda_api_key_here` with your actual API key
    - Save the file
 
@@ -34,8 +34,8 @@ USDA_API_KEY=your_actual_api_key_from_usda_here
 
 After setting up your API key:
 
-1. Restart the API-Manager service
-2. Visit http://localhost:5002
+1. Restart the Nutrition Database service
+2. Visit http://localhost:5000
 3. You should see "🔑 API Key: Configured" in the header
 4. Try performing a search to verify everything works
 
@@ -44,7 +44,7 @@ After setting up your API key:
 **Common Issues:**
 
 1. **"API key not configured" error:**
-   - Check that your .env file is in the correct directory (API-manager/)
+   - Check that your .env file is in the correct directory (Nutrition-Database/)
    - Ensure the API key doesn't have extra spaces or quotes
    - Verify the key isn't the placeholder text
 
@@ -53,7 +53,7 @@ After setting up your API key:
    - Make sure you're using the FoodData Central API key, not another USDA service
 
 3. **Service still shows "Not Configured":**
-   - Restart the API-Manager service after changing the .env file
+   - Restart the Nutrition Database service after changing the .env file
    - Check the server logs for any error messages
 
 ### Security Notes
