@@ -1,0 +1,225 @@
+#!/bin/bash
+
+# Heart Portal Local Deployment Script
+# Pushes changes to GitHub and triggers server deployment
+
+set -e  # Exit on any error
+
+SERVER_HOST="129.212.181.161"
+SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
+PROJECT_DIR="/opt/heart-portal"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+log() {
+    echo -e "${BLUE}[$(date '+%H:%M:%S')]${NC} $1"
+}
+
+success() {
+    echo -e "${GREEN}✅ $1${NC}"
+}
+
+warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
+
+error() {
+    echo -e "${RED}❌ $1${NC}"
+}
+
+# Check development environment
+check_environment() {
+    log "Checking development environment..."
+    
+    # Check if we're in the correct directory
+    local current_dir=$(pwd)
+    local expected_path="/Users/mrrobot/VSCodeProjects/Heart-Portal-Main"
+    
+    if [[ "$current_dir" != "$expected_path" ]]; then
+        error "Wrong directory! You're in: $current_dir"
+        error "Should be in: $expected_path"
+        echo "Run: cd $expected_path"
+        return 1
+    fi
+    
+    # Check that we're not on the server
+    local hostname=$(hostname)
+    if [[ "$hostname" == *"ubuntu"* ]] || [[ "$hostname" == *"heartfailure"* ]]; then
+        error "WARNING: You appear to be on the server!"
+        error "Never deploy from the server. Work locally instead."
+        return 1
+    fi
+    
+    success "Environment check passed - you're working locally"
+}
+
+# Check if there are uncommitted changes and handle auto-commit
+check_git_status() {
+    log "Checking git status..."
+
+    if ! git diff-index --quiet HEAD --; then
+        warning "You have uncommitted changes:"
+        git status --porcelain
+        echo
+
+        # Prompt for auto-commit
+        read -p "Would you like to commit these changes now? (y/n): " -r
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo
+            read -p "Enter commit message: " commit_message
+
+            if [ -z "$commit_message" ]; then
+                error "Commit message cannot be empty"
+                return 1
+            fi
+
+            log "Adding and committing changes..."
+            git add .
+            git commit -m "$commit_message"
+            success "Changes committed successfully"
+        else
+            echo
+            echo "Please commit your changes manually before deploying:"
+            echo "Run: git add . && git commit -m \"Your commit message\""
+            return 1
+        fi
+    else
+        success "No uncommitted changes found"
+    fi
+}
+
+# Push to GitHub
+push_to_github() {
+    log "Pushing to GitHub repository..."
+    
+    # Check if we're ahead of origin
+    LOCAL_COMMITS=$(git rev-list HEAD --not --remotes=origin | wc -l)
+    if [ "$LOCAL_COMMITS" -eq 0 ]; then
+        warning "No new commits to push"
+    else
+        success "Pushing $LOCAL_COMMITS new commit(s) to GitHub"
+        git push origin main
+    fi
+}
+
+# Deploy to server
+deploy_to_server() {
+    log "Deploying to Heart Portal server..."
+    
+    # Check if SSH key exists
+    if [ ! -f "$SSH_KEY" ]; then
+        error "SSH key not found at $SSH_KEY"
+        return 1
+    fi
+    
+    # Execute deployment on server
+    ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" heartportal@"$SERVER_HOST" "cd /opt/heart-portal && ./scripts/deploy.sh server"
+}
+
+# Server-side deployment process (runs on production server)
+server_deploy() {
+    echo "========================================"
+    echo "🔄 Server-side Deployment"
+    echo "========================================"
+    echo
+    
+    log "Pulling latest changes from GitHub..."
+    cd /opt/heart-portal
+    git pull origin main
+    
+    log "Stopping Heart Portal services..."
+    sudo systemctl stop heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog || true
+    
+    log "Installing/updating dependencies..."
+    # Update each component's dependencies if requirements changed
+    cd /opt/heart-portal
+    cd main-app && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    cd Nutrition-Database && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    cd Food-Base && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    cd Blog-Manager && source venv/bin/activate && pip install -r requirements.txt && deactivate && cd ..
+    
+    log "Starting Heart Portal services..."
+    sudo systemctl start heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog
+    
+    log "Waiting for services to start..."
+    sleep 5
+    
+    log "Checking service status..."
+    if sudo systemctl is-active --quiet heart-portal-main heart-portal-nutrition heart-portal-food heart-portal-blog; then
+        success "All services started successfully!"
+    else
+        error "Some services failed to start. Check systemctl status."
+        sudo systemctl status heart-portal-* --no-pager
+        return 1
+    fi
+    
+    success "Server deployment completed! ✅"
+}
+
+# Main deployment process (runs locally)
+main() {
+    echo "========================================"
+    echo "🚀 Heart Portal Deployment"
+    echo "========================================"
+    echo
+    
+    # Check development environment
+    if ! check_environment; then
+        exit 1
+    fi
+    
+    # Check git status
+    if ! check_git_status; then
+        exit 1
+    fi
+    
+    # Push to GitHub
+    push_to_github
+    
+    # Deploy to server
+    deploy_to_server
+    
+    echo
+    success "Deployment completed! 🎉"
+    echo
+    echo "Your Heart Portal is now live at:"
+    echo "🌐 Main Site: https://heartfailureportal.com"
+    echo "🔍 Nutrition-DB: https://heartfailureportal.com/nutrition-database/"
+    echo "🍎 Food-Base: https://heartfailureportal.com/food-base/"
+    echo "📝 Blog: https://heartfailureportal.com/blog-manager/"
+    echo
+}
+
+# Handle command line arguments
+case "${1:-}" in
+    "server")
+        # Server-side deployment mode (called via SSH)
+        server_deploy
+        ;;
+    "help"|"-h"|"--help")
+        echo "Heart Portal Deployment Script"
+        echo
+        echo "Usage: ./deploy.sh [command]"
+        echo
+        echo "Commands:"
+        echo "  help        Show this help message"
+        echo "  server      Server-side deployment (internal use)"
+        echo "  (no args)   Deploy to production server"
+        echo
+        echo "This script will:"
+        echo "1. Check for uncommitted changes"
+        echo "2. Push commits to GitHub"
+        echo "3. Deploy to production server"
+        echo "4. Restart all services"
+        echo "5. Verify deployment health"
+        ;;
+    *)
+        main "$@"
+        ;;
+esac
