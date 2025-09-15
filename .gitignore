@@ -48,3 +48,7 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Documentation and Scripts
+*.md
+scripts/

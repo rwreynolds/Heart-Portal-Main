@@ -6,8 +6,8 @@ Multi-component Flask application for heart failure nutrition management with US
 ## New Claude Session Quick Start
 **For Claude to help with server tasks, just tell Claude:**
 1. "Check the server status" → I'll use the connection details below
-2. "Deploy SSL" → I'll use `./deploy.sh` then guide you through server setup
-3. "Monitor services" → I'll help run `./monitor-services.sh` on server
+2. "Deploy SSL" → I'll use `./scripts/deploy.sh` then guide you through server setup
+3. "Monitor services" → I'll help run `./scripts/monitor-services.sh` on server
 4. Server connection: `ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161`
 
 ## Architecture
@@ -37,7 +37,7 @@ Multi-component Flask application for heart failure nutrition management with US
 
 ### Server Connection
 ```bash
-./connect-server.sh                    # Quick SSH connection
+./scripts/connect-server.sh                    # Quick SSH connection
 ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 ```
 
@@ -46,24 +46,24 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 
 ### Before Making Changes
 ```bash
-./dev-check.sh  # Verify you're in local environment
+./scripts/dev-check.sh  # Verify you're in local environment
 ```
 
 ### Deployment Process
 ```bash
-./deploy.sh     # Push to GitHub and deploy to server
+./scripts/deploy.sh     # Push to GitHub and deploy to server
 ```
 
 ### Production Rollback
 ```bash
-./rollback.sh              # Rollback to previous version
-./rollback.sh --force      # Force rollback without safety checks
-./rollback.sh --commit abc123  # Rollback to specific commit
+./scripts/rollback.sh              # Rollback to previous version
+./scripts/rollback.sh --force      # Force rollback without safety checks
+./scripts/rollback.sh --commit abc123  # Rollback to specific commit
 ```
 
 ### Database Management
 ```bash
-./download-database.sh  # Download production database to local
+./scripts/download-database.sh  # Download production database to local
 ```
 
 ## Key Files
@@ -71,17 +71,17 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - `Nutrition-Database/app.py`: Nutrition database Flask app
 - `Food-Base/app.py`: Food storage Flask app
 - `Blog-Manager/app.py`: Blog system Flask app
-- `deploy.sh`: Local deployment script
-- `rollback.sh`: Production rollback script
-- `dev-check.sh`: Environment verification
-- `download-database.sh`: Database sync script
+- `scripts/deploy.sh`: Local deployment script
+- `scripts/rollback.sh`: Production rollback script
+- `scripts/dev-check.sh`: Environment verification
+- `scripts/download-database.sh`: Database sync script
 
 ## SSL/HTTPS Configuration
 - `nginx/heart-portal.conf`: Nginx reverse proxy configuration
-- `setup-ssl.sh`: One-time SSL setup script (run on server)
-- `renew-ssl.sh`: Manual SSL certificate renewal
-- `test-ssl.sh`: SSL/HTTPS testing and verification
-- `monitor-services.sh`: Health monitoring for all services
+- `scripts/setup-ssl.sh`: One-time SSL setup script (run on server)
+- `scripts/renew-ssl.sh`: Manual SSL certificate renewal
+- `scripts/test-ssl.sh`: SSL/HTTPS testing and verification
+- `scripts/monitor-services.sh`: Health monitoring for all services
 
 ## Environment Variables
 - USDA API Key required in `.env` files for each component
@@ -94,8 +94,9 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - Git workflow enforcement
 
 ## Recent Changes
-- ✅ **Production Rollback System** - `rollback.sh` script with safety checks and recovery tags
-- ✅ **Enhanced Monitoring** - `monitor-services.sh` works locally to monitor remote server
+- ✅ **Script Organization** - All scripts moved to `scripts/` folder with updated cross-references
+- ✅ **Production Rollback System** - `scripts/rollback.sh` script with safety checks and recovery tags
+- ✅ **Enhanced Monitoring** - `scripts/monitor-services.sh` works locally to monitor remote server
 - ✅ **SSL/HTTPS fully configured** with Let's Encrypt certificates
 - ✅ **Sticky navigation** implemented across all applications
 - ✅ **Fixed deployment script** with correct SSH key paths and server sync
@@ -138,19 +139,19 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 **One-time setup on server (after deploying scripts):**
 ```bash
 # Deploy SSL configuration files
-./deploy.sh
+./scripts/deploy.sh
 
 # SSH to server and run SSL setup
 ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
-sudo ./setup-ssl.sh
+sudo ./scripts/setup-ssl.sh
 ```
 
 **SSL Management Commands:**
 ```bash
-./monitor-services.sh    # Check all services including HTTPS
-./test-ssl.sh           # Comprehensive SSL testing
-./renew-ssl.sh          # Manual certificate renewal
-./renew-ssl.sh --force  # Force renewal
+./scripts/monitor-services.sh    # Check all services including HTTPS
+./scripts/test-ssl.sh           # Comprehensive SSL testing
+./scripts/renew-ssl.sh          # Manual certificate renewal
+./scripts/renew-ssl.sh --force  # Force renewal
 ```
 
 ## Complete Deploy → Test → Rollback Workflow
@@ -158,27 +159,27 @@ sudo ./setup-ssl.sh
 
 ### 1. Deploy & Test
 ```bash
-./deploy.sh              # Deploy changes to production
-./monitor-services.sh    # Verify all services are healthy
+./scripts/deploy.sh              # Deploy changes to production
+./scripts/monitor-services.sh    # Verify all services are healthy
 ```
 
 ### 2. If Issues Found - Rollback
 ```bash
-./rollback.sh            # Quick rollback to previous version
-./rollback.sh --force    # Force rollback without health checks
+./scripts/rollback.sh            # Quick rollback to previous version
+./scripts/rollback.sh --force    # Force rollback without health checks
 ```
 
 ### 3. Fix Locally & Redeploy
 ```bash
 # Fix issues in local development
-./deploy.sh              # Deploy fixed version
+./scripts/deploy.sh              # Deploy fixed version
 ```
 
 ## Troubleshooting
-- Use `./dev-check.sh` to verify environment
+- Use `./scripts/dev-check.sh` to verify environment
 - Check service status on server: `systemctl status heart-portal-*`
-- Database issues: Use `./download-database.sh` to sync from production
+- Database issues: Use `./scripts/download-database.sh` to sync from production
 - Deployment hanging: SSH connection uses BatchMode and ConnectTimeout
 - Template errors: Check template files exist in correct directories
-- SSL issues: Use `./test-ssl.sh` to diagnose problems
+- SSL issues: Use `./scripts/test-ssl.sh` to diagnose problems
 - Certificate problems: Check `/var/log/heart-portal-ssl-renewal.log`
