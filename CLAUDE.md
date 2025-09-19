@@ -71,6 +71,7 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - `Nutrition-Database/app.py`: Nutrition database Flask app
 - `Food-Base/app.py`: Food storage Flask app
 - `Blog-Manager/app.py`: Blog system Flask app
+- `README.md`: GitHub repository documentation (excluded from server)
 - `scripts/deploy.sh`: Local deployment script
 - `scripts/rollback.sh`: Production rollback script
 - `scripts/dev-check.sh`: Environment verification
@@ -101,14 +102,26 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - ✅ **Sticky navigation** implemented across all applications
 - ✅ **Fixed deployment script** with correct SSH key paths and server sync
 - ✅ **All error templates created** (404.html, 500.html) for all applications
+- ✅ **README.md Documentation** - Comprehensive project documentation created for GitHub repository
+- ✅ **Server Analysis Complete** - Full production server architecture documented
+- ✅ **Local Development Setup** - Main app can run locally on port 3000
 - Header background changed to red (#dc2626) in main app
 - Environment-aware JavaScript for local/production compatibility
 - Fixed deployment script syntax errors
 - Implemented database-safe deployment workflow
+- README.md excluded from server deployments via .gitignore but available for GitHub display
 
 ## Current Issues
+- ⚠️ **Server Main App Service** - heart-portal-main service experiencing restart loop (port conflict resolved locally)
 - Contact form exists but may need testing
 - Consider upgrading to production WSGI server (currently using Flask dev server)
+
+## Known Server Status (Last Checked)
+- ✅ **heart-portal-nutrition** (port 5000): Running normally
+- ✅ **heart-portal-food** (port 5001): Running normally
+- ✅ **heart-portal-blog** (port 5002): Running normally
+- ❌ **heart-portal-main** (port 3000): Service failing due to port conflict with existing process
+- ✅ **Nginx & SSL**: Operating correctly with proper HTTPS redirects
 
 ## Templates Status
 ### Main App Templates (main-app/templates/)
@@ -183,3 +196,10 @@ sudo ./scripts/setup-ssl.sh
 - Template errors: Check template files exist in correct directories
 - SSL issues: Use `./scripts/test-ssl.sh` to diagnose problems
 - Certificate problems: Check `/var/log/heart-portal-ssl-renewal.log`
+- **Local Port Conflicts**: If port 3000 is in use locally, kill processes with `lsof -ti :3000` then `kill -9 <PID>`
+- **Server Main App Issues**: Check for existing processes holding port 3000 on server
+
+## Documentation
+- **README.md**: Comprehensive project documentation for GitHub display
+- **CLAUDE.md**: Development and deployment instructions (this file)
+- **Local vs Server**: README.md is excluded from server deployments but shows on GitHub repository

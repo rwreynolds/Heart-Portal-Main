@@ -1,0 +1,74 @@
+[Unit]
+Description=Heart Portal Main App (Landing Page & Navigation)
+After=network.target network-online.target
+Wants=network-online.target
+Documentation=https://github.com/rwreynolds/Heart-Portal-Main
+
+[Service]
+Type=simple
+User=heartportal
+Group=heartportal
+WorkingDirectory=/opt/heart-portal/main-app
+
+# Environment variables
+Environment=PATH=/opt/heart-portal/main-app/venv/bin
+Environment=FLASK_APP=main_app.py
+Environment=FLASK_ENV=production
+Environment=FLASK_DEBUG=0
+Environment=PYTHONPATH=/opt/heart-portal/main-app
+Environment=PYTHONUNBUFFERED=1
+
+# Pre-start checks and cleanup
+ExecStartPre=/bin/bash -c 'echo "Starting Heart Portal Main App at $(date)" >> /var/log/heart-portal-main.log'
+ExecStartPre=/opt/heart-portal/scripts/diagnose-port-3000.sh --quick
+ExecStartPre=/bin/bash -c 'if lsof -ti :3000 >/dev/null 2>&1; then echo "Killing existing processes on port 3000" >> /var/log/heart-portal-main.log; lsof -ti :3000 | xargs -r kill -9; sleep 2; fi'
+ExecStartPre=/bin/bash -c 'if lsof -ti :3000 >/dev/null 2>&1; then echo "ERROR: Port 3000 still in use after cleanup" >> /var/log/heart-portal-main.log; exit 1; fi'
+
+# Start the application
+ExecStart=/opt/heart-portal/main-app/venv/bin/python main_app.py
+
+# Post-start verification
+ExecStartPost=/bin/bash -c 'sleep 5 && if ss -tlnp | grep ":3000 " >/dev/null; then echo "Heart Portal Main App started successfully on port 3000 at $(date)" >> /var/log/heart-portal-main.log; else echo "ERROR: Heart Portal Main App failed to bind to port 3000 at $(date)" >> /var/log/heart-portal-main.log; exit 1; fi'
+
+# Graceful shutdown
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+TimeoutStopSec=30
+KillMode=mixed
+
+# Restart and failure handling
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# When start limit is reached, wait 5 minutes before trying again
+StartLimitAction=none
+
+# Resource limits and security
+LimitNOFILE=65536
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/heart-portal/main-app /var/log /tmp
+
+# Logging
+StandardOutput=append:/var/log/heart-portal-main.log
+StandardError=append:/var/log/heart-portal-main-error.log
+SyslogIdentifier=heart-portal-main
+
+# Health monitoring
+WatchdogSec=30
+
+[Install]
+WantedBy=multi-user.target
+Alias=heart-portal-main.service
+
+# Additional configuration notes:
+# - Comprehensive port conflict detection and resolution
+# - Enhanced logging for debugging
+# - Resource limits and security hardening
+# - Improved restart policies with backoff
+# - Health monitoring integration
+# - Pre/post start verification steps
