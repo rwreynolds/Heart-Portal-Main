@@ -1,0 +1,27 @@
+[Unit]
+Description=Heart Portal Sodium Tracker Service
+After=network.target
+
+[Service]
+Type=simple
+User=heartportal
+WorkingDirectory=/opt/heart-portal/Sodium-Tracker
+Environment=PATH=/opt/heart-portal/Sodium-Tracker/venv/bin
+ExecStart=/opt/heart-portal/Sodium-Tracker/venv/bin/python app.py
+Restart=always
+RestartSec=10
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/heart-portal/Sodium-Tracker/database
+
+# Resource limits
+LimitNOFILE=4096
+MemoryHigh=256M
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

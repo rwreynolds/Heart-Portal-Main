@@ -160,6 +160,9 @@ diagnose_services() {
         "heart-portal-nutrition:5000"
         "heart-portal-food:5001"
         "heart-portal-blog:5002"
+        "heart-portal-sodium:5003"
+        "heart-portal-fluid:5004"
+        "heart-portal-weight:5005"
         "nginx:80,443"
     )
 

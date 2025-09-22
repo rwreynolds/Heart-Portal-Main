@@ -3,7 +3,7 @@ Food-Base Component - Flask Application
 Stores and manages food data captured from API-Manager
 """
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect
 import os
 from datetime import datetime
 
@@ -246,6 +246,57 @@ def health_check():
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+
+# Redirect routes for inter-component navigation
+@app.route('/redirect/nutrition')
+def redirect_to_nutrition():
+    """Redirect to Nutrition Database - environment-aware"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/nutrition-database/')
+    return redirect('http://localhost:5000')
+
+@app.route('/redirect/foodbase')
+def redirect_to_foodbase():
+    """Redirect to Food-Base - environment-aware"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/food-base/')
+    return redirect('http://localhost:5001')
+
+@app.route('/redirect/sodium')
+def redirect_to_sodium():
+    """Redirect to Sodium Tracker - environment-aware"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/sodium-tracker/')
+    return redirect('http://localhost:5003')
+
+@app.route('/redirect/fluid')
+def redirect_to_fluid():
+    """Redirect to Fluid Tracker - environment-aware"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/fluid-tracker/')
+    return redirect('http://localhost:5004')
+
+@app.route('/redirect/weight')
+def redirect_to_weight():
+    """Redirect to Weight Tracker - environment-aware"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/weight-tracker/')
+    return redirect('http://localhost:5005')
 
 if __name__ == '__main__':
     print("🍎 Starting Food-Base Component on port 5001")

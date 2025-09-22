@@ -5,35 +5,45 @@ Multi-component Flask application for heart failure nutrition management with US
 
 ## New Claude Session Quick Start
 **For Claude to help with server tasks, just tell Claude:**
-1. "Check the server status" → I'll use the connection details below
-2. "Deploy SSL" → I'll use `./scripts/deploy.sh` then guide you through server setup
-3. "Monitor services" → I'll help run `./scripts/monitor-services.sh` on server
-4. Server connection: `ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161`
+1. "Check the server status" → I'll use `./scripts/monitor.sh all --local`
+2. "Deploy changes" → I'll use `./scripts/deploy.sh`
+3. "Fix service issues" → I'll use `./scripts/troubleshoot.sh full --fix`
+4. "Manage services" → I'll use `./scripts/manage-services.sh` commands
+5. Server connection: `ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161`
 
 ## Architecture
 - **Main App** (port 3000): Landing page, about pages, navigation hub
 - **Nutrition-Database** (port 5000): USDA Food Data Central API interface
 - **Food-Base** (port 5001): Personal food storage and management
 - **Blog-Manager** (port 5002): Heart health blog system
+- **Sodium-Tracker** (port 5003): Daily sodium intake tracking for heart failure patients
+- **Fluid-Tracker** (port 5004): Daily fluid intake monitoring for optimal hydration
+- **Weight-Tracker** (port 5005): Daily weight tracking for heart failure monitoring
 
 ## Production URLs
 - Main Site: https://heartfailureportal.com
 - Nutrition-Database: https://heartfailureportal.com/nutrition-database/
 - Food-Base: https://heartfailureportal.com/food-base/
 - Blog-Manager: https://heartfailureportal.com/blog-manager/
+- Sodium-Tracker: https://heartfailureportal.com/sodium-tracker/
+- Fluid-Tracker: https://heartfailureportal.com/fluid-tracker/
+- Weight-Tracker: https://heartfailureportal.com/weight-tracker/
 
 ## Local Development URLs
 - Main App: http://localhost:3000
 - Nutrition-Database: http://localhost:5000
 - Food-Base: http://localhost:5001
 - Blog-Manager: http://localhost:5002
+- Sodium-Tracker: http://localhost:5003
+- Fluid-Tracker: http://localhost:5004
+- Weight-Tracker: http://localhost:5005
 
 ## Server Details
 - Host: 129.212.181.161
 - SSH Key: /Users/mrrobot/.ssh/id_ed25519
 - User: heartportal
 - Project Path: /opt/heart-portal
-- Services: Managed via systemctl (heart-portal-main, heart-portal-nutrition, heart-portal-food, heart-portal-blog)
+- Services: Managed via systemctl (heart-portal-main, heart-portal-nutrition, heart-portal-food, heart-portal-blog, heart-portal-sodium, heart-portal-fluid, heart-portal-weight)
 
 ### Server Connection
 ```bash
@@ -66,6 +76,21 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 ./scripts/download-database.sh  # Download production database to local
 ```
 
+### Service Management (New Consolidated Scripts)
+```bash
+# Service control
+./scripts/manage-services.sh status              # Check all services
+./scripts/manage-services.sh restart             # Restart all services
+./scripts/manage-services.sh start main          # Start main app only
+./scripts/manage-services.sh update              # Fix main service port conflicts
+
+# Monitoring & diagnostics
+./scripts/monitor.sh all                         # Quick status check
+./scripts/monitor.sh main                        # Detailed main app status
+./scripts/troubleshoot.sh full                   # Complete system diagnostic
+./scripts/troubleshoot.sh port --fix             # Diagnose and fix port issues
+```
+
 ## Key Files
 - `main-app/main_app.py`: Main Flask application
 - `Nutrition-Database/app.py`: Nutrition database Flask app
@@ -76,13 +101,16 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - `scripts/rollback.sh`: Production rollback script
 - `scripts/dev-check.sh`: Environment verification
 - `scripts/download-database.sh`: Database sync script
+- `SCRIPTS.md`: Comprehensive documentation for all scripts (see for detailed usage)
 
 ## SSL/HTTPS Configuration
 - `nginx/heart-portal.conf`: Nginx reverse proxy configuration
 - `scripts/setup-ssl.sh`: One-time SSL setup script (run on server)
 - `scripts/renew-ssl.sh`: Manual SSL certificate renewal
 - `scripts/test-ssl.sh`: SSL/HTTPS testing and verification
-- `scripts/monitor-services.sh`: Health monitoring for all services
+- `scripts/monitor.sh`: Health monitoring for all services
+- `scripts/manage-services.sh`: Service lifecycle management
+- `scripts/troubleshoot.sh`: Comprehensive diagnostics and auto-repair
 
 ## Environment Variables
 - USDA API Key required in `.env` files for each component
@@ -95,9 +123,11 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - Git workflow enforcement
 
 ## Recent Changes
+- ✅ **Script Consolidation** - Reduced 19 scripts to 12 (-37%), eliminated overlaps and conflicts
+- ✅ **New Consolidated Scripts** - `manage-services.sh`, `monitor.sh`, `troubleshoot.sh` with enhanced features
 - ✅ **Script Organization** - All scripts moved to `scripts/` folder with updated cross-references
 - ✅ **Production Rollback System** - `scripts/rollback.sh` script with safety checks and recovery tags
-- ✅ **Enhanced Monitoring** - `scripts/monitor-services.sh` works locally to monitor remote server
+- ✅ **Enhanced Monitoring** - `scripts/monitor.sh` works locally to monitor remote server with health scoring
 - ✅ **SSL/HTTPS fully configured** with Let's Encrypt certificates
 - ✅ **Sticky navigation** implemented across all applications
 - ✅ **Fixed deployment script** with correct SSH key paths and server sync
@@ -105,6 +135,10 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - ✅ **README.md Documentation** - Comprehensive project documentation created for GitHub repository
 - ✅ **Server Analysis Complete** - Full production server architecture documented
 - ✅ **Local Development Setup** - Main app can run locally on port 3000
+- ✅ **Navbar Consistency Fixed** - All applications now have unified Tools → Trackers submenu structure
+- ✅ **About Page CSS Fixed** - Removed overflow:hidden that prevented submenu display
+- ✅ **Weight-Tracker Fixed** - Resolved close_db() TypeError and blank page issues
+- ✅ **Component Template Updates** - All Flask apps now have consistent navbar and redirect routes
 - Header background changed to red (#dc2626) in main app
 - Environment-aware JavaScript for local/production compatibility
 - Fixed deployment script syntax errors
@@ -116,12 +150,27 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - Contact form exists but may need testing
 - Consider upgrading to production WSGI server (currently using Flask dev server)
 
+## Issues Recently Resolved
+- ✅ **Navbar Inconsistency** - Fixed Tools dropdown structure across all applications
+- ✅ **About Page Submenu** - Fixed CSS overflow issue preventing Trackers submenu display
+- ✅ **Weight-Tracker Service** - Fixed close_db() TypeError and blank page issues
+- ✅ **Missing Redirect Routes** - Added tracker redirect routes to all component applications
+
 ## Known Server Status (Last Checked)
 - ✅ **heart-portal-nutrition** (port 5000): Running normally
 - ✅ **heart-portal-food** (port 5001): Running normally
 - ✅ **heart-portal-blog** (port 5002): Running normally
 - ❌ **heart-portal-main** (port 3000): Service failing due to port conflict with existing process
+- ✅ **heart-portal-sodium** (port 5003): Running normally
+- ✅ **heart-portal-fluid** (port 5004): Running normally
+- ✅ **heart-portal-weight** (port 5005): Running normally (recently fixed)
 - ✅ **Nginx & SSL**: Operating correctly with proper HTTPS redirects
+
+## Local Development Status (Current Session)
+- ✅ **Main App** (port 3000): Running successfully
+- ✅ **Weight-Tracker** (port 5005): Fixed and running (close_db issue resolved)
+- ✅ **All Applications**: Consistent navbar with unified Tools → Trackers submenu
+- ✅ **About Page**: CSS submenu display issue resolved
 
 ## Templates Status
 ### Main App Templates (main-app/templates/)
@@ -142,11 +191,24 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 ### Main App (main-app/main_app.py)
 - `/` - Landing page
 - `/about` - About portal
-- `/creator` - About creator  
+- `/creator` - About creator
 - `/contact` - Contact form (GET/POST)
 - `/blog` - Redirects to blog manager (port 5002)
-- `/redirect/nutrition` - Redirects to API Manager
-- `/redirect/foodbase` - Redirects to Food-Base
+- `/redirect/nutrition` - Redirects to Nutrition Database (port 5000)
+- `/redirect/foodbase` - Redirects to Food-Base (port 5001)
+- `/redirect/sodium` - Redirects to Sodium Tracker (port 5003)
+- `/redirect/fluid` - Redirects to Fluid Tracker (port 5004)
+- `/redirect/weight` - Redirects to Weight Tracker (port 5005)
+
+### Navigation Structure
+All applications feature unified navigation:
+- **Tools** dropdown containing:
+  - 🔍 Nutrition Database
+  - 🍎 Food Storage
+  - **📊 Trackers ▶** (submenu)
+    - 🧂 Sodium Tracker
+    - 💧 Fluid Tracker
+    - ⚖️ Weight Tracker
 
 ## SSL Setup Instructions
 **One-time setup on server (after deploying scripts):**
@@ -198,6 +260,13 @@ sudo ./scripts/setup-ssl.sh
 - Certificate problems: Check `/var/log/heart-portal-ssl-renewal.log`
 - **Local Port Conflicts**: If port 3000 is in use locally, kill processes with `lsof -ti :3000` then `kill -9 <PID>`
 - **Server Main App Issues**: Check for existing processes holding port 3000 on server
+
+### Recently Fixed Issues (Reference)
+- **Navbar Inconsistency**: Fixed by updating all component templates with unified Tools → Trackers structure
+- **About Page Submenu Not Showing**: Fixed by removing `overflow: hidden` from `.content` CSS class in `about.html:125`
+- **Weight-Tracker Blank Page**: Fixed Flask `close_db()` TypeError by renaming teardown function to avoid naming conflicts
+- **Missing Tracker Redirects**: Added `/redirect/sodium`, `/redirect/fluid`, `/redirect/weight` routes to all component applications
+- **BuildError for Tracker URLs**: Fixed by ensuring all templates have the required `url_for()` redirect routes
 
 ## Documentation
 - **README.md**: Comprehensive project documentation for GitHub display

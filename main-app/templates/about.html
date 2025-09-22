@@ -57,6 +57,7 @@
         .nav-links a:hover {
             color: #fecaca;
         }
+        /* Dropdown and submenu styles - Updated */
         .dropdown {
             position: relative;
             display: inline-block;
@@ -85,12 +86,43 @@
         .dropdown:hover .dropdown-content {
             display: block;
         }
+        .dropdown-submenu {
+            position: relative;
+        }
+        .submenu-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .submenu-content {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background-color: #dc2626;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+        }
+        .dropdown-submenu:hover .submenu-content {
+            display: block;
+        }
+        .submenu-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 5px;
+        }
+        .submenu-content a:hover {
+            background-color: #b91c1c;
+        }
         .content {
             background: white;
             margin: 40px 0;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            overflow: hidden;
         }
         .content-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -169,6 +201,14 @@
                         <div class="dropdown-content">
                             <a href="{{ url_for('redirect_to_nutrition') }}">🔍 Nutrition Database</a>
                             <a href="{{ url_for('redirect_to_foodbase') }}">🍎 Food Storage</a>
+                            <div class="dropdown-submenu">
+                                <a href="#" class="submenu-title">📊 Trackers ▶</a>
+                                <div class="submenu-content">
+                                    <a href="{{ url_for('redirect_to_sodium') }}">🧂 Sodium Tracker</a>
+                                    <a href="{{ url_for('redirect_to_fluid') }}">💧 Fluid Tracker</a>
+                                    <a href="{{ url_for('redirect_to_weight') }}">⚖️ Weight Tracker</a>
+                                </div>
+                            </div>
                         </div>
                     </li>
                     <li><a href="/about">About</a></li>

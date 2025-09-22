@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Fluid Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        .header {
+            background: #dc2626;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        .nav-links {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 30px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: #fecaca;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #dc2626;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            top: 100%;
+            right: 0;
+        }
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 5px;
+        }
+        .dropdown-content a:hover {
+            background-color: #b91c1c;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown-submenu {
+            position: relative;
+        }
+        .submenu-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .submenu-content {
+            display: none;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            background-color: #dc2626;
+            min-width: 200px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+        }
+        .dropdown-submenu:hover .submenu-content {
+            display: block;
+        }
+        .submenu-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-radius: 5px;
+        }
+        .submenu-content a:hover {
+            background-color: #b91c1c;
+        }
+        .main-content {
+            padding: 40px 0;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .page-header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .page-header p {
+            color: #e5e7eb;
+            font-size: 1.1rem;
+        }
+        .settings-card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #374151;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+        .form-help {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary {
+            background: #dc2626;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #b91c1c;
+        }
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .guidelines {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .guidelines h3 {
+            margin-top: 0;
+            color: #dc2626;
+        }
+        .guidelines ul {
+            margin: 15px 0 0;
+            padding-left: 20px;
+        }
+        .guidelines li {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+        .actions {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 15px;
+            }
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="header">
+        <nav class="nav container">
+            <a href="{{ main_app_url }}" class="logo">❤️ Heart Portal</a>
+            <ul class="nav-links">
+                <li><a href="{{ main_app_url }}">Home</a></li>
+                <li><a href="{{ blog_url }}">Blog</a></li>
+                <li class="dropdown">
+                    <a href="#">Tools</a>
+                    <div class="dropdown-content">
+                        <a href="{{ nutrition_url }}">🔍 Nutrition Database</a>
+                        <a href="{{ foodbase_url }}">🍎 Food Storage</a>
+                        <div class="dropdown-submenu">
+                            <a href="#" class="submenu-title">📊 Trackers ▶</a>
+                            <div class="submenu-content">
+                                <a href="{{ sodium_url }}">🧂 Sodium Tracker</a>
+                                <a href="/">💧 Fluid Tracker</a>
+                                <a href="{{ weight_url }}">⚖️ Weight Tracker</a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="{{ main_app_url }}/about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>⚙️ Settings</h1>
+                <p>Configure your fluid tracking preferences</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">← Back to Dashboard</a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Settings Form -->
+            <div class="settings-card">
+                <form method="POST" action="{{ url_for('settings') }}">
+                    <div class="form-group">
+                        <label for="default_daily_goal">Default Daily Fluid Goal (ml)</label>
+                        <input type="number" id="default_daily_goal" name="default_daily_goal"
+                               value="{{ settings.get('default_daily_goal', 2000) }}"
+                               min="500" max="5000" step="100" required>
+                        <div class="form-help">
+                            Recommended: 2,000ml for general population, may be restricted for heart failure patients
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="alert_threshold">Alert Threshold (%)</label>
+                        <input type="number" id="alert_threshold" name="alert_threshold"
+                               value="{{ settings.get('alert_threshold', 80) }}"
+                               min="50" max="100" step="5" required>
+                        <div class="form-help">
+                            Show warnings when reaching this percentage of your daily goal
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+
+                <!-- Guidelines -->
+                <div class="guidelines">
+                    <h3>📋 Fluid Intake Guidelines</h3>
+                    <ul>
+                        <li><strong>General Population:</strong> About 2,000ml (8 glasses) per day</li>
+                        <li><strong>Heart Failure Patients:</strong> May be restricted (consult your doctor)</li>
+                        <li><strong>Hypertension:</strong> Monitor intake carefully</li>
+                        <li><strong>Kidney Disease:</strong> Varies, follow medical advice for fluid limits</li>
+                        <li><strong>Athletes:</strong> May need increased intake during exercise</li>
+                    </ul>
+                    <p><strong>Note:</strong> Always consult with your healthcare provider before making significant changes to your fluid intake, especially if you have heart failure or other medical conditions.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

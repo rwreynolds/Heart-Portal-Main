@@ -295,6 +295,45 @@ def redirect_to_foodbase():
     # Local development
     return redirect('http://localhost:5001')
 
+@app.route('/redirect/sodium')
+def redirect_to_sodium():
+    """Redirect to Sodium Tracker - environment-aware"""
+    # Check if we're running in production (server has heartfailureportal.com in hostname)
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/sodium-tracker/')
+
+    # Local development
+    return redirect('http://localhost:5003')
+
+@app.route('/redirect/fluid')
+def redirect_to_fluid():
+    """Redirect to Fluid Tracker - environment-aware"""
+    # Check if we're running in production (server has heartfailureportal.com in hostname)
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/fluid-tracker/')
+
+    # Local development
+    return redirect('http://localhost:5004')
+
+@app.route('/redirect/weight')
+def redirect_to_weight():
+    """Redirect to Weight Tracker - environment-aware"""
+    # Check if we're running in production (server has heartfailureportal.com in hostname)
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return redirect('http://heartfailureportal.com/weight-tracker/')
+
+    # Local development
+    return redirect('http://localhost:5005')
+
 @app.errorhandler(404)
 def page_not_found(e):
     """404 error handler"""
