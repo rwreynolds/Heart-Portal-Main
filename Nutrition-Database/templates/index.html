@@ -1,64 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Nutrition API Manager</title>
-    <style>
-        /* Keep your existing styles and add these new ones */
-        
-        /* Sticky navigation styles */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            padding-top: 80px;
-        }
+{% extends "base.html" %}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+{% block title %}Nutrition Database - Heart Portal{% endblock %}
+
+{% block additional_css %}
+        /* Keep your existing styles and add these new ones */
 
         .tabs {
-            display: flex;
-            border-bottom: 2px solid #e5e5e7;
-            margin-bottom: 24px;
+            display: inline-flex;
+            border-bottom: none;
+            margin-bottom: 0;
+            background: white;
+            border: 1px solid #e5e5e7;
+            border-bottom: none;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            width: auto;
         }
-        
+
         .tab {
             padding: 12px 24px;
-            background: none;
+            background: #f8f9fa;
             border: none;
-            border-bottom: 2px solid transparent;
+            border-right: 1px solid #e5e5e7;
             cursor: pointer;
             font-size: 16px;
             font-weight: 500;
-            color: #86868b;
+            color: #555;
             transition: all 0.2s ease;
+            position: relative;
         }
-        
+
+        .tab:first-child {
+            border-top-left-radius: 8px;
+        }
+
+        .tab:last-child {
+            border-right: none;
+            border-top-right-radius: 8px;
+        }
+
         .tab.active {
             color: #007aff;
-            border-bottom-color: #007aff;
+            background: white;
+            border-bottom: 1px solid white;
+            z-index: 1;
         }
-        
-        .tab:hover {
+
+        .tab:hover:not(.active) {
             color: #007aff;
+            background: #f0f0f0;
         }
-        
+
         .tab-content {
             display: none;
         }
-        
+
         .tab-content.active {
             display: block;
         }
-        
+
         .filter-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -68,25 +68,25 @@
             background: #f7f7f9;
             border-radius: 8px;
         }
-        
+
         .checkbox-group {
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             margin-top: 8px;
         }
-        
+
         .checkbox-item {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        
+
         .checkbox-item input[type="checkbox"] {
             width: 16px;
             height: 16px;
         }
-        
+
         .pagination {
             display: flex;
             align-items: center;
@@ -94,7 +94,7 @@
             gap: 8px;
             margin-top: 16px;
         }
-        
+
         .pagination button {
             padding: 8px 12px;
             border: 1px solid #d2d2d7;
@@ -103,45 +103,45 @@
             cursor: pointer;
             font-size: 14px;
         }
-        
+
         .pagination button:hover:not(:disabled) {
             background: #f7f7f9;
         }
-        
+
         .pagination button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
-        
+
         .pagination .current-page {
             padding: 8px 12px;
             background: #007aff;
             color: white;
             border-radius: 6px;
         }
-        
+
         .comparison-table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 16px;
         }
-        
+
         .comparison-table th,
         .comparison-table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #e5e5e7;
         }
-        
+
         .comparison-table th {
             background: #f7f7f9;
             font-weight: 600;
         }
-        
+
         .comparison-table tr:hover {
             background: #f9f9f9;
         }
-        
+
         .selected-foods {
             background: #e8f4fd;
             border: 1px solid #007aff;
@@ -149,7 +149,7 @@
             padding: 12px;
             margin-bottom: 16px;
         }
-        
+
         .selected-food-item {
             display: inline-block;
             background: #007aff;
@@ -159,13 +159,13 @@
             margin: 2px;
             font-size: 12px;
         }
-        
+
         .remove-food {
             margin-left: 6px;
             cursor: pointer;
             font-weight: bold;
         }
-        
+
         .data-type-badge {
             display: inline-block;
             padding: 2px 6px;
@@ -174,19 +174,19 @@
             font-weight: 500;
             margin-left: 8px;
         }
-        
+
         .badge-foundation { background: #d1eddb; color: #0f5132; }
         .badge-branded { background: #fff3cd; color: #664d03; }
         .badge-sr-legacy { background: #d1ecf1; color: #055160; }
         .badge-survey { background: #f8d7da; color: #721c24; }
         .badge-experimental { background: #e2e3e5; color: #41464b; }
-        
+
         .stats-row {
             display: flex;
             gap: 16px;
             margin-bottom: 16px;
         }
-        
+
         .stat-card {
             flex: 1;
             background: white;
@@ -195,19 +195,19 @@
             border: 1px solid #e5e5e7;
             text-align: center;
         }
-        
+
         .stat-value {
             font-size: 2rem;
             font-weight: 700;
             color: #007aff;
             margin-bottom: 4px;
         }
-        
+
         .stat-label {
             font-size: 0.9rem;
             color: #86868b;
         }
-        
+
         /* Food item separation styles */
         .food-item {
             padding: 16px;
@@ -220,28 +220,28 @@
             cursor: pointer;
             position: relative;
         }
-        
+
         .food-item:hover {
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             border-color: #007aff;
             background: #f8f9fa;
             transform: translateY(-2px);
         }
-        
+
         .food-item:hover .food-name {
             color: #007aff;
         }
-        
+
         .food-item:not(:last-child) {
             border-bottom: 2px solid #f0f0f0;
         }
-        
+
         .food-separator {
             height: 1px;
             background: linear-gradient(to right, transparent, #d1d1d6, transparent);
             margin: 12px 0;
         }
-        
+
         .click-hint {
             position: absolute;
             top: 8px;
@@ -255,121 +255,17 @@
             transition: opacity 0.2s ease;
             pointer-events: none;
         }
-        
+
         .food-item:hover .click-hint {
             opacity: 1;
         }
-        
+
         .food-name {
             font-weight: 600;
             margin-bottom: 8px;
             transition: color 0.2s ease;
         }
 
-        /* Navigation Styles */
-        .nav-header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-        }
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: #fecaca;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            top: 100%;
-            right: 0;
-        }
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .dropdown-content a:hover {
-            background-color: #b91c1c;
-        }
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropdown-submenu {
-            position: relative;
-        }
-        .submenu-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .submenu-content {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-        .dropdown-submenu:hover .submenu-content {
-            display: block;
-        }
-        .submenu-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .submenu-content a:hover {
-            background-color: #b91c1c;
-        }
-        
         .nutrient-highlight {
             background: rgba(0, 122, 255, 0.1);
             padding: 2px 4px;
@@ -377,70 +273,43 @@
             font-weight: 600;
             color: #007aff;
         }
-        
+
         .btn-primary {
             background: #007aff;
             color: white;
             border: 1px solid #007aff;
         }
-        
+
         .btn-primary:hover {
             background: #0056b3;
             border-color: #0056b3;
         }
-        
+
         .save-btn.saving {
             background: #ffc107;
             border-color: #ffc107;
             color: #000;
         }
-        
+
         .save-btn.saved {
             background: #28a745;
             border-color: #28a745;
             color: white;
         }
-        
+
         .save-btn.error {
             background: #dc3545;
             border-color: #dc3545;
             color: white;
         }
-    </style>
-</head>
-<body>
-    <header class="nav-header">
-        <nav class="nav">
-            <div class="logo">❤️ Heart Portal</div>
-            <ul class="nav-links">
-                <li><a href="{{ get_main_app_url() }}">Home</a></li>
-                <li><a href="{{ get_blog_url() }}">Blog</a></li>
-                <li class="dropdown">
-                    <a href="#">Tools</a>
-                    <div class="dropdown-content">
-                        <a href="/">🔍 Nutrition Database</a>
-                        <a href="{{ get_foodbase_url() }}">🍎 Food Storage</a>
-                        <div class="dropdown-submenu">
-                            <a href="#" class="submenu-title">📊 Trackers ▶</a>
-                            <div class="submenu-content">
-                                <a href="{{ url_for('redirect_to_sodium') }}">🧂 Sodium Tracker</a>
-                                <a href="{{ url_for('redirect_to_fluid') }}">💧 Fluid Tracker</a>
-                                <a href="{{ url_for('redirect_to_weight') }}">⚖️ Weight Tracker</a>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <li><a href="{{ get_main_app_url() }}/about">About</a></li>
-                <li><a href="{{ get_main_app_url() }}/creator">Creator</a></li>
-                <li><a href="{{ get_main_app_url() }}/contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
+{% endblock %}
 
-    <div class="container">
-        <!-- Food-Base Style Header -->
-        <div class="header" style="text-align: center; margin-bottom: 40px; padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; margin-bottom: 32px;">
-            <h1 style="font-size: 2.5rem; margin-bottom: 12px; font-weight: 700;">Nutrition Database Search</h1>
+{% block content %}
+    <div class="main-container">
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 40px; padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 12px; font-weight: 700;">🔍 Nutrition Database</h1>
+            <p style="font-size: 1.2rem; opacity: 0.95;">Search and explore comprehensive nutritional information from USDA databases</p>
         </div>
 
         <!-- Main Application Panel -->
@@ -458,17 +327,16 @@
         </div> -->
 
         <!-- Tabbed Interface -->
-        <div class="card">
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('search')">Advanced Search</button>
-                <button class="tab" onclick="switchTab('browse')">Browse Foods</button>
-                <button class="tab" onclick="switchTab('compare')">Compare Foods</button>
-                <button class="tab" onclick="switchTab('analytics')">Analytics</button>
-            </div>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('search')">Advanced Search</button>
+            <button class="tab" onclick="switchTab('browse')">Browse Foods</button>
+            <button class="tab" onclick="switchTab('compare')">Compare Foods</button>
+            <button class="tab" onclick="switchTab('analytics')">Analytics</button>
+        </div>
+        <div class="card" style="border-top: none; border-top-left-radius: 0; border-top-right-radius: 0; margin-top: 0;">
 
             <!-- Advanced Search Tab -->
             <div id="search-tab" class="tab-content active">
-                <h3>Advanced Food Search</h3>
                 <div class="filter-group">
                     <div class="form-group">
                         <label for="adv-search-query">Search Query</label>
@@ -496,7 +364,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="filter-group">
                     <h4 style="margin: 0 0 12px 0; color: #007aff;">Secondary Sorting (Client-Side)</h4>
                     <div class="form-group">
@@ -519,18 +387,18 @@
                             <option value="asc">Lowest First</option>
                         </select>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Data Types to Include</label>
-                    <div id="data-types-checkboxes" class="checkbox-group">
-                        <!-- Will be populated by JavaScript -->
+
+                    <div class="form-group">
+                        <label>Data Types to Include</label>
+                        <div id="data-types-checkboxes" class="checkbox-group">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
-                
+
                 <button onclick="performAdvancedSearch()" class="btn">Advanced Search</button>
                 <button onclick="clearAdvancedSearch()" class="btn btn-secondary">Clear Filters</button>
-                
+
                 <div id="search-stats" class="stats-row" style="display: none;">
                     <div class="stat-card">
                         <div id="total-results" class="stat-value">0</div>
@@ -545,14 +413,13 @@
                         <div class="stat-label">Total Pages</div>
                     </div>
                 </div>
-                
+
                 <div id="search-pagination" class="pagination" style="display: none;"></div>
                 <div id="advanced-search-results" class="search-results" style="display: none;"></div>
             </div>
 
             <!-- Browse Foods Tab -->
             <div id="browse-tab" class="tab-content">
-                <h3>Browse Foods by Category</h3>
                 <div class="filter-group">
                     <div class="form-group">
                         <label>Select Food Categories</label>
@@ -570,32 +437,31 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <button onclick="browseFoods()" class="btn">Browse Foods</button>
                 <button onclick="loadRandomSample()" class="btn btn-secondary">Random Sample</button>
-                
+
                 <div id="browse-pagination" class="pagination" style="display: none;"></div>
                 <div id="browse-results" class="search-results" style="display: none;"></div>
             </div>
 
             <!-- Compare Foods Tab -->
             <div id="compare-tab" class="tab-content">
-                <h3>Compare Foods</h3>
                 <p>Select foods from search results to compare their nutritional profiles side by side.</p>
-                
+
                 <div id="selected-foods-display" class="selected-foods" style="display: none;">
                     <strong>Selected Foods for Comparison:</strong>
                     <div id="selected-foods-list"></div>
                     <button onclick="performComparison()" class="btn">Compare Selected Foods</button>
                     <button onclick="clearSelectedFoods()" class="btn btn-secondary">Clear Selection</button>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="compare-fdc-ids">Or enter FDC IDs directly (comma-separated)</label>
                     <input type="text" id="compare-fdc-ids" class="form-control" placeholder="e.g., 170148,170149,170150">
                     <button onclick="compareByIds()" class="btn" style="margin-top: 8px;">Compare by IDs</button>
                 </div>
-                
+
                 <div id="comparison-results" style="display: none;">
                     <h4>Nutritional Comparison</h4>
                     <div id="comparison-table-container"></div>
@@ -604,9 +470,8 @@
 
             <!-- Analytics Tab -->
             <div id="analytics-tab" class="tab-content">
-                <h3>Database Analytics</h3>
                 <p>Get insights into the USDA FoodData Central database.</p>
-                
+
                 <div class="stats-row">
                     <div class="stat-card">
                         <div id="foundation-count" class="stat-value">-</div>
@@ -625,7 +490,7 @@
                         <div class="stat-label">Survey Foods</div>
                     </div>
                 </div>
-                
+
                 <button onclick="generateAnalytics()" class="btn">Generate Analytics</button>
                 <button onclick="exportData()" class="btn btn-secondary">Export Sample Data</button>
             </div>
@@ -645,12 +510,12 @@
 
         // API Key status tracking
         let apiKeyConfigured = false;
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             checkApiStatus();
             loadDataTypes();
         });
-        
+
         async function checkApiStatus() {
             try {
                 const response = await fetch('./api/status');
@@ -663,7 +528,7 @@
                 updateApiStatusDisplay({ configured: false, message: 'Failed to check API status' });
             }
         }
-        
+
         function updateApiStatusDisplay(status) {
             // DISABLED: API status display hidden
             return;
@@ -690,7 +555,7 @@
 
             header.appendChild(statusSpan);
         }
-        
+
         // Enhanced error handling for API responses
         async function handleApiResponse(response, operation = 'API request') {
             if (response.status === 503) {
@@ -702,12 +567,12 @@
                     throw new Error('API key is not configured');
                 }
             }
-            
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || errorData.message || `${operation} failed`);
             }
-            
+
             return await response.json();
         }
 
@@ -716,14 +581,14 @@
             // Hide all tab contents
             const contents = document.querySelectorAll('.tab-content');
             contents.forEach(content => content.classList.remove('active'));
-            
+
             // Remove active class from all tabs
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(tab => tab.classList.remove('active'));
-            
+
             // Show selected tab content
             document.getElementById(tabName + '-tab').classList.add('active');
-            
+
             // Add active class to clicked tab
             event.target.classList.add('active');
         }
@@ -731,12 +596,12 @@
         // Enhanced provider management
         async function addEnhancedProvider() {
             const apiKey = document.getElementById('enhanced-api-key').value;
-            
+
             if (!apiKey) {
                 showAlert('Please enter an API key', 'error');
                 return;
             }
-            
+
             try {
                 const response = await fetch('./api/add-enhanced-provider', {
                     method: 'POST',
@@ -747,9 +612,9 @@
                         api_key: apiKey
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     showAlert('Enhanced USDA API added successfully! Available endpoints: ' + data.endpoints.join(', '));
                     document.getElementById('enhanced-api-key').value = '';
@@ -767,10 +632,10 @@
             try {
                 const response = await fetch('./api/data-types');
                 const data = await response.json();
-                
+
                 currentDataTypes = data.dataTypes;
                 populateDataTypeCheckboxes();
-                
+
             } catch (error) {
                 showAlert('Failed to load data types: ' + error.message, 'error');
             }
@@ -779,14 +644,14 @@
         function populateDataTypeCheckboxes() {
             const searchCheckboxes = document.getElementById('data-types-checkboxes');
             const browseCheckboxes = document.getElementById('browse-data-types');
-            
+
             const checkboxHtml = currentDataTypes.map(type => `
                 <div class="checkbox-item">
                     <input type="checkbox" id="dt-${type.value}" value="${type.value}">
                     <label for="dt-${type.value}">${type.label}</label>
                 </div>
             `).join('');
-            
+
             searchCheckboxes.innerHTML = checkboxHtml;
             browseCheckboxes.innerHTML = checkboxHtml.replace(/dt-/g, 'browse-dt-');
         }
@@ -798,23 +663,23 @@
                 displayResults([], 'Advanced Search', 'API key is not configured. Please check your .env file.');
                 return;
             }
-            
+
             const query = document.getElementById('adv-search-query').value;
             const brandOwner = document.getElementById('brand-owner').value;
             const sortBy = document.getElementById('sort-by').value;
             const sortOrder = document.getElementById('sort-order').value;
-            
+
             if (!query) {
                 showAlert('Please enter a search query', 'error');
                 return;
             }
-            
+
             // Get selected data types
             const selectedDataTypes = [];
             document.querySelectorAll('#data-types-checkboxes input:checked').forEach(checkbox => {
                 selectedDataTypes.push(checkbox.value);
             });
-            
+
             const searchData = {
                 query: query,
                 dataTypes: selectedDataTypes,
@@ -824,10 +689,10 @@
                 pageSize: 25,
                 pageNumber: pageNumber
             };
-            
+
             try {
                 showLoading('advanced-search-results');
-                
+
                 const response = await fetch('./api/advanced-search', {
                     method: 'POST',
                     headers: {
@@ -835,9 +700,9 @@
                     },
                     body: JSON.stringify(searchData)
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     currentSearchResults = data;
                     displayAdvancedSearchResults(data);
@@ -846,7 +711,7 @@
                 } else {
                     showAlert(data.error, 'error');
                 }
-                
+
             } catch (error) {
                 showAlert('Advanced search failed: ' + error.message, 'error');
             } finally {
@@ -857,12 +722,12 @@
         function displayAdvancedSearchResults(data) {
             const resultsDiv = document.getElementById('advanced-search-results');
             resultsDiv.style.display = 'block';
-            
+
             if (!data.results || data.results.length === 0) {
                 resultsDiv.innerHTML = '<p>No results found.</p>';
                 return;
             }
-            
+
             const resultsHtml = data.results.map((food, index) => `
                 <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
                     <div class="click-hint">Click for details</div>
@@ -870,12 +735,12 @@
                         ${food.name}
                         ${getDataTypeBadge(food.data_type)}
                         <div style="float: right; display: flex; gap: 4px;">
-                            <button onclick="event.stopPropagation(); saveToFoodBase(${food.food_id}, '${food.name.replace(/'/g, "\\'")}', this)" 
-                                    class="btn btn-primary save-btn" style="padding: 4px 8px; font-size: 12px;" 
+                            <button onclick="event.stopPropagation(); saveToFoodBase(${food.food_id}, '${food.name.replace(/'/g, "\\'")}', this)"
+                                    class="btn btn-primary save-btn" style="padding: 4px 8px; font-size: 12px;"
                                     data-food-id="${food.food_id}" title="Save to Food-Base">
                                 💾 Save
                             </button>
-                            <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${food.name}')" 
+                            <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${food.name}')"
                                     class="btn btn-success" style="padding: 4px 8px; font-size: 12px;">
                                 + Compare
                             </button>
@@ -895,7 +760,7 @@
                 </div>
                 ${index < data.results.length - 1 ? '<div class="food-separator"></div>' : ''}
             `).join('');
-            
+
             resultsDiv.innerHTML = resultsHtml;
         }
 
@@ -912,14 +777,14 @@
             document.querySelectorAll('#browse-data-types input:checked').forEach(checkbox => {
                 selectedDataTypes.push(checkbox.value);
             });
-            
+
             if (selectedDataTypes.length === 0) {
                 showAlert('Please select at least one data type to browse', 'error');
                 return;
             }
-            
+
             const pageSize = parseInt(document.getElementById('browse-page-size').value);
-            
+
             const browseData = {
                 dataTypes: selectedDataTypes,
                 sortBy: 'description',
@@ -927,10 +792,10 @@
                 pageSize: pageSize,
                 pageNumber: pageNumber
             };
-            
+
             try {
                 showLoading('browse-results');
-                
+
                 const response = await fetch('./api/foods-list', {
                     method: 'POST',
                     headers: {
@@ -938,16 +803,16 @@
                     },
                     body: JSON.stringify(browseData)
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     displayBrowseResults(data);
                     createPagination('browse-pagination', data, browseFoods);
                 } else {
                     showAlert(data.error, 'error');
                 }
-                
+
             } catch (error) {
                 showAlert('Browse failed: ' + error.message, 'error');
             } finally {
@@ -958,19 +823,19 @@
         function displayBrowseResults(data) {
             const resultsDiv = document.getElementById('browse-results');
             resultsDiv.style.display = 'block';
-            
+
             if (!data.foods || data.foods.length === 0) {
                 resultsDiv.innerHTML = '<p>No foods found.</p>';
                 return;
             }
-            
+
             const resultsHtml = data.foods.map((food, index) => `
                 <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
                     <div class="click-hint">Click for details</div>
                     <div class="food-name">
                         ${food.name}
                         ${getDataTypeBadge(food.data_type)}
-                        <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${food.name}')" 
+                        <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${food.name}')"
                                 class="btn btn-success" style="float: right; padding: 4px 8px; font-size: 12px;">
                             + Compare
                         </button>
@@ -988,7 +853,7 @@
                 </div>
                 ${index < data.foods.length - 1 ? '<div class="food-separator"></div>' : ''}
             `).join('');
-            
+
             resultsDiv.innerHTML = resultsHtml;
         }
 
@@ -998,12 +863,12 @@
                 showAlert('Food already selected for comparison', 'error');
                 return;
             }
-            
+
             if (selectedFoodsForComparison.length >= 10) {
                 showAlert('Maximum 10 foods can be compared at once', 'error');
                 return;
             }
-            
+
             selectedFoodsForComparison.push({ id: fdcId, name: name });
             updateSelectedFoodsDisplay();
             showAlert(`Added "${name}" to comparison`);
@@ -1012,12 +877,12 @@
         function updateSelectedFoodsDisplay() {
             const display = document.getElementById('selected-foods-display');
             const list = document.getElementById('selected-foods-list');
-            
+
             if (selectedFoodsForComparison.length === 0) {
                 display.style.display = 'none';
                 return;
             }
-            
+
             display.style.display = 'block';
             list.innerHTML = selectedFoodsForComparison.map(food => `
                 <span class="selected-food-item">
@@ -1042,7 +907,7 @@
                 showAlert('Please select at least 2 foods to compare', 'error');
                 return;
             }
-            
+
             const fdcIds = selectedFoodsForComparison.map(food => food.id);
             await compareFoods(fdcIds);
         }
@@ -1053,17 +918,17 @@
                 showAlert('Please enter FDC IDs', 'error');
                 return;
             }
-            
+
             const fdcIds = idsInput.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
             if (fdcIds.length < 2) {
                 showAlert('Please enter at least 2 valid FDC IDs', 'error');
                 return;
             }
-            
-            await compareFood-ids(fdcIds);
+
+            await compareFoods(fdcIds);
         }
 
-        async function compareFood(fdcIds) {
+        async function compareFoods(fdcIds) {
             try {
                 const response = await fetch('./api/compare-foods', {
                     method: 'POST',
@@ -1074,15 +939,15 @@
                         fdcIds: fdcIds
                     })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     displayComparisonResults(data);
                 } else {
                     showAlert(data.error, 'error');
                 }
-                
+
             } catch (error) {
                 showAlert('Comparison failed: ' + error.message, 'error');
             }
@@ -1091,14 +956,14 @@
         function displayComparisonResults(data) {
             const resultsDiv = document.getElementById('comparison-results');
             const tableContainer = document.getElementById('comparison-table-container');
-            
+
             resultsDiv.style.display = 'block';
-            
+
             if (!data.foods || data.foods.length === 0) {
                 tableContainer.innerHTML = '<p>No comparison data available.</p>';
                 return;
             }
-            
+
             // Create comparison table
             const commonNutrients = [
                 { id: 1008, name: 'Energy (kcal)', unit: 'kcal' },
@@ -1109,13 +974,13 @@
                 { id: 2000, name: 'Sugars', unit: 'g' },
                 { id: 1093, name: 'Sodium', unit: 'mg' }
             ];
-            
+
             let tableHtml = '<table class="comparison-table"><thead><tr><th>Nutrient</th>';
             data.foods.forEach(food => {
                 tableHtml += `<th>${food.description}</th>`;
             });
             tableHtml += '</tr></thead><tbody>';
-            
+
             commonNutrients.forEach(nutrient => {
                 tableHtml += `<tr><td>${nutrient.name} (${nutrient.unit})</td>`;
                 data.foods.forEach(food => {
@@ -1125,7 +990,7 @@
                 });
                 tableHtml += '</tr>';
             });
-            
+
             tableHtml += '</tbody></table>';
             tableContainer.innerHTML = tableHtml;
         }
@@ -1146,7 +1011,7 @@
                 'Survey (FNDDS)': 'badge-survey',
                 'Experimental': 'badge-experimental'
             };
-            
+
             const badgeClass = badges[dataType] || 'badge-experimental';
             return `<span class="data-type-badge ${badgeClass}">${dataType || 'Unknown'}</span>`;
         }
@@ -1165,20 +1030,20 @@
             const container = document.getElementById(containerId);
             const currentPage = data.currentPage || 1;
             const totalPages = data.totalPages || 1;
-            
+
             if (totalPages <= 1) {
                 container.style.display = 'none';
                 return;
             }
-            
+
             container.style.display = 'flex';
-            
+
             let paginationHtml = `
                 <button onclick="${callback.name}(${currentPage - 1})" ${currentPage <= 1 ? 'disabled' : ''}>Previous</button>
                 <span class="current-page">Page ${currentPage} of ${totalPages}</span>
                 <button onclick="${callback.name}(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>
             `;
-            
+
             container.innerHTML = paginationHtml;
         }
 
@@ -1204,33 +1069,33 @@
             document.getElementById('search-stats').style.display = 'none';
             document.getElementById('search-pagination').style.display = 'none';
         }
-        
+
         function reorderResultsByNutrient() {
             if (!currentSearchResults || !currentSearchResults.results) return;
-            
+
             const nutrientSort = document.getElementById('nutrient-sort').value;
             const sortOrder = document.getElementById('nutrient-sort-order').value;
-            
+
             if (!nutrientSort) {
                 // If no nutrient sorting, display original results
                 displayAdvancedSearchResults(currentSearchResults);
                 highlightSortedNutrient(''); // Remove highlights
                 return;
             }
-            
+
             // Create a copy of the results to sort
             const sortedResults = [...currentSearchResults.results];
-            
+
             // Sort by the selected nutrient
             sortedResults.sort((a, b) => {
                 const aValue = getNutrientValue(a, nutrientSort);
                 const bValue = getNutrientValue(b, nutrientSort);
-                
+
                 // Handle null/undefined values - put them at the end
                 if (aValue === null && bValue === null) return 0;
                 if (aValue === null) return 1;
                 if (bValue === null) return -1;
-                
+
                 // Sort based on order preference
                 if (sortOrder === 'desc') {
                     return bValue - aValue; // Descending (highest first)
@@ -1238,21 +1103,21 @@
                     return aValue - bValue; // Ascending (lowest first)
                 }
             });
-            
+
             // Display the sorted results
             const sortedData = {
                 ...currentSearchResults,
                 results: sortedResults
             };
             displayAdvancedSearchResults(sortedData);
-            
+
             // Highlight the sorted nutrient values
             highlightSortedNutrient(nutrientSort);
-            
+
             // Show sorting indicator
             showAlert(`Results sorted by ${nutrientSort} (${sortOrder === 'desc' ? 'highest first' : 'lowest first'})`);
         }
-        
+
         function getNutrientValue(food, nutrientType) {
             // Map nutrient types to food properties
             switch (nutrientType) {
@@ -1274,15 +1139,15 @@
                     return null;
             }
         }
-        
+
         function highlightSortedNutrient(nutrientType) {
             // Remove existing highlights
             document.querySelectorAll('.nutrient-highlight').forEach(el => {
                 el.classList.remove('nutrient-highlight');
             });
-            
+
             if (!nutrientType) return;
-            
+
             // Add highlight to the sorted nutrient
             setTimeout(() => {
                 document.querySelectorAll(`[data-nutrient="${nutrientType}"]`).forEach(el => {
@@ -1298,7 +1163,7 @@
             alert.className = `alert alert-${type}`;
             alert.textContent = message;
             alertsDiv.appendChild(alert);
-            
+
             setTimeout(() => {
                 alert.remove();
             }, 5000);
@@ -1314,37 +1179,37 @@
                         'Content-Type': 'application/json',
                     }
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('Failed to fetch food details');
                 }
-                
+
                 const foodData = await response.json();
                 displayFoodDetailsModal(foodData);
-                
+
             } catch (error) {
                 console.error('Error fetching food details:', error);
                 showAlert('Unable to load food details. Please try again.', 'error');
             }
         }
-        
+
         function displayFoodDetailsModal(food) {
             // Store food data globally for calculations
             currentFoodData = food;
-            
+
             // Determine default portion from food portions or use 100g
             let defaultAmount = 100;
             let defaultUnit = 'g';
-            
+
             // Check if food has portion information
             if (food.foodPortions && food.foodPortions.length > 0) {
                 const portion = food.foodPortions[0];
                 defaultAmount = portion.amount || 100;
-                defaultUnit = portion.modifier === 'cup' ? 'cup' : 
+                defaultUnit = portion.modifier === 'cup' ? 'cup' :
                              portion.modifier === 'oz' ? 'oz' :
                              portion.modifier?.includes('serving') ? 'serving' : 'g';
             }
-            
+
             // Create and show a modal with food details
             const modalHtml = `
                 <div id="food-modal" style="
@@ -1385,13 +1250,13 @@
                             ${food.brandOwner ? `<strong>Brand:</strong> ${food.brandOwner}<br>` : ''}
                             ${food.publishedDate ? `<strong>Published:</strong> ${new Date(food.publishedDate).toLocaleDateString()}<br>` : ''}
                         </div>
-                        
+
                         <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
                             <h3 style="color: #007aff; margin: 0 0 12px 0;">Portion Size Calculator</h3>
                             <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 12px;">
                                 <div style="flex: 1;">
                                     <label style="display: block; font-weight: 600; margin-bottom: 4px;">Amount:</label>
-                                    <input type="number" id="portion-amount" value="${defaultAmount}" min="0.1" step="0.1" 
+                                    <input type="number" id="portion-amount" value="${defaultAmount}" min="0.1" step="0.1"
                                            style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
                                            onchange="recalculateNutrients()">
                                 </div>
@@ -1434,20 +1299,20 @@
                     </div>
                 </div>
             `;
-            
+
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
+
             // Trigger initial calculation with default values
             setTimeout(() => {
                 recalculateNutrients();
             }, 100);
         }
-        
+
         function formatNutrientsForModal(nutrients) {
             if (!nutrients || nutrients.length === 0) {
                 return '<p style="grid-column: 1/-1; color: #666;">No nutritional data available</p>';
             }
-            
+
             // Show most important nutrients first
             const importantNutrients = [1008, 1003, 1004, 1005, 1079, 2000, 1093, 1087, 1089];
             const sortedNutrients = nutrients.sort((a, b) => {
@@ -1458,12 +1323,12 @@
                 if (bIndex === -1) return -1;
                 return aIndex - bIndex;
             });
-            
+
             return sortedNutrients.slice(0, 20).map(nutrient => {
                 const name = nutrient.nutrient?.name || nutrient.name || 'Unknown';
                 const amount = nutrient.amount || nutrient.value || 0;
                 const unit = nutrient.nutrient?.unitName || nutrient.unit || '';
-                
+
                 return `
                     <div style="padding: 8px; border: 1px solid #eee; border-radius: 4px;">
                         <strong>${name}</strong><br>
@@ -1472,37 +1337,37 @@
                 `;
             }).join('');
         }
-        
+
         function closeFoodModal() {
             const modal = document.getElementById('food-modal');
             if (modal) {
                 modal.remove();
             }
         }
-        
+
         // Food-Base integration functions
         let foodBaseConnection = null;
-        
+
         // Check Food-Base connection on page load
         document.addEventListener('DOMContentLoaded', function() {
             checkFoodBaseConnection();
         });
-        
+
         async function checkFoodBaseConnection() {
             try {
                 const response = await fetch('./api/check-foodbase-connection');
                 const data = await response.json();
-                
+
                 foodBaseConnection = data;
                 updateFoodBaseStatus(data);
-                
+
             } catch (error) {
                 console.error('Failed to check Food-Base connection:', error);
                 foodBaseConnection = { connected: false, error: error.message };
                 updateFoodBaseStatus(foodBaseConnection);
             }
         }
-        
+
         function updateFoodBaseStatus(status) {
             // DISABLED: Food-Base status display hidden
             return;
@@ -1526,22 +1391,22 @@
                 header.appendChild(statusSpan);
             }
         }
-        
+
         async function saveToFoodBase(fdcId, foodName, buttonElement) {
             // Check if Food-Base is connected
             if (!foodBaseConnection || !foodBaseConnection.connected) {
                 showAlert('Food-Base is not connected. Please make sure it is running on port 5001.', 'error');
                 return;
             }
-            
+
             // Update button state
             const originalText = buttonElement.textContent;
             const originalClass = buttonElement.className;
-            
+
             buttonElement.textContent = '⏳ Saving...';
             buttonElement.className = buttonElement.className.replace('btn-primary', 'saving');
             buttonElement.disabled = true;
-            
+
             try {
                 const response = await fetch('./api/save-to-foodbase', {
                     method: 'POST',
@@ -1552,40 +1417,40 @@
                         fdc_id: fdcId
                     })
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     // Success state
                     buttonElement.textContent = result.duplicate ? '✓ Already Saved' : '✓ Saved!';
                     buttonElement.className = originalClass.replace('btn-primary', 'saved').replace('saving', '');
-                    
-                    const message = result.duplicate 
+
+                    const message = result.duplicate
                         ? `"${foodName}" was already in your Food-Base`
                         : `"${foodName}" saved to Food-Base successfully!`;
-                    
+
                     showAlert(message, 'success');
-                    
+
                     // Update connection status to show new count
                     if (!result.duplicate) {
                         foodBaseConnection.foods_stored = (foodBaseConnection.foods_stored || 0) + 1;
                         updateFoodBaseStatus(foodBaseConnection);
                     }
-                    
+
                     // Reset button after delay
                     setTimeout(() => {
                         if (!result.duplicate) {
                             buttonElement.textContent = '✓ Saved';
                         }
                     }, 2000);
-                    
+
                 } else {
                     // Error state
                     buttonElement.textContent = '❌ Error';
                     buttonElement.className = originalClass.replace('btn-primary', 'error').replace('saving', '');
-                    
+
                     showAlert(`Failed to save "${foodName}": ${result.error}`, 'error');
-                    
+
                     // Reset button after delay
                     setTimeout(() => {
                         buttonElement.textContent = originalText;
@@ -1593,16 +1458,16 @@
                         buttonElement.disabled = false;
                     }, 3000);
                 }
-                
+
             } catch (error) {
                 console.error('Save to Food-Base failed:', error);
-                
+
                 // Error state
                 buttonElement.textContent = '❌ Error';
                 buttonElement.className = originalClass.replace('btn-primary', 'error').replace('saving', '');
-                
+
                 showAlert(`Failed to save "${foodName}": ${error.message}`, 'error');
-                
+
                 // Reset button after delay
                 setTimeout(() => {
                     buttonElement.textContent = originalText;
@@ -1611,7 +1476,7 @@
                 }, 3000);
             }
         }
-        
+
         // Add Food-Base link to interface
         function addFoodBaseLink() {
             const header = document.querySelector('.header');
@@ -1632,13 +1497,13 @@
                 }
             }
         }
-        
+
         // Call addFoodBaseLink when connection is established
         // setTimeout(addFoodBaseLink, 1000); // Hidden while deciding whether to keep
-        
+
         // Global variable to store original food data
         let currentFoodData = null;
-        
+
         // Unit conversion factors (everything converted to grams)
         const unitConversions = {
             'g': 1,
@@ -1650,32 +1515,32 @@
             'tsp': 5,        // Approximate
             'serving': 100   // Default serving size
         };
-        
+
         function recalculateNutrients() {
             if (!currentFoodData) return;
-            
+
             const amount = parseFloat(document.getElementById('portion-amount').value) || 100;
             const unit = document.getElementById('portion-unit').value;
-            
+
             // Convert input to grams
             const gramsAmount = amount * unitConversions[unit];
-            
+
             // Calculate multiplier (USDA data is per 100g)
             const multiplier = gramsAmount / 100;
-            
+
             // Update the display
             updateNutrientsDisplay(currentFoodData.foodNutrients || [], multiplier, amount, unit);
         }
-        
+
         function updateNutrientsDisplay(nutrients, multiplier, displayAmount, displayUnit) {
             const nutrientsList = document.getElementById('nutrients-list');
             if (!nutrientsList) return;
-            
+
             if (!nutrients || nutrients.length === 0) {
                 nutrientsList.innerHTML = '<p style="grid-column: 1/-1; color: #666;">No nutritional data available</p>';
                 return;
             }
-            
+
             // Show most important nutrients first
             const importantNutrients = [1008, 1003, 1004, 1005, 1079, 2000, 1093, 1087, 1089];
             const sortedNutrients = nutrients.sort((a, b) => {
@@ -1686,13 +1551,13 @@
                 if (bIndex === -1) return -1;
                 return aIndex - bIndex;
             });
-            
+
             const nutrientsHtml = sortedNutrients.slice(0, 20).map(nutrient => {
                 const name = nutrient.nutrient?.name || nutrient.name || 'Unknown';
                 const originalAmount = nutrient.amount || nutrient.value || 0;
                 const calculatedAmount = originalAmount * multiplier;
                 const unit = nutrient.nutrient?.unitName || nutrient.unit || '';
-                
+
                 return `
                     <div style="padding: 8px; border: 1px solid #eee; border-radius: 4px; position: relative;">
                         <strong>${name}</strong><br>
@@ -1708,9 +1573,8 @@
                     </div>
                 `;
             }).join('');
-            
+
             nutrientsList.innerHTML = nutrientsHtml;
         }
     </script>
-</body>
-</html>
+{% endblock %}

@@ -1,66 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Error - Sodium Tracker</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .error-container {
-            text-align: center;
-            background: white;
-            border-radius: 15px;
-            padding: 60px 40px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            max-width: 500px;
-        }
-        .error-code {
-            font-size: 6rem;
-            font-weight: bold;
-            color: #dc2626;
-            margin: 0;
-        }
-        .error-message {
-            font-size: 1.5rem;
-            margin: 20px 0;
-            color: #374151;
-        }
-        .error-description {
-            color: #6b7280;
-            margin-bottom: 30px;
-        }
-        .btn {
-            padding: 15px 30px;
-            background: #dc2626;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: bold;
-            transition: background 0.3s ease;
-        }
-        .btn:hover {
-            background: #b91c1c;
-        }
-    </style>
-</head>
-<body>
-    <div class="error-container">
-        <h1 class="error-code">500</h1>
-        <h2 class="error-message">Server Error</h2>
-        <p class="error-description">
-            Something went wrong with the Sodium Tracker. Please try again later.
-        </p>
-        <a href="/" class="btn">Return to Dashboard</a>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}Server Error - Sodium Tracker{% endblock %}
+
+{% block additional_css %}
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-container {
+    text-align: center;
+    background: white;
+    border-radius: 15px;
+    padding: 60px 40px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    max-width: 500px;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: bold;
+    color: #dc2626;
+    margin: 0;
+}
+
+.error-message {
+    font-size: 1.5rem;
+    margin: 20px 0;
+    color: #374151;
+}
+
+.error-description {
+    color: #6b7280;
+    margin-bottom: 30px;
+}
+
+.btn {
+    padding: 15px 30px;
+    background: #dc2626;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background 0.3s ease;
+}
+
+.btn:hover {
+    background: #b91c1c;
+}
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <h1 class="error-code">500</h1>
+    <h2 class="error-message">Server Error</h2>
+    <p class="error-description">
+        Something went wrong with the Sodium Tracker. Please try again later.
+    </p>
+    <a href="/" class="btn">Return to Dashboard</a>
+</div>
+{% endblock %}

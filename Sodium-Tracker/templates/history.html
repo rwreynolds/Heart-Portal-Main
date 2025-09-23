@@ -1,309 +1,178 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sodium History - Heart Portal</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
-        .nav-links {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            gap: 30px;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: #fecaca;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            top: 100%;
-            right: 0;
-        }
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .dropdown-content a:hover {
-            background-color: #b91c1c;
-        }
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropdown-submenu {
-            position: relative;
-        }
-        .submenu-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .submenu-content {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-        .dropdown-submenu:hover .submenu-content {
-            display: block;
-        }
-        .submenu-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .submenu-content a:hover {
-            background-color: #b91c1c;
-        }
-        .main-content {
-            padding: 40px 0;
-        }
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .page-header h1 {
-            color: white;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        .page-header p {
-            color: #e5e7eb;
-            font-size: 1.1rem;
-        }
-        .history-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .history-table th,
-        .history-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .history-table th {
-            background: #f9fafb;
-            font-weight: bold;
-            color: #374151;
-        }
-        .history-table tr:hover {
-            background: #f9fafb;
-        }
-        .progress-bar {
-            width: 100px;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s ease;
-        }
-        .progress-good {
-            background: #10b981;
-        }
-        .progress-warning {
-            background: #f59e0b;
-        }
-        .progress-danger {
-            background: #ef4444;
-        }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: inline-block;
-        }
-        .btn-primary {
-            background: #dc2626;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #b91c1c;
-        }
-        .actions {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .no-data {
-            text-align: center;
-            color: #6b7280;
-            font-style: italic;
-            padding: 40px;
-        }
+{% extends "base.html" %}
 
-        @media (max-width: 768px) {
-            .history-table {
-                font-size: 14px;
-            }
-            .history-table th,
-            .history-table td {
-                padding: 10px 8px;
-            }
-            .nav-links {
-                gap: 15px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation Header -->
-    <header class="header">
-        <nav class="nav container">
-            <a href="{{ main_app_url }}" class="logo">❤️ Heart Portal</a>
-            <ul class="nav-links">
-                <li><a href="{{ main_app_url }}">Home</a></li>
-                <li><a href="{{ blog_url }}">Blog</a></li>
-                <li class="dropdown">
-                    <a href="#">Tools</a>
-                    <div class="dropdown-content">
-                        <a href="{{ nutrition_url }}">🔍 Nutrition Database</a>
-                        <a href="{{ foodbase_url }}">🍎 Food Storage</a>
-                        <div class="dropdown-submenu">
-                            <a href="#" class="submenu-title">📊 Trackers ▶</a>
-                            <div class="submenu-content">
-                                <a href="/">🧂 Sodium Tracker</a>
-                                <a href="{{ fluid_url }}">💧 Fluid Tracker</a>
-                                <a href="{{ weight_url }}">⚖️ Weight Tracker</a>
+{% block title %}Sodium History - Heart Portal{% endblock %}
+
+{% block additional_css %}
+.main-content {
+    padding: 40px 0;
+}
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-header h1 {
+    color: white;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.page-header p {
+    color: #e5e7eb;
+    font-size: 1.1rem;
+}
+
+.history-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.history-table th,
+.history-table td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.history-table th {
+    background: #f9fafb;
+    font-weight: bold;
+    color: #374151;
+}
+
+.history-table tr:hover {
+    background: #f9fafb;
+}
+
+.progress-bar {
+    width: 100px;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-good {
+    background: #10b981;
+}
+
+.progress-warning {
+    background: #f59e0b;
+}
+
+.progress-danger {
+    background: #ef4444;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #b91c1c;
+}
+
+.actions {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.no-data {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 40px;
+}
+
+@media (max-width: 768px) {
+    .history-table {
+        font-size: 14px;
+    }
+    .history-table th,
+    .history-table td {
+        padding: 10px 8px;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>📊 Sodium History</h1>
+        <p>Review your daily sodium intake over time</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">← Back to Dashboard</a>
+    </div>
+
+    <!-- History Table -->
+    <div class="history-card">
+        {% if daily_summaries %}
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Total Sodium</th>
+                        <th>Daily Goal</th>
+                        <th>Progress</th>
+                        <th>Entries</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for summary in daily_summaries %}
+                    <tr>
+                        <td>{{ summary.date }}</td>
+                        <td><strong>{{ summary.total_sodium }}mg</strong></td>
+                        <td>{{ summary.daily_goal }}mg</td>
+                        <td>
+                            <div class="progress-bar">
+                                <div class="progress-fill
+                                           {% if summary.percentage >= 100 %}progress-danger
+                                           {% elif summary.percentage >= 80 %}progress-warning
+                                           {% else %}progress-good{% endif %}"
+                                     style="width: {{ [summary.percentage, 100]|min }}%"></div>
                             </div>
-                        </div>
-                    </div>
-                </li>
-                <li><a href="{{ main_app_url }}/about">About</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Page Header -->
-            <div class="page-header">
-                <h1>📊 Sodium History</h1>
-                <p>Review your daily sodium intake over time</p>
+                            <small>{{ summary.percentage }}%</small>
+                        </td>
+                        <td>{{ summary.entry_count }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-data">
+                No sodium tracking data found. <a href="{{ url_for('add_entry') }}">Start tracking</a> to see your history!
             </div>
-
-            <!-- Actions -->
-            <div class="actions">
-                <a href="{{ url_for('index') }}" class="btn btn-primary">← Back to Dashboard</a>
-            </div>
-
-            <!-- History Table -->
-            <div class="history-card">
-                {% if daily_summaries %}
-                    <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Total Sodium</th>
-                                <th>Daily Goal</th>
-                                <th>Progress</th>
-                                <th>Entries</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for summary in daily_summaries %}
-                            <tr>
-                                <td>{{ summary.date }}</td>
-                                <td><strong>{{ summary.total_sodium }}mg</strong></td>
-                                <td>{{ summary.daily_goal }}mg</td>
-                                <td>
-                                    <div class="progress-bar">
-                                        <div class="progress-fill
-                                                   {% if summary.percentage >= 100 %}progress-danger
-                                                   {% elif summary.percentage >= 80 %}progress-warning
-                                                   {% else %}progress-good{% endif %}"
-                                             style="width: {{ [summary.percentage, 100]|min }}%"></div>
-                                    </div>
-                                    <small>{{ summary.percentage }}%</small>
-                                </td>
-                                <td>{{ summary.entry_count }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                {% else %}
-                    <div class="no-data">
-                        No sodium tracking data found. <a href="{{ url_for('add_entry') }}">Start tracking</a> to see your history!
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </main>
-</body>
-</html>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

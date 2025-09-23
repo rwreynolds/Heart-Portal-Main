@@ -12,6 +12,13 @@ import json
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fluid-tracker-secret-key-change-in-production')
 
+# Configure Jinja to look in multiple template directories
+from jinja2 import FileSystemLoader, ChoiceLoader
+app.jinja_loader = ChoiceLoader([
+    FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
+    FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
+])
+
 # Database configuration
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'fluid_tracker.db')
 
@@ -59,6 +66,35 @@ def get_sodium_url():
         if 'ubuntu' in hostname or 'heartfailure' in hostname:
             return 'https://heartfailureportal.com/sodium-tracker/'
     return 'http://localhost:5003'
+
+def get_fluid_url():
+    """Get the fluid tracker URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/fluid-tracker/'
+    return 'http://localhost:5004'
+
+def get_weight_url():
+    """Get the weight tracker URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/weight-tracker/'
+    return 'http://localhost:5005'
+
+# Make URL functions available in templates
+app.jinja_env.globals.update(
+    get_main_app_url=get_main_app_url,
+    get_blog_url=get_blog_url,
+    get_nutrition_url=get_nutrition_url,
+    get_foodbase_url=get_foodbase_url,
+    get_sodium_url=get_sodium_url,
+    get_fluid_url=get_fluid_url,
+    get_weight_url=get_weight_url
+)
 
 def init_database():
     """Initialize the SQLite database"""

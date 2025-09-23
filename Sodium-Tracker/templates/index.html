@@ -1,446 +1,354 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sodium Tracker - Heart Portal</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
-        .nav-links {
-            display: flex;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            gap: 30px;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: #fecaca;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            top: 100%;
-            right: 0;
-        }
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .dropdown-content a:hover {
-            background-color: #b91c1c;
-        }
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropdown-submenu {
-            position: relative;
-        }
-        .submenu-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .submenu-content {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-        .dropdown-submenu:hover .submenu-content {
-            display: block;
-        }
-        .submenu-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .submenu-content a:hover {
-            background-color: #b91c1c;
-        }
-        .main-content {
-            padding: 40px 0;
-        }
-        .dashboard-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .dashboard-header h1 {
-            color: white;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-        .dashboard-header p {
-            color: #e5e7eb;
-            font-size: 1.1rem;
-        }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        .progress-card {
-            text-align: center;
-        }
-        .progress-circle {
-            width: 150px;
-            height: 150px;
-            margin: 0 auto 20px;
-            position: relative;
-        }
-        .progress-ring {
-            transform: rotate(-90deg);
-        }
-        .progress-ring-circle {
-            stroke: #e5e7eb;
-            stroke-width: 8;
-            fill: transparent;
-        }
-        .progress-ring-progress {
-            stroke-width: 8;
-            fill: transparent;
-            stroke-linecap: round;
-            transition: stroke-dasharray 0.5s ease;
-        }
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        .quick-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            text-align: center;
-        }
-        .stat-item h3 {
-            margin: 0;
-            font-size: 1.8rem;
-            color: #dc2626;
-        }
-        .stat-item p {
-            margin: 5px 0 0;
-            color: #6b7280;
-        }
-        .actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background: #dc2626;
-            color: white;
-        }
-        .btn-primary:hover {
-            background: #b91c1c;
-        }
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-        }
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
-        .recent-entries {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        .recent-entries h2 {
-            margin-top: 0;
-            color: #dc2626;
-        }
-        .entries-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .entry-item {
-            padding: 15px;
-            border-bottom: 1px solid #e5e7eb;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .entry-item:last-child {
-            border-bottom: none;
-        }
-        .entry-details {
-            flex: 1;
-        }
-        .entry-food {
-            font-weight: bold;
-            color: #374151;
-        }
-        .entry-meta {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin-top: 5px;
-        }
-        .entry-sodium {
-            font-weight: bold;
-            color: #dc2626;
-            font-size: 1.1rem;
-        }
-        .no-entries {
-            text-align: center;
-            color: #6b7280;
-            font-style: italic;
-            padding: 40px;
-        }
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .alert-warning {
-            background: #fef3c7;
-            border: 1px solid #f59e0b;
-            color: #92400e;
-        }
-        .alert-danger {
-            background: #fee2e2;
-            border: 1px solid #ef4444;
-            color: #dc2626;
-        }
-        .alert-success {
-            background: #d1fae5;
-            border: 1px solid #10b981;
-            color: #065f46;
-        }
+{% extends "base.html" %}
 
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            .nav-links {
-                gap: 15px;
-            }
-            .actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation Header -->
-    <header class="header">
-        <nav class="nav container">
-            <a href="{{ main_app_url }}" class="logo">❤️ Heart Portal</a>
-            <ul class="nav-links">
-                <li><a href="{{ main_app_url }}">Home</a></li>
-                <li><a href="{{ blog_url }}">Blog</a></li>
-                <li class="dropdown">
-                    <a href="#">Tools</a>
-                    <div class="dropdown-content">
-                        <a href="{{ nutrition_url }}">🔍 Nutrition Database</a>
-                        <a href="{{ foodbase_url }}">🍎 Food Storage</a>
-                        <div class="dropdown-submenu">
-                            <a href="#" class="submenu-title">📊 Trackers ▶</a>
-                            <div class="submenu-content">
-                                <a href="/">🧂 Sodium Tracker</a>
-                                <a href="{{ fluid_url }}">💧 Fluid Tracker</a>
-                                <a href="{{ weight_url }}">⚖️ Weight Tracker</a>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                <li><a href="{{ main_app_url }}/about">About</a></li>
-            </ul>
-        </nav>
-    </header>
+{% block title %}Sodium Tracker - Heart Portal{% endblock %}
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="container">
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <h1>🧂 Sodium Tracker</h1>
-                <p>Monitor your daily sodium intake for better heart health</p>
-            </div>
+{% block additional_css %}
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
 
-            <!-- Alerts -->
-            {% if percentage >= 100 %}
-            <div class="alert alert-danger">
-                <strong>⚠️ Daily Goal Exceeded!</strong> You've consumed {{ daily_intake }}mg of sodium today, which is {{ (percentage - 100)|round(1) }}% over your goal of {{ daily_goal }}mg.
-            </div>
-            {% elif percentage >= 80 %}
-            <div class="alert alert-warning">
-                <strong>⚠️ Approaching Daily Limit!</strong> You've consumed {{ percentage }}% of your daily sodium goal. Consider low-sodium options for remaining meals.
-            </div>
-            {% endif %}
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
 
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+.dashboard-header p {
+    font-size: 1.1rem;
+    color: #e5e7eb;
+}
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
 
-            <!-- Dashboard Grid -->
-            <div class="dashboard-grid">
-                <!-- Progress Card -->
-                <div class="card progress-card">
-                    <h2>Today's Progress</h2>
-                    <div class="progress-circle">
-                        <svg class="progress-ring" width="150" height="150">
-                            <circle class="progress-ring-circle" r="65" cx="75" cy="75"/>
-                            <circle class="progress-ring-progress"
-                                    r="65" cx="75" cy="75"
-                                    stroke="{% if percentage >= 100 %}#ef4444{% elif percentage >= 80 %}#f59e0b{% else %}#10b981{% endif %}"
-                                    stroke-dasharray="{{ (percentage * 408.4 / 100)|round(1) if percentage <= 100 else 408.4 }}, 408.4"/>
-                        </svg>
-                        <div class="progress-text">{{ percentage }}%</div>
-                    </div>
-                    <p><strong>{{ daily_intake }}mg</strong> of {{ daily_goal }}mg</p>
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-card {
+    text-align: center;
+}
+
+.progress-circle {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px;
+    position: relative;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+    stroke: #e5e7eb;
+    stroke-width: 8;
+    fill: transparent;
+}
+
+.progress-ring-progress {
+    stroke-width: 8;
+    fill: transparent;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.5s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.quick-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    text-align: center;
+}
+
+.stat-item h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #667eea;
+}
+
+.stat-item p {
+    margin: 5px 0 0;
+    color: #6b7280;
+}
+
+.actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 5px;
+}
+
+.btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+}
+
+.btn-primary {
+    background: #667eea;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+}
+
+.btn-secondary {
+    background: #6b7280;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.recent-entries {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-top: 20px;
+}
+
+.recent-entries h2 {
+    margin-top: 0;
+    color: #667eea;
+}
+
+.entries-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.entry-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.entry-item:last-child {
+    border-bottom: none;
+}
+
+.entry-details {
+    flex: 1;
+}
+
+.entry-food {
+    font-weight: bold;
+    color: #374151;
+}
+
+.entry-meta {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+.entry-sodium {
+    font-weight: bold;
+    color: #667eea;
+    font-size: 1.1rem;
+}
+
+.no-entries {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 40px;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.alert-warning {
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    color: #92400e;
+}
+
+.alert-danger {
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    color: #dc2626;
+}
+
+.alert-success {
+    background: #d1fae5;
+    border: 1px solid #10b981;
+    color: #065f46;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>🧂 Sodium Tracker</h1>
+        <p>Monitor your daily sodium intake for better heart health</p>
+    </div>
+
+    <!-- Alerts -->
+    {% if percentage >= 100 %}
+    <div class="alert alert-danger">
+        <strong>⚠️ Daily Goal Exceeded!</strong> You've consumed {{ daily_intake }}mg of sodium today, which is {{ (percentage - 100)|round(1) }}% over your goal of {{ daily_goal }}mg.
+    </div>
+    {% elif percentage >= 80 %}
+    <div class="alert alert-warning">
+        <strong>⚠️ Approaching Daily Limit!</strong> You've consumed {{ percentage }}% of your daily sodium goal. Consider low-sodium options for remaining meals.
+    </div>
+    {% endif %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                    {{ message }}
                 </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
-                <!-- Quick Stats -->
-                <div class="card">
-                    <h2>Quick Stats</h2>
-                    <div class="quick-stats">
-                        <div class="stat-item">
-                            <h3>{{ daily_intake }}</h3>
-                            <p>Today's Intake (mg)</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>{{ daily_goal }}</h3>
-                            <p>Daily Goal (mg)</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>{{ daily_goal - daily_intake if daily_intake < daily_goal else 0 }}</h3>
-                            <p>Remaining (mg)</p>
-                        </div>
-                        <div class="stat-item">
-                            <h3>{{ entries|length }}</h3>
-                            <p>Today's Entries</p>
-                        </div>
-                    </div>
+    <!-- Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Progress Card -->
+        <div class="card progress-card">
+            <h2>Today's Progress</h2>
+            <div class="progress-circle">
+                <svg class="progress-ring" width="150" height="150">
+                    <circle class="progress-ring-circle" r="65" cx="75" cy="75"/>
+                    <circle class="progress-ring-progress"
+                            r="65" cx="75" cy="75"
+                            stroke="{% if percentage >= 100 %}#ef4444{% elif percentage >= 80 %}#f59e0b{% else %}#10b981{% endif %}"
+                            stroke-dasharray="{{ (percentage * 408.4 / 100)|round(1) if percentage <= 100 else 408.4 }}, 408.4"/>
+                </svg>
+                <div class="progress-text">{{ percentage }}%</div>
+            </div>
+            <p><strong>{{ daily_intake }}mg</strong> of {{ daily_goal }}mg</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="card">
+            <h2>Quick Stats</h2>
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <h3>{{ daily_intake }}</h3>
+                    <p>Today's Intake (mg)</p>
                 </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="actions">
-                <a href="{{ url_for('add_entry') }}" class="btn btn-primary">+ Add Sodium Entry</a>
-                <a href="{{ url_for('history') }}" class="btn btn-secondary">📊 View History</a>
-                <a href="{{ url_for('settings') }}" class="btn btn-secondary">⚙️ Settings</a>
-            </div>
-
-            <!-- Recent Entries -->
-            <div class="recent-entries">
-                <h2>Today's Entries</h2>
-                {% if entries %}
-                    <ul class="entries-list">
-                        {% for entry in entries %}
-                        <li class="entry-item">
-                            <div class="entry-details">
-                                <div class="entry-food">{{ entry.food_item }}</div>
-                                <div class="entry-meta">
-                                    {% if entry.serving_size %}{{ entry.serving_size }}{% endif %}
-                                    {% if entry.meal_type %} • {{ entry.meal_type }}{% endif %}
-                                    {% if entry.notes %} • {{ entry.notes }}{% endif %}
-                                </div>
-                            </div>
-                            <div class="entry-sodium">{{ entry.sodium_mg }}mg</div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <div class="no-entries">
-                        No entries for today yet. <a href="{{ url_for('add_entry') }}">Add your first entry</a>!
-                    </div>
-                {% endif %}
+                <div class="stat-item">
+                    <h3>{{ daily_goal }}</h3>
+                    <p>Daily Goal (mg)</p>
+                </div>
+                <div class="stat-item">
+                    <h3>{{ daily_goal - daily_intake if daily_intake < daily_goal else 0 }}</h3>
+                    <p>Remaining (mg)</p>
+                </div>
+                <div class="stat-item">
+                    <h3>{{ entries|length }}</h3>
+                    <p>Today's Entries</p>
+                </div>
             </div>
         </div>
-    </main>
-</body>
-</html>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions">
+        <a href="{{ url_for('add_entry') }}" class="btn btn-primary">📝 Add Sodium Entry</a>
+        <a href="{{ url_for('history') }}" class="btn btn-secondary">📊 View History</a>
+        <a href="{{ url_for('settings') }}" class="btn btn-secondary">⚙️ Settings</a>
+    </div>
+
+    <!-- Recent Entries -->
+    <div class="recent-entries">
+        <h2>Today's Entries</h2>
+        {% if entries %}
+            <ul class="entries-list">
+                {% for entry in entries %}
+                <li class="entry-item">
+                    <div class="entry-details">
+                        <div class="entry-food">{{ entry.food_item }}</div>
+                        <div class="entry-meta">
+                            {% if entry.serving_size %}{{ entry.serving_size }}{% endif %}
+                            {% if entry.meal_type %} • {{ entry.meal_type }}{% endif %}
+                            {% if entry.notes %} • {{ entry.notes }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="entry-sodium">{{ entry.sodium_mg }}mg</div>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="no-entries">
+                No entries for today yet. <a href="{{ url_for('add_entry') }}">Add your first entry</a>!
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

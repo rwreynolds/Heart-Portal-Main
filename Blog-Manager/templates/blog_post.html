@@ -1,122 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }} - Heart Failure Portal</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-        }
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: #fecaca;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            top: 100%;
-            right: 0;
-        }
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .dropdown-content a:hover {
-            background-color: #b91c1c;
-        }
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropdown-submenu {
-            position: relative;
-        }
-        .submenu-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .submenu-content {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-        .dropdown-submenu:hover .submenu-content {
-            display: block;
-        }
-        .submenu-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .submenu-content a:hover {
-            background-color: #b91c1c;
-        }
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Heart Portal{% endblock %}
+
+{% block additional_css %}
         .post-header {
             text-align: center;
             padding: 60px 0 40px;
@@ -204,41 +90,11 @@
                 font-size: 2rem;
             }
         }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <div class="logo">❤️ Heart Portal</div>
-                <ul class="nav-links">
-                    <li><a href="{{ get_main_app_url() }}">Home</a></li>
-                    <li><a href="/">Blog</a></li>
-                    <li class="dropdown">
-                        <a href="#">Tools</a>
-                        <div class="dropdown-content">
-                            <a href="{{ url_for('redirect_to_nutrition') }}">🔍 Nutrition Database</a>
-                            <a href="{{ url_for('redirect_to_foodbase') }}">🍎 Food Storage</a>
-                            <div class="dropdown-submenu">
-                                <a href="#" class="submenu-title">📊 Trackers ▶</a>
-                                <div class="submenu-content">
-                                    <a href="{{ url_for('redirect_to_sodium') }}">🧂 Sodium Tracker</a>
-                                    <a href="{{ url_for('redirect_to_fluid') }}">💧 Fluid Tracker</a>
-                                    <a href="{{ url_for('redirect_to_weight') }}">⚖️ Weight Tracker</a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li><a href="{{ get_main_app_url() }}/about">About</a></li>
-                    <li><a href="{{ get_main_app_url() }}/creator">Creator</a></li>
-                    <li><a href="{{ get_main_app_url() }}/contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+{% endblock %}
 
+{% block content %}
     <section class="post-header">
-        <div class="container">
+        <div class="main-container">
             <h1>{{ post.title }}</h1>
             <div class="post-meta">
                 By {{ post.author }} • {{ post.date.strftime('%B %d, %Y') }}
@@ -248,7 +104,7 @@
     </section>
 
     <section class="post-content">
-        <div class="container">
+        <div class="main-container">
             <article class="post-article">
                 {{ post.content | safe }}
             </article>
@@ -256,10 +112,9 @@
     </section>
 
     <footer class="footer">
-        <div class="container">
+        <div class="main-container">
             <p>&copy; 2025 Heart Failure Portal. Created to support heart health through better nutrition.</p>
             <p>Always consult with your healthcare provider before making dietary changes.</p>
         </div>
     </footer>
-</body>
-</html>
+{% endblock %}

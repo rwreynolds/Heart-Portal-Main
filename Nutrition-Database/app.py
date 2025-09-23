@@ -5,7 +5,7 @@ Add this to your existing app.py
 
 from flask import Flask, request, jsonify, render_template, redirect
 from nutrition_api_manager import (
-    EnhancedUSDAFoodDataAPI, 
+    EnhancedUSDAFoodDataAPI,
     EnhancedNutritionAPIManager,
     SearchCriteria,
     ListCriteria,
@@ -16,11 +16,18 @@ from nutrition_api_manager import (
 import json
 import os
 from dotenv import load_dotenv
+from jinja2 import ChoiceLoader, FileSystemLoader
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
+
+# Configure Jinja2 to use shared templates
+app.jinja_loader = ChoiceLoader([
+    FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
+    FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
+])
 
 def get_main_app_url():
     """Get the main app URL based on environment"""
@@ -40,6 +47,15 @@ def get_blog_url():
             return 'https://heartfailureportal.com/blog-manager/'
     return 'http://localhost:5002'
 
+def get_nutrition_url():
+    """Get the nutrition database URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/nutrition-database/'
+    return 'http://localhost:5000'
+
 def get_foodbase_url():
     """Get the Food-Base URL based on environment"""
     if os.path.exists('/etc/hostname'):
@@ -49,14 +65,56 @@ def get_foodbase_url():
             return 'https://heartfailureportal.com/food-base/'
     return 'http://localhost:5001'
 
+def get_sodium_url():
+    """Get the sodium tracker URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/sodium-tracker/'
+    return 'http://localhost:5003'
+
+def get_fluid_url():
+    """Get the fluid tracker URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/fluid-tracker/'
+    return 'http://localhost:5004'
+
+def get_weight_url():
+    """Get the weight tracker URL based on environment"""
+    if os.path.exists('/etc/hostname'):
+        with open('/etc/hostname', 'r') as f:
+            hostname = f.read().strip()
+        if 'ubuntu' in hostname or 'heartfailure' in hostname:
+            return 'https://heartfailureportal.com/weight-tracker/'
+    return 'http://localhost:5005'
+
 # Make functions available in templates
 @app.context_processor
 def utility_processor():
     return dict(
         get_main_app_url=get_main_app_url,
         get_blog_url=get_blog_url,
-        get_foodbase_url=get_foodbase_url
+        get_nutrition_url=get_nutrition_url,
+        get_foodbase_url=get_foodbase_url,
+        get_sodium_url=get_sodium_url,
+        get_fluid_url=get_fluid_url,
+        get_weight_url=get_weight_url
     )
+
+# Register template global functions
+app.jinja_env.globals.update(
+    get_main_app_url=get_main_app_url,
+    get_blog_url=get_blog_url,
+    get_nutrition_url=get_nutrition_url,
+    get_foodbase_url=get_foodbase_url,
+    get_sodium_url=get_sodium_url,
+    get_fluid_url=get_fluid_url,
+    get_weight_url=get_weight_url
+)
 
 # Global manager instance with API key management
 manager = EnhancedNutritionAPIManager()

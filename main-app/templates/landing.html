@@ -1,286 +1,142 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heart Failure Portal - Nutrition & Wellness</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-        }
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: #fecaca;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            top: 100%;
-            right: 0;
-        }
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .dropdown-content a:hover {
-            background-color: #b91c1c;
-        }
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropdown-submenu {
-            position: relative;
-        }
-        .submenu-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .submenu-content {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-        .dropdown-submenu:hover .submenu-content {
-            display: block;
-        }
-        .submenu-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .submenu-content a:hover {
-            background-color: #b91c1c;
-        }
-        .hero {
-            text-align: center;
-            padding: 80px 0;
-            color: white;
-        }
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .hero p {
-            font-size: 1.3rem;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-        .cta-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            text-decoration: none;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background: white;
-            color: #667eea;
-        }
-        .btn-secondary {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 2px solid white;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .features {
-            background: white;
-            padding: 80px 0;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            margin-top: 50px;
-        }
-        .feature-card {
-            text-align: center;
-            padding: 40px 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        .feature-card h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .section-subtitle {
-            text-align: center;
-            font-size: 1.2rem;
-            color: #666;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .footer {
-            background: #333;
-            color: white;
-            text-align: center;
-            padding: 40px 0;
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <div class="logo">❤️ Heart Portal</div>
-                <ul class="nav-links">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/blog">Blog</a></li>
-                    <li class="dropdown">
-                        <a href="#">Tools</a>
-                        <div class="dropdown-content">
-                            <a href="{{ url_for('redirect_to_nutrition') }}">🔍 Nutrition Database</a>
-                            <a href="{{ url_for('redirect_to_foodbase') }}">🍎 Food Storage</a>
-                            <div class="dropdown-submenu">
-                                <a href="#" class="submenu-title">📊 Trackers ▶</a>
-                                <div class="submenu-content">
-                                    <a href="{{ url_for('redirect_to_sodium') }}">🧂 Sodium Tracker</a>
-                                    <a href="{{ url_for('redirect_to_fluid') }}">💧 Fluid Tracker</a>
-                                    <a href="{{ url_for('redirect_to_weight') }}">⚖️ Weight Tracker</a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li><a href="/about">About</a></li>
-                    <li><a href="/creator">Creator</a></li>
-                    <li><a href="/contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+{% extends "base.html" %}
 
-    <section class="hero">
-        <div class="container">
-            <h1>Heart Failure Portal</h1>
-            <p>Your comprehensive resource for nutrition guidance, wellness tips, and empowering information to help you live well with heart failure.</p>
-        </div>
-    </section>
+{% block title %}Heart Failure Portal - Nutrition & Wellness{% endblock %}
 
-    <section class="features">
-        <div class="container">
-            <h2 class="section-title">Comprehensive Heart Health Tools</h2>
-            <p class="section-subtitle">Everything you need to manage your nutrition and wellness journey</p>
-            
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
-                    <h3>USDA Nutrition Database</h3>
-                    <p>Access comprehensive nutritional information from the USDA Food Data Central to make informed dietary choices for your heart health.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🍎</div>
-                    <h3>Personal Food Storage</h3>
-                    <p>Save and organize your favorite heart-healthy foods with detailed nutritional profiles for easy meal planning.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Nutritional Analysis</h3>
-                    <p>Compare foods, track nutrients important for heart health like sodium, and make better choices for your condition.</p>
-                </div>
+{% block additional_css %}
+.hero {
+    text-align: center;
+    padding: 80px 0;
+    color: white;
+}
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+.hero p {
+    font-size: 1.3rem;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+.cta-buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+.btn-primary {
+    background: white;
+    color: #667eea;
+}
+.btn-secondary {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid white;
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+.features {
+    background: white;
+    padding: 80px 0;
+}
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    margin-top: 50px;
+}
+.feature-card {
+    text-align: center;
+    padding: 40px 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+.feature-card h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+.section-title {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+.section-subtitle {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto;
+}
+.footer {
+    background: #333;
+    color: white;
+    text-align: center;
+    padding: 40px 0;
+}
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="main-container">
+        <h1>Heart Failure Portal</h1>
+        <p>Your comprehensive resource for nutrition guidance, wellness tips, and empowering information to help you live well with heart failure.</p>
+    </div>
+</section>
+
+<section class="features">
+    <div class="main-container">
+        <h2 class="section-title">Comprehensive Heart Health Tools</h2>
+        <p class="section-subtitle">Everything you need to manage your nutrition and wellness journey</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>USDA Nutrition Database</h3>
+                <p>Access comprehensive nutritional information from the USDA Food Data Central to make informed dietary choices for your heart health.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🍎</div>
+                <h3>Personal Food Storage</h3>
+                <p>Save and organize your favorite heart-healthy foods with detailed nutritional profiles for easy meal planning.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Nutritional Analysis</h3>
+                <p>Compare foods, track nutrients important for heart health like sodium, and make better choices for your condition.</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 Heart Failure Portal. Created to support heart health through better nutrition.</p>
-            <p>Always consult with your healthcare provider before making dietary changes.</p>
-        </div>
-    </footer>
-</body>
-</html>
+<footer class="footer">
+    <div class="main-container">
+        <p>&copy; 2025 Heart Failure Portal. Created to support heart health through better nutrition.</p>
+        <p>Always consult with your healthcare provider before making dietary changes.</p>
+    </div>
+</footer>
+{% endblock %}

@@ -1,0 +1,34 @@
+<header class="header">
+    <div class="container">
+        <nav class="nav">
+            <div class="logo-section">
+                <div class="logo">❤️ Heart Portal</div>
+                <div class="warning-notice">
+                    ⚠️ This website is for informational purposes only and does not provide medical advice of any sort. Always consult with a qualified healthcare professional before making any decisions based on information found on this site. In case of a medical emergency, call 911 immediately.
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ get_main_app_url() }}/">Home</a></li>
+                <li><a href="{{ get_blog_url() }}">Blog</a></li>
+                <li class="dropdown">
+                    <a href="#">Tools</a>
+                    <div class="dropdown-content">
+                        <a href="{{ get_nutrition_url() }}">🔍 Nutrition Database</a>
+                        <a href="{{ get_foodbase_url() }}">🍎 Food Storage</a>
+                        <div class="dropdown-submenu">
+                            <a href="#" class="submenu-title">📊 Trackers ▶</a>
+                            <div class="submenu-content">
+                                <a href="{{ get_sodium_url() }}">🧂 Sodium Tracker</a>
+                                <a href="{{ get_fluid_url() }}">💧 Fluid Tracker</a>
+                                <a href="{{ get_weight_url() }}">⚖️ Weight Tracker</a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="{{ get_main_app_url() }}/about">About</a></li>
+                <li><a href="{{ get_main_app_url() }}/creator">Creator</a></li>
+                <li><a href="{{ get_main_app_url() }}/contact">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
