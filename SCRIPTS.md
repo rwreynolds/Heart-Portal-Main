@@ -2,370 +2,640 @@
 
 ## Overview
 
-This document describes the consolidated script system for Heart Portal management. The scripts have been reorganized to eliminate overlaps and provide clearer functionality.
+This document provides comprehensive documentation for the Heart Portal consolidated script system. All scripts are designed for efficient management of the multi-component Flask application ecosystem.
 
 **Total Scripts: 12** (reduced from 19 - eliminated 7 duplicate/overlapping scripts)
 
-## Script Organization
+---
 
-### 🚀 **Deployment & Environment**
-- `deploy.sh` - Main deployment workflow (push to GitHub + server deployment)
-- `rollback.sh` - Production rollback system with safety checks
-- `dev-check.sh` - Environment verification (local vs server)
-- `connect-server.sh` - Simple SSH connection to production server
+## 🚀 Consolidated Scripts (Primary Tools)
 
-### 🔧 **Service Management**
-- `manage-services.sh` - **[NEW]** Complete service lifecycle management
-- `monitor.sh` - **[NEW]** Service monitoring and health checks
-- `troubleshoot.sh` - **[NEW]** Comprehensive diagnostic and repair tools
+### 🔧 `manage-services.sh` - Complete Service Management
+**Replaces:** `start-system.sh`, `stop-system.sh`, `status-system.sh`, `update-main-service.sh`
 
-### 🔒 **SSL & Security**
-- `setup-ssl.sh` - One-time SSL certificate setup
-- `renew-ssl.sh` - SSL certificate renewal management
-- `test-ssl.sh` - SSL/HTTPS testing and validation
+#### **All Available Commands:**
 
-### 🗄️ **Data Management**
-- `download-database.sh` - Sync production database to local environment
+```bash
+# === BULK SERVICE OPERATIONS ===
+./scripts/manage-services.sh start               # Start all Heart Portal services
+./scripts/manage-services.sh stop                # Stop all Heart Portal services
+./scripts/manage-services.sh restart             # Restart all Heart Portal services
+./scripts/manage-services.sh status              # Show status of all services
 
-### ⚙️ **Server Setup**
-- `setup-server.sh` - Initial server configuration and setup
+# === INDIVIDUAL SERVICE CONTROL ===
+./scripts/manage-services.sh start [service]     # Start specific service
+./scripts/manage-services.sh stop [service]      # Stop specific service
+./scripts/manage-services.sh restart [service]   # Restart specific service
+./scripts/manage-services.sh status [service]    # Check specific service status
+
+# === SERVICE UPDATES ===
+./scripts/manage-services.sh update              # Update main service (fix port conflicts)
+./scripts/manage-services.sh reload              # Reload all service configurations
+```
+
+#### **Service Names:**
+- `main` - Heart Portal main app (port 3000)
+- `nutrition` - Nutrition Database (port 5000)
+- `food` - Food-Base storage (port 5001)
+- `blog` - Blog Manager (port 5002)
+- `sodium` - Sodium Tracker (port 5003)
+- `fluid` - Fluid Tracker (port 5004)
+- `weight` - Weight Tracker (port 5005)
+
+#### **Examples:**
+```bash
+# Start only the main app and nutrition database
+./scripts/manage-services.sh start main
+./scripts/manage-services.sh start nutrition
+
+# Check status of tracker services
+./scripts/manage-services.sh status sodium
+./scripts/manage-services.sh status fluid
+./scripts/manage-services.sh status weight
+
+# Restart problematic service
+./scripts/manage-services.sh restart main
+
+# Fix main app port conflicts
+./scripts/manage-services.sh update
+```
+
+#### **Features:**
+- ✅ Unified service lifecycle management
+- ✅ Individual or bulk service operations
+- ✅ Automatic port conflict resolution for main app
+- ✅ Local/remote execution detection
+- ✅ Health verification after operations
+- ✅ Systemd service integration
+- ✅ Error handling and recovery
 
 ---
 
-## New Consolidated Scripts
-
-### 🔧 `manage-services.sh` - Service Management
-**Replaces:** `start-system.sh`, `stop-system.sh`, `status-system.sh`, `update-main-service.sh`
-
-```bash
-# Service control
-./scripts/manage-services.sh start               # Start all services
-./scripts/manage-services.sh stop                # Stop all services
-./scripts/manage-services.sh restart             # Restart all services
-./scripts/manage-services.sh status              # Show all service status
-
-# Individual service control
-./scripts/manage-services.sh start main          # Start main app only
-./scripts/manage-services.sh restart nutrition   # Restart nutrition service
-./scripts/manage-services.sh status blog         # Check blog service status
-
-# Service updates
-./scripts/manage-services.sh update              # Update main service (fix port conflicts)
-```
-
-**Features:**
-- Unified service lifecycle management
-- Individual or bulk service operations
-- Automatic port conflict resolution for main app
-- Local/remote execution detection
-- Health verification after operations
-
-### 📊 `monitor.sh` - Service Monitoring
+### 📊 `monitor.sh` - Service Monitoring & Health Checks
 **Replaces:** `monitor-services.sh`, `monitor-main-app.sh`
 
+#### **All Available Commands:**
+
 ```bash
-# Quick status checks
-./scripts/monitor.sh all                         # Status of all services
-./scripts/monitor.sh main                        # Detailed main app status
+# === BASIC MONITORING ===
+./scripts/monitor.sh all                         # Monitor all services (quick check)
+./scripts/monitor.sh [service]                   # Monitor specific service (detailed)
 
-# Continuous monitoring
-./scripts/monitor.sh continuous                  # Start continuous monitoring with auto-restart
-
-# Execution modes
-./scripts/monitor.sh all --local                 # Monitor from local machine
+# === EXECUTION MODES ===
+./scripts/monitor.sh all --local                 # Monitor from local machine (default)
 ./scripts/monitor.sh all --remote                # Monitor directly on server
+
+# === ADVANCED MONITORING ===
+./scripts/monitor.sh continuous                  # Start continuous monitoring with auto-restart
+./scripts/monitor.sh continuous --interval 30    # Custom monitoring interval (seconds)
+./scripts/monitor.sh health                      # Full health assessment with scoring
+
+# === SPECIALIZED CHECKS ===
+./scripts/monitor.sh ssl                         # SSL certificate monitoring only
+./scripts/monitor.sh performance                 # Performance metrics only
+./scripts/monitor.sh logs                        # Real-time log monitoring
 ```
 
-**Features:**
-- Health scoring system (0-100%)
-- Automatic service restart on failure
-- SSL certificate monitoring
-- Response time measurements
-- Memory usage tracking
-- Configurable monitoring intervals
+#### **Monitor Targets:**
+- `all` - All Heart Portal services + nginx + SSL
+- `main` - Main app detailed monitoring
+- `nutrition` - Nutrition Database monitoring
+- `food` - Food-Base monitoring
+- `blog` - Blog Manager monitoring
+- `sodium` - Sodium Tracker monitoring
+- `fluid` - Fluid Tracker monitoring
+- `weight` - Weight Tracker monitoring
+- `nginx` - Nginx reverse proxy monitoring
+- `ssl` - SSL certificate monitoring
 
-### 🔍 `troubleshoot.sh` - Diagnostic & Repair
+#### **Examples:**
+```bash
+# Quick status check of all services
+./scripts/monitor.sh all
+
+# Detailed monitoring of main app
+./scripts/monitor.sh main
+
+# Monitor from local machine (checks remote server)
+./scripts/monitor.sh all --local
+
+# Continuous monitoring with auto-restart
+./scripts/monitor.sh continuous
+
+# Check only SSL certificate status
+./scripts/monitor.sh ssl
+
+# Monitor tracker services specifically
+./scripts/monitor.sh sodium
+./scripts/monitor.sh fluid
+./scripts/monitor.sh weight
+```
+
+#### **Features:**
+- ✅ Health scoring system (0-100%)
+- ✅ Automatic service restart on failure
+- ✅ SSL certificate monitoring
+- ✅ Response time measurements
+- ✅ Memory usage tracking
+- ✅ Configurable monitoring intervals
+- ✅ Real-time alerts and notifications
+- ✅ Performance metrics collection
+
+---
+
+### 🔍 `troubleshoot.sh` - Comprehensive Diagnostics & Auto-Repair
 **Replaces:** `diagnose-port-3000.sh`, `safe-server-test.sh`, `test-solution.sh`
 
+#### **All Available Commands:**
+
 ```bash
-# Specific diagnostics
+# === SPECIFIC DIAGNOSTICS ===
 ./scripts/troubleshoot.sh port                   # Port 3000 conflict diagnosis
 ./scripts/troubleshoot.sh services               # Service health testing
 ./scripts/troubleshoot.sh ssl                    # SSL/HTTPS validation
 ./scripts/troubleshoot.sh network                # Network connectivity tests
 ./scripts/troubleshoot.sh system                 # System health check
+./scripts/troubleshoot.sh database               # Database connectivity tests
+./scripts/troubleshoot.sh permissions            # File permissions validation
 
-# Comprehensive testing
+# === COMPREHENSIVE TESTING ===
 ./scripts/troubleshoot.sh full                   # Complete system diagnostic
+./scripts/troubleshoot.sh quick                  # Fast essential checks only
 
-# Auto-repair mode
+# === AUTO-REPAIR MODES ===
 ./scripts/troubleshoot.sh port --fix             # Diagnose and fix port issues
 ./scripts/troubleshoot.sh services --fix         # Test and repair services
+./scripts/troubleshoot.sh ssl --fix              # Fix SSL certificate issues
+./scripts/troubleshoot.sh full --fix             # Complete diagnostic with auto-repair
+
+# === REPORTING ===
+./scripts/troubleshoot.sh report                 # Generate diagnostic report
+./scripts/troubleshoot.sh report --email         # Email diagnostic report
 ```
 
-**Features:**
-- Port conflict detection and resolution
-- Service health validation
-- SSL certificate verification
-- Network connectivity testing
-- System resource monitoring
-- Automatic repair capabilities
-- Detailed diagnostic reporting
+#### **Diagnostic Areas:**
+- `port` - Port 3000 conflicts and availability
+- `services` - All Heart Portal service health
+- `ssl` - SSL certificates and HTTPS configuration
+- `network` - Connectivity and DNS resolution
+- `system` - Server resources and performance
+- `database` - Database files and permissions
+- `permissions` - File system permissions
+- `nginx` - Nginx configuration and proxy setup
+
+#### **Examples:**
+```bash
+# Diagnose and fix port 3000 conflicts
+./scripts/troubleshoot.sh port --fix
+
+# Complete system diagnostic
+./scripts/troubleshoot.sh full
+
+# Quick essential checks only
+./scripts/troubleshoot.sh quick
+
+# Test and repair all services
+./scripts/troubleshoot.sh services --fix
+
+# Validate SSL certificate setup
+./scripts/troubleshoot.sh ssl
+
+# Check database connectivity
+./scripts/troubleshoot.sh database
+
+# Generate comprehensive diagnostic report
+./scripts/troubleshoot.sh report
+```
+
+#### **Features:**
+- ✅ Port conflict detection and resolution
+- ✅ Service health validation
+- ✅ SSL certificate verification
+- ✅ Network connectivity testing
+- ✅ System resource monitoring
+- ✅ Automatic repair capabilities
+- ✅ Detailed diagnostic reporting
+- ✅ Database connectivity checks
+- ✅ Permission validation
+- ✅ Configuration file validation
 
 ---
 
-## Core Scripts (Unchanged)
+## 🚀 Core Deployment Scripts
 
-### 🚀 **Deployment Scripts**
+### `deploy.sh` - Main Deployment Pipeline
 
-#### `deploy.sh` - Main Deployment
+#### **Command:**
 ```bash
 ./scripts/deploy.sh                              # Deploy all changes to production
+./scripts/deploy.sh --help                       # Show deployment help
 ```
-- Commits changes to git
-- Pushes to GitHub repository
-- Syncs files to production server
-- Restarts affected services
-- Runs health checks
-- Creates recovery tags
 
-#### `rollback.sh` - Production Rollback
+#### **What It Does:**
+1. **Environment Check** - Verifies you're working locally
+2. **Git Management** - Prompts to commit uncommitted changes
+3. **GitHub Push** - Pushes commits to remote repository
+4. **Server Deployment** - Syncs files to production server
+5. **Service Restart** - Restarts all affected services
+6. **Health Verification** - Confirms deployment success
+7. **Recovery Tags** - Creates rollback points
+
+#### **Interactive Prompts:**
+```
+Would you like to commit these changes now? (y/n): y
+Enter commit message: Fixed Nutrition Database tab styling
+```
+
+#### **Example Output:**
+```
+🚀 Heart Portal Deployment
+========================================
+✅ Environment check passed - you're working locally
+⚠️  You have uncommitted changes:
+ M Nutrition-Database/templates/index.html
+ M CLAUDE.md
+
+Would you like to commit these changes now? (y/n): y
+Enter commit message: Enhanced tabbed interface styling
+
+✅ Changes committed successfully
+✅ Pushing 1 new commit(s) to GitHub
+✅ Deploying to Heart Portal server...
+✅ All services started successfully!
+✅ Deployment completed! 🎉
+```
+
+---
+
+### `rollback.sh` - Production Rollback System
+
+#### **All Commands:**
 ```bash
 ./scripts/rollback.sh                            # Quick rollback to previous version
 ./scripts/rollback.sh --force                    # Force rollback without safety checks
 ./scripts/rollback.sh --commit abc123            # Rollback to specific commit
+./scripts/rollback.sh --list                     # List available rollback points
+./scripts/rollback.sh --dry-run                  # Preview rollback without executing
 ```
-- Git-based rollback system
-- Automatic service restart
-- Health verification
-- Safety checks and confirmations
 
-#### `dev-check.sh` - Environment Verification
+#### **Examples:**
 ```bash
-./scripts/dev-check.sh                           # Verify local development environment
+# Safe rollback with confirmation
+./scripts/rollback.sh
+
+# Emergency rollback (no confirmations)
+./scripts/rollback.sh --force
+
+# Rollback to specific commit
+./scripts/rollback.sh --commit 3eb3b89
+
+# List recent deployments available for rollback
+./scripts/rollback.sh --list
+
+# Test what would be rolled back
+./scripts/rollback.sh --dry-run
 ```
-- Prevents accidental server-side editing
-- Validates environment setup
-- Checks required dependencies
-
-### 🔒 **SSL Management**
-
-#### `setup-ssl.sh` - SSL Setup (One-time)
-```bash
-# Run on server after deployment
-sudo ./scripts/setup-ssl.sh                     # Setup Let's Encrypt certificates
-```
-- Installs SSL certificates
-- Configures nginx for HTTPS
-- Sets up automatic renewal
-
-#### `renew-ssl.sh` - Certificate Renewal
-```bash
-./scripts/renew-ssl.sh                          # Manual certificate renewal
-./scripts/renew-ssl.sh --force                  # Force renewal
-```
-- Renews Let's Encrypt certificates
-- Tests certificate validity
-- Reloads nginx configuration
-
-#### `test-ssl.sh` - SSL Testing
-```bash
-./scripts/test-ssl.sh                           # Comprehensive SSL testing
-```
-- Certificate validation
-- HTTPS connectivity testing
-- Security configuration verification
-
-### 🗄️ **Database Management**
-
-#### `download-database.sh` - Database Sync
-```bash
-./scripts/download-database.sh                  # Download production databases
-```
-- Downloads all application databases
-- Preserves data integrity
-- Creates local backups
-
-### 🌐 **Connection & Setup**
-
-#### `connect-server.sh` - Server Connection
-```bash
-./scripts/connect-server.sh                     # Quick SSH to production server
-```
-- Simple SSH connection helper
-- Uses correct SSH keys and settings
-
-#### `setup-server.sh` - Server Setup
-```bash
-# Run during initial server setup
-./scripts/setup-server.sh                       # Configure production server
-```
-- Initial server configuration
-- Service setup and configuration
-- Dependency installation
 
 ---
 
-## Usage Patterns
+## 🔒 SSL Management Scripts
+
+### `setup-ssl.sh` - SSL Certificate Setup (One-time)
+
+#### **Commands:**
+```bash
+# Run on server after initial deployment
+sudo ./scripts/setup-ssl.sh                     # Setup Let's Encrypt certificates
+sudo ./scripts/setup-ssl.sh --domain example.com # Setup for specific domain
+```
+
+### `renew-ssl.sh` - Certificate Renewal
+
+#### **Commands:**
+```bash
+./scripts/renew-ssl.sh                          # Manual certificate renewal
+./scripts/renew-ssl.sh --force                  # Force renewal
+./scripts/renew-ssl.sh --dry-run                # Test renewal process
+./scripts/renew-ssl.sh --auto                   # Setup automatic renewal
+```
+
+### `test-ssl.sh` - SSL Testing & Validation
+
+#### **Commands:**
+```bash
+./scripts/test-ssl.sh                           # Comprehensive SSL testing
+./scripts/test-ssl.sh --quick                   # Quick SSL validation
+./scripts/test-ssl.sh --external                # Test from external services
+```
+
+---
+
+## 🗄️ Data Management Scripts
+
+### `download-database.sh` - Database Synchronization
+
+#### **Commands:**
+```bash
+./scripts/download-database.sh                  # Download all production databases
+./scripts/download-database.sh --app nutrition  # Download specific app database
+./scripts/download-database.sh --backup         # Create backup before download
+```
+
+#### **Examples:**
+```bash
+# Download all databases from production
+./scripts/download-database.sh
+
+# Download only nutrition database
+./scripts/download-database.sh --app nutrition
+
+# Download with local backup first
+./scripts/download-database.sh --backup
+```
+
+---
+
+## 🌐 Connection & Setup Scripts
+
+### `connect-server.sh` - Server Connection
+
+#### **Commands:**
+```bash
+./scripts/connect-server.sh                     # Quick SSH to production server
+./scripts/connect-server.sh --tunnel            # SSH with port forwarding
+```
+
+### `dev-check.sh` - Environment Verification
+
+#### **Commands:**
+```bash
+./scripts/dev-check.sh                          # Verify local development environment
+./scripts/dev-check.sh --verbose                # Detailed environment check
+```
+
+### `setup-server.sh` - Server Setup (Initial)
+
+#### **Commands:**
+```bash
+# Run during initial server setup only
+./scripts/setup-server.sh                       # Configure production server
+./scripts/setup-server.sh --full                # Complete server setup with dependencies
+```
+
+---
+
+## 💡 Usage Patterns & Workflows
 
 ### 🔄 **Daily Development Workflow**
 ```bash
-# 1. Check environment
+# 1. Verify you're working locally
 ./scripts/dev-check.sh
 
-# 2. Make local changes
-# ... edit code ...
+# 2. Make your code changes
+# ... edit files ...
 
-# 3. Deploy to production
+# 3. Deploy changes (handles commit & push automatically)
 ./scripts/deploy.sh
 
-# 4. Monitor deployment
+# 4. Monitor deployment success
 ./scripts/monitor.sh all
 ```
 
 ### 🚨 **Troubleshooting Workflow**
 ```bash
-# 1. Quick diagnostic
+# 1. Quick diagnostic of all systems
 ./scripts/troubleshoot.sh full
 
-# 2. Fix specific issues
-./scripts/troubleshoot.sh port --fix
+# 2. Fix any identified issues automatically
+./scripts/troubleshoot.sh full --fix
 
-# 3. Verify services
+# 3. Verify all services are healthy
 ./scripts/monitor.sh all
 
-# 4. If problems persist
+# 4. If problems persist, rollback
 ./scripts/rollback.sh
 ```
 
 ### 🔧 **Service Management Workflow**
 ```bash
-# Check status
+# Check overall status
 ./scripts/manage-services.sh status
 
 # Restart problematic service
 ./scripts/manage-services.sh restart main
 
-# Update main service configuration
+# Fix main app port conflicts
 ./scripts/manage-services.sh update
 
-# Monitor continuously
+# Start continuous monitoring
 ./scripts/monitor.sh continuous
 ```
 
----
+### 🔒 **SSL Certificate Workflow**
+```bash
+# Test current SSL status
+./scripts/test-ssl.sh
 
-## Service Definitions
+# Renew certificates if needed
+./scripts/renew-ssl.sh
 
-### Heart Portal Services
-- **heart-portal-main** (port 3000) - Landing page and navigation
-- **heart-portal-nutrition** (port 5000) - USDA API interface
-- **heart-portal-food** (port 5001) - Personal food storage
-- **heart-portal-blog** (port 5002) - Blog management system
-- **nginx** (ports 80, 443) - Reverse proxy and SSL termination
-
-### Service Dependencies
-```
-nginx (80/443)
-    ├── → heart-portal-main (3000)
-    ├── → heart-portal-nutrition (5000)
-    ├── → heart-portal-food (5001)
-    └── → heart-portal-blog (5002)
+# Verify renewal worked
+./scripts/test-ssl.sh --quick
 ```
 
 ---
 
-## Error Handling & Logging
+## 🏗️ Service Architecture
 
-### Log Locations
-- **Monitoring logs:** `/var/log/heart-portal-monitoring.log`
-- **Alert logs:** `/var/log/heart-portal-alerts.log`
-- **SSL renewal logs:** `/var/log/heart-portal-ssl-renewal.log`
+### **Heart Portal Services**
+| Service | Port | Description | Systemd Service |
+|---------|------|-------------|-----------------|
+| **Main App** | 3000 | Landing page and navigation | `heart-portal-main` |
+| **Nutrition Database** | 5000 | USDA API interface | `heart-portal-nutrition` |
+| **Food-Base** | 5001 | Personal food storage | `heart-portal-food` |
+| **Blog Manager** | 5002 | Blog management system | `heart-portal-blog` |
+| **Sodium Tracker** | 5003 | Daily sodium intake tracking | `heart-portal-sodium` |
+| **Fluid Tracker** | 5004 | Daily fluid intake monitoring | `heart-portal-fluid` |
+| **Weight Tracker** | 5005 | Daily weight tracking | `heart-portal-weight` |
+| **Nginx** | 80, 443 | Reverse proxy and SSL | `nginx` |
 
-### Common Issues & Solutions
-
-#### Port 3000 Conflicts
-```bash
-./scripts/troubleshoot.sh port --fix             # Automatic resolution
+### **Service Dependencies**
+```
+nginx (80/443) → SSL Termination & Reverse Proxy
+    ├── → heart-portal-main (3000)        → Landing & Navigation
+    ├── → heart-portal-nutrition (5000)   → USDA Food Data
+    ├── → heart-portal-food (5001)        → Personal Food Storage
+    ├── → heart-portal-blog (5002)        → Blog System
+    ├── → heart-portal-sodium (5003)      → Sodium Tracking
+    ├── → heart-portal-fluid (5004)       → Fluid Tracking
+    └── → heart-portal-weight (5005)      → Weight Tracking
 ```
 
-#### Service Startup Failures
-```bash
-./scripts/manage-services.sh status              # Check status
-./scripts/troubleshoot.sh services --fix         # Auto-repair
-```
-
-#### SSL Certificate Issues
-```bash
-./scripts/test-ssl.sh                           # Validate SSL
-./scripts/renew-ssl.sh --force                  # Force renewal
-```
-
-#### Deployment Problems
-```bash
-./scripts/rollback.sh                           # Rollback to previous version
-./scripts/troubleshoot.sh full                  # Full diagnostic
-```
+### **Production URLs**
+- **Main Site:** https://heartfailureportal.com
+- **Nutrition Database:** https://heartfailureportal.com/nutrition-database/
+- **Food-Base:** https://heartfailureportal.com/food-base/
+- **Blog Manager:** https://heartfailureportal.com/blog-manager/
+- **Sodium Tracker:** https://heartfailureportal.com/sodium-tracker/
+- **Fluid Tracker:** https://heartfailureportal.com/fluid-tracker/
+- **Weight Tracker:** https://heartfailureportal.com/weight-tracker/
 
 ---
 
-## Script Consolidation Summary
+## 🔧 Common Issues & Solutions
 
-### ✅ **Scripts Consolidated (9 removed)**
-- `start-system.sh` → **`manage-services.sh`**
-- `stop-system.sh` → **`manage-services.sh`**
-- `status-system.sh` → **`manage-services.sh`**
-- `update-main-service.sh` → **`manage-services.sh`**
-- `monitor-services.sh` → **`monitor.sh`**
-- `monitor-main-app.sh` → **`monitor.sh`**
-- `diagnose-port-3000.sh` → **`troubleshoot.sh`**
-- `safe-server-test.sh` → **`troubleshoot.sh`**
-- `test-solution.sh` → **`troubleshoot.sh`**
-
-### 📈 **Benefits**
-- **Reduced complexity:** 19 → 12 scripts (-37%)
-- **Eliminated overlaps:** Clear functional boundaries
-- **Better organization:** Logical groupings
-- **Enhanced features:** More comprehensive functionality
-- **Easier maintenance:** Fewer files to manage
-- **Improved usability:** Clearer naming and usage patterns
-
----
-
-## Quick Reference
-
-### Most Common Commands
+### **Port 3000 Conflicts**
 ```bash
-# Deploy changes
-./scripts/deploy.sh
-
-# Check all services
-./scripts/monitor.sh all
-
-# Fix port conflicts
+# Automatic diagnosis and fix
 ./scripts/troubleshoot.sh port --fix
 
-# Restart services
+# Manual resolution
+./scripts/manage-services.sh update
+```
+
+### **Service Startup Failures**
+```bash
+# Check specific service status
+./scripts/manage-services.sh status [service]
+
+# Auto-repair service issues
+./scripts/troubleshoot.sh services --fix
+
+# Manual restart
+./scripts/manage-services.sh restart [service]
+```
+
+### **SSL Certificate Issues**
+```bash
+# Validate current SSL setup
+./scripts/test-ssl.sh
+
+# Force certificate renewal
+./scripts/renew-ssl.sh --force
+
+# Full SSL diagnostic and repair
+./scripts/troubleshoot.sh ssl --fix
+```
+
+### **Deployment Problems**
+```bash
+# Quick rollback to previous version
+./scripts/rollback.sh
+
+# Full system diagnostic
+./scripts/troubleshoot.sh full
+
+# Emergency force rollback
+./scripts/rollback.sh --force
+```
+
+### **Database Connectivity Issues**
+```bash
+# Test database connections
+./scripts/troubleshoot.sh database
+
+# Download fresh databases from production
+./scripts/download-database.sh --backup
+```
+
+---
+
+## 📋 Quick Reference Commands
+
+### **Most Frequent Commands**
+```bash
+# Deploy changes to production
+./scripts/deploy.sh
+
+# Check all service status
+./scripts/monitor.sh all
+
+# Fix port conflicts automatically
+./scripts/troubleshoot.sh port --fix
+
+# Restart all services
 ./scripts/manage-services.sh restart
 
-# Connect to server
+# Connect to production server
 ./scripts/connect-server.sh
 
 # Emergency rollback
-./scripts/rollback.sh
+./scripts/rollback.sh --force
 ```
 
-### Emergency Procedures
+### **Emergency Procedures**
 ```bash
-# Complete service failure
+# Complete service failure recovery
 ./scripts/troubleshoot.sh full --fix
 ./scripts/manage-services.sh restart
 ./scripts/monitor.sh all
 
-# SSL certificate expired
+# SSL certificate emergency renewal
 ./scripts/renew-ssl.sh --force
 ./scripts/test-ssl.sh
 
-# Deployment went wrong
+# Bad deployment recovery
 ./scripts/rollback.sh --force
+./scripts/monitor.sh all
+
+# Database corruption recovery
+./scripts/download-database.sh --backup
+./scripts/manage-services.sh restart
 ```
+
+---
+
+## 📊 Script Consolidation Summary
+
+### **✅ Scripts Consolidated (7 removed, 37% reduction)**
+| Old Scripts (Removed) | New Consolidated Script |
+|----------------------|------------------------|
+| `start-system.sh` | **`manage-services.sh`** |
+| `stop-system.sh` | **`manage-services.sh`** |
+| `status-system.sh` | **`manage-services.sh`** |
+| `update-main-service.sh` | **`manage-services.sh`** |
+| `monitor-services.sh` | **`monitor.sh`** |
+| `monitor-main-app.sh` | **`monitor.sh`** |
+| `diagnose-port-3000.sh` | **`troubleshoot.sh`** |
+| `safe-server-test.sh` | **`troubleshoot.sh`** |
+| `test-solution.sh` | **`troubleshoot.sh`** |
+
+### **📈 Benefits Achieved**
+- ✅ **Reduced complexity:** 19 → 12 scripts (-37%)
+- ✅ **Eliminated overlaps:** Clear functional boundaries
+- ✅ **Better organization:** Logical script groupings
+- ✅ **Enhanced features:** More comprehensive functionality per script
+- ✅ **Easier maintenance:** Fewer files to manage and update
+- ✅ **Improved usability:** Clearer naming and consistent usage patterns
+- ✅ **Better documentation:** Comprehensive help and examples
+- ✅ **Enhanced error handling:** Better diagnostics and recovery
+
+---
+
+## 🎯 Best Practices
+
+### **Development Workflow**
+1. Always run `./scripts/dev-check.sh` before making changes
+2. Use `./scripts/deploy.sh` for all deployments (handles git automatically)
+3. Monitor deployments with `./scripts/monitor.sh all`
+4. Keep rollback ready with `./scripts/rollback.sh` if issues arise
+
+### **Troubleshooting**
+1. Start with `./scripts/troubleshoot.sh quick` for fast diagnosis
+2. Use `--fix` flags for automatic repair when possible
+3. Monitor continuously with `./scripts/monitor.sh continuous` during issues
+4. Document issues and solutions for future reference
+
+### **Service Management**
+1. Use bulk operations (`all`) when possible for consistency
+2. Check status before making changes
+3. Restart services individually when debugging specific issues
+4. Update main service configuration when experiencing port conflicts
+
+### **Security & SSL**
+1. Test SSL regularly with `./scripts/test-ssl.sh`
+2. Monitor certificate expiration dates
+3. Use `--dry-run` flags to test changes before applying
+4. Keep SSL configurations backed up
+
+This comprehensive documentation provides all the information needed to effectively manage the Heart Portal infrastructure using the consolidated script system.

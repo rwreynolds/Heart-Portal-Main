@@ -99,7 +99,13 @@ execute_command() {
     if [ "$RUN_MODE" = "local" ]; then
         $SSH_CMD "$cmd" 2>/dev/null
     else
-        eval "$cmd" 2>/dev/null
+        # When in server/remote mode, ensure we're actually running on server
+        if [ "$(whoami)" != "$SERVER_USER" ]; then
+            # If not on server, execute via SSH anyway
+            ssh -i "$SSH_KEY" -o BatchMode=yes -o ConnectTimeout=10 "$SERVER_USER@$SERVER_HOST" "$cmd" 2>/dev/null
+        else
+            eval "$cmd" 2>/dev/null
+        fi
     fi
 }
 
@@ -127,22 +133,22 @@ check_service_health() {
     local health_score=0
 
     # Check systemctl status
-    if execute_command "systemctl is-active $service_name" >/dev/null; then
+    if execute_command "systemctl is-active $service_name" >/dev/null 2>&1; then
         ((health_score += 40))
     fi
 
     # Check port connectivity
-    if execute_command "nc -z localhost $port" >/dev/null; then
+    if execute_command "nc -z localhost $port" >/dev/null 2>&1; then
         ((health_score += 30))
     fi
 
     # Check process exists
-    if execute_command "pgrep -f $service_name" >/dev/null; then
+    if execute_command "pgrep -f $service_name" >/dev/null 2>&1; then
         ((health_score += 20))
     fi
 
-    # Check recent logs for errors
-    if ! execute_command "journalctl -u $service_name --since '5 minutes ago' | grep -i error" >/dev/null; then
+    # Check recent logs for errors (no errors = good = +10 points)
+    if ! execute_command "journalctl -u $service_name --since '5 minutes ago' -q 2>/dev/null | grep -i error" >/dev/null 2>&1; then
         ((health_score += 10))
     fi
 
