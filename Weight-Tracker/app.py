@@ -5,13 +5,35 @@ import sqlite3
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, jsonify, g
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Configure Flask app with shared templates
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+# Add shared directory to path for authentication module
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
+from auth import get_current_user
+
+# Import shared URL helpers
+from url_helpers import (
+    get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
+    get_sodium_url, get_fluid_url, get_weight_url
+)
+
 app = Flask(__name__)
-app.secret_key = 'weight-tracker-secret-key-2025'
+# Shared secret key for cross-application session compatibility
+app.secret_key = os.environ.get('SECRET_KEY', 'heart-portal-shared-secret-key-2025')
+
+# Configure session cookies for reverse proxy setup
+app.config['SESSION_COOKIE_DOMAIN'] = '.heartfailureportal.com'  # Share cookies across all subdomains
+app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cross-site requests
 
 # Configure Jinja to look in multiple template directories
 from jinja2 import FileSystemLoader, ChoiceLoader
@@ -104,55 +126,7 @@ def get_base_url():
     else:
         return 'https://heartfailureportal.com'
 
-# URL Helper Functions for Navbar
-def get_main_app_url():
-    """Get the main app URL"""
-    if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
-        return 'http://localhost:3000'
-    else:
-        return 'https://heartfailureportal.com'
-
-def get_blog_url():
-    """Get the blog URL"""
-    if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
-        return 'http://localhost:5002'
-    else:
-        return 'https://heartfailureportal.com/blog-manager'
-
-def get_nutrition_url():
-    """Get the nutrition database URL"""
-    if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
-        return 'http://localhost:5000'
-    else:
-        return 'https://heartfailureportal.com/nutrition-database'
-
-def get_foodbase_url():
-    """Get the food base URL"""
-    if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
-        return 'http://localhost:5001'
-    else:
-        return 'https://heartfailureportal.com/food-base'
-
-def get_sodium_url():
-    """Get the sodium tracker URL"""
-    if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
-        return 'http://localhost:5003'
-    else:
-        return 'https://heartfailureportal.com/sodium-tracker'
-
-def get_fluid_url():
-    """Get the fluid tracker URL"""
-    if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
-        return 'http://localhost:5004'
-    else:
-        return 'https://heartfailureportal.com/fluid-tracker'
-
-def get_weight_url():
-    """Get the weight tracker URL"""
-    if request.host.startswith('localhost') or request.host.startswith('127.0.0.1'):
-        return 'http://localhost:5005'
-    else:
-        return 'https://heartfailureportal.com/weight-tracker'
+# URL helpers are now imported from shared module
 
 # Make URL functions available in templates
 app.jinja_env.globals.update(
@@ -162,7 +136,8 @@ app.jinja_env.globals.update(
     get_foodbase_url=get_foodbase_url,
     get_sodium_url=get_sodium_url,
     get_fluid_url=get_fluid_url,
-    get_weight_url=get_weight_url
+    get_weight_url=get_weight_url,
+    get_current_user=get_current_user
 )
 
 def lbs_to_kg(lbs):
@@ -175,7 +150,12 @@ def kg_to_lbs(kg):
 
 @app.route('/')
 def index():
-    """Weight tracking dashboard"""
+    """Weight tracking dashboard - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     db = get_db()
     today = datetime.now().strftime('%Y-%m-%d')
 
