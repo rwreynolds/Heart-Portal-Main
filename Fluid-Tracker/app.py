@@ -442,4 +442,7 @@ if __name__ == '__main__':
 
     # Use debug=False in production, True for development
     debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
-    app.run(debug=debug_mode, port=5004, host='0.0.0.0')
+
+    # Read port from environment variable (for staging) or use default
+    port = int(os.getenv('PORT', 5004))
+    app.run(debug=debug_mode, port=port, host='0.0.0.0')

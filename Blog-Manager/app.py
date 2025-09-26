@@ -349,4 +349,6 @@ if __name__ == '__main__':
     init_blog_database()
     migrate_sample_posts()
 
-    app.run(debug=True, port=5002, host='0.0.0.0')
+    # Read port from environment variable (for staging) or use default
+    port = int(os.getenv('PORT', 5002))
+    app.run(debug=True, port=port, host='0.0.0.0')

@@ -339,4 +339,6 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"❌ Database initialization failed: {e}")
     
-    app.run(debug=True, port=5001)
+    # Read port from environment variable (for staging) or use default
+    port = int(os.getenv('PORT', 5001))
+    app.run(debug=True, port=port)
