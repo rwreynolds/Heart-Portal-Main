@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Heart Portal{% endblock %}</title>
 
-    <!-- Page-specific CSS -->
-    {% block head_css %}{% endblock %}
+    <!-- Page-specific CSS will be injected via additional_css block -->
 
     <!-- Shared Navigation CSS -->
     <style>
@@ -206,9 +205,10 @@
                 text-align: center;
             }
         }
-
-        {% block additional_css %}{% endblock %}
     </style>
+
+    <!-- Additional page-specific CSS -->
+    {% block additional_css %}{% endblock %}
 </head>
 <body>
     <!-- Navigation Header -->

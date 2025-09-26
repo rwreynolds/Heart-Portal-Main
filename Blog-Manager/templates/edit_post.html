@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Post - Heart Portal{% endblock %}
+
+{% block head %}
+    <meta name="description" content="Edit your blog post on Heart Portal">
+    <style>
+        .edit-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .edit-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .edit-title {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin: 0 0 10px 0;
+        }
+
+        .edit-subtitle {
+            color: #6c757d;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .status-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .status-pending_review {
+            border-left-color: #ffc107;
+            background-color: #fff3cd;
+        }
+
+        .status-published {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .status-rejected {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .status-info h4 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .status-info p {
+            margin: 0;
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 300px;
+            resize: vertical;
+            font-family: 'Georgia', serif;
+            line-height: 1.6;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e5e5;
+            border-radius: 6px;
+            font-size: 1rem;
+            background-color: white;
+            transition: border-color 0.3s;
+        }
+
+        .form-select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        .help-text {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        .visibility-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .visibility-info h4 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .visibility-info ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #495057;
+        }
+
+        .visibility-info li {
+            margin-bottom: 5px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+            color: white;
+            text-decoration: none;
+        }
+
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .review-notes {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .review-notes h4 {
+            color: #856404;
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+        }
+
+        .review-notes p {
+            margin: 0;
+            color: #856404;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .edit-container {
+                padding: 15px;
+            }
+
+            .form-container {
+                padding: 20px;
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="edit-header">
+        <h1 class="edit-title">Edit Post</h1>
+        <p class="edit-subtitle">Update your blog post</p>
+    </div>
+
+    {% if post.status == 'pending_review' %}
+        <div class="status-info status-pending_review">
+            <h4>📋 Post Under Review</h4>
+            <p>This post is currently being reviewed for publication. You can still make edits, which will reset the review process.</p>
+        </div>
+    {% elif post.status == 'published' %}
+        <div class="status-info status-published">
+            <h4>✅ Post Published</h4>
+            <p>This post is live and visible to the public. Any changes will require re-approval if the post remains public.</p>
+        </div>
+    {% elif post.status == 'rejected' %}
+        <div class="status-info status-rejected">
+            <h4>❌ Post Needs Revision</h4>
+            <p>This post was not approved for publication. Please review the feedback below and make necessary changes.</p>
+        </div>
+    {% endif %}
+
+    {% if post.review_notes %}
+        <div class="review-notes">
+            <h4>📝 Review Feedback</h4>
+            <p>{{ post.review_notes }}</p>
+        </div>
+    {% endif %}
+
+    <form method="POST" class="form-container">
+        <div class="form-group">
+            <label for="title" class="form-label">Post Title *</label>
+            <input type="text" id="title" name="title" class="form-input" required
+                   value="{{ post.title }}">
+            <div class="help-text">Choose a clear, descriptive title that tells readers what to expect</div>
+        </div>
+
+        <div class="form-group">
+            <label for="excerpt" class="form-label">Post Excerpt</label>
+            <textarea id="excerpt" name="excerpt" class="form-input" rows="3">{{ post.excerpt or '' }}</textarea>
+            <div class="help-text">This summary appears in the blog list and helps readers decide if they want to read more</div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-col">
+                <label for="visibility" class="form-label">Visibility *</label>
+                <select id="visibility" name="visibility" class="form-select" required onchange="updateVisibilityInfo()">
+                    <option value="private" {{ 'selected' if post.visibility == 'private' else '' }}>
+                        Private - Only I can see this
+                    </option>
+                    <option value="public" {{ 'selected' if post.visibility == 'public' else '' }}>
+                        Public - Visible to everyone
+                    </option>
+                </select>
+            </div>
+            <div class="form-col">
+                <label for="tags" class="form-label">Tags</label>
+                <input type="text" id="tags" name="tags" class="form-input"
+                       value="{{ post.tags or '' }}"
+                       placeholder="heart-health, nutrition, recipes">
+                <div class="help-text">Separate tags with commas</div>
+            </div>
+        </div>
+
+        <div id="visibility-info" class="visibility-info" style="display: none;">
+            <h4>📋 Public Post Guidelines</h4>
+            <ul>
+                <li><strong>Review process:</strong> Changes to public posts require re-approval</li>
+                <li><strong>Content focus:</strong> Share helpful, heart-health related experiences</li>
+                <li><strong>Medical advice:</strong> Avoid giving specific medical recommendations</li>
+                <li><strong>Approval time:</strong> Usually 24-48 hours</li>
+            </ul>
+        </div>
+
+        <div class="form-group">
+            <label for="content" class="form-label">Post Content *</label>
+            <textarea id="content" name="content" class="form-input form-textarea" required>{{ post.content }}</textarea>
+            <div class="help-text">Write your post content using HTML tags for formatting. Focus on being helpful and authentic.</div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary">
+                ← Back to Dashboard
+            </a>
+            <div>
+                <button type="submit" class="btn btn-primary">
+                    💾 Update Post
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function updateVisibilityInfo() {
+    const visibility = document.getElementById('visibility').value;
+    const infoDiv = document.getElementById('visibility-info');
+
+    if (visibility === 'public') {
+        infoDiv.style.display = 'block';
+    } else {
+        infoDiv.style.display = 'none';
+    }
+}
+
+// Initialize visibility info display
+document.addEventListener('DOMContentLoaded', function() {
+    updateVisibilityInfo();
+});
+</script>
+{% endblock %}

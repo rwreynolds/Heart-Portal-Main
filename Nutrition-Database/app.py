@@ -3,7 +3,7 @@ Enhanced Flask app with additional USDA API endpoints
 Add this to your existing app.py
 """
 
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify, render_template, redirect, session
 from nutrition_api_manager import (
     EnhancedUSDAFoodDataAPI,
     EnhancedNutritionAPIManager,
@@ -15,13 +15,42 @@ from nutrition_api_manager import (
 )
 import json
 import os
+import sys
 from dotenv import load_dotenv
 from jinja2 import ChoiceLoader, FileSystemLoader
 
-# Load environment variables
-load_dotenv()
+# Load environment variables from both root and local .env files
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))  # Root .env for shared settings
+load_dotenv()  # Local .env for component-specific settings
 
 app = Flask(__name__)
+# Shared secret key for cross-application session compatibility
+app.secret_key = os.environ.get('SECRET_KEY', 'heart-portal-shared-secret-key-2025')
+
+# Configure session cookies for reverse proxy setup
+app.config['SESSION_COOKIE_DOMAIN'] = '.heartfailureportal.com'  # Share cookies across all subdomains
+app.config['SESSION_COOKIE_PATH'] = '/'
+app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cross-site requests
+
+# Add shared directory to path for authentication module
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
+
+try:
+    from auth import get_user_from_session, get_current_user
+except ImportError:
+    # If auth module not available, create dummy functions
+    def get_user_from_session(token):
+        return None
+    def get_current_user():
+        return None
+
+# Import shared URL helpers
+from url_helpers import (
+    get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
+    get_sodium_url, get_fluid_url, get_weight_url
+)
 
 # Configure Jinja2 to use shared templates
 app.jinja_loader = ChoiceLoader([
@@ -29,68 +58,7 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
 
-def get_main_app_url():
-    """Get the main app URL based on environment"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return 'https://heartfailureportal.com'
-    return 'http://localhost:3000'
-
-def get_blog_url():
-    """Get the blog URL based on environment"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return 'https://heartfailureportal.com/blog-manager/'
-    return 'http://localhost:5002'
-
-def get_nutrition_url():
-    """Get the nutrition database URL based on environment"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return 'https://heartfailureportal.com/nutrition-database/'
-    return 'http://localhost:5000'
-
-def get_foodbase_url():
-    """Get the Food-Base URL based on environment"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return 'https://heartfailureportal.com/food-base/'
-    return 'http://localhost:5001'
-
-def get_sodium_url():
-    """Get the sodium tracker URL based on environment"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return 'https://heartfailureportal.com/sodium-tracker/'
-    return 'http://localhost:5003'
-
-def get_fluid_url():
-    """Get the fluid tracker URL based on environment"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return 'https://heartfailureportal.com/fluid-tracker/'
-    return 'http://localhost:5004'
-
-def get_weight_url():
-    """Get the weight tracker URL based on environment"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return 'https://heartfailureportal.com/weight-tracker/'
-    return 'http://localhost:5005'
+# URL helpers are now imported from shared module
 
 # Make functions available in templates
 @app.context_processor
@@ -105,6 +73,17 @@ def utility_processor():
         get_weight_url=get_weight_url
     )
 
+# Authentication helper function
+def get_current_user():
+    """Get current user from session"""
+    session_token = session.get('session_token')
+    if session_token:
+        try:
+            return get_user_from_session(session_token)
+        except:
+            return None
+    return None
+
 # Register template global functions
 app.jinja_env.globals.update(
     get_main_app_url=get_main_app_url,
@@ -113,7 +92,8 @@ app.jinja_env.globals.update(
     get_foodbase_url=get_foodbase_url,
     get_sodium_url=get_sodium_url,
     get_fluid_url=get_fluid_url,
-    get_weight_url=get_weight_url
+    get_weight_url=get_weight_url,
+    get_current_user=get_current_user
 )
 
 # Global manager instance with API key management
@@ -166,7 +146,14 @@ def require_api_key(f):
 
 @app.route('/')
 def index():
-    """Serve the main application page"""
+    """Serve the main application page - requires login"""
+    # Check if user is logged in
+    current_user = get_current_user()
+    if not current_user:
+        # Not logged in - redirect to main app login
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     return render_template('index.html')
 
 @app.route('/api/status')

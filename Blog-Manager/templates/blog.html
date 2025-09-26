@@ -3,6 +3,7 @@
 {% block title %}Blog - Heart Failure Portal{% endblock %}
 
 {% block additional_css %}
+<style>
 .blog-header {
     text-align: center;
     padding: 60px 0 40px;
@@ -79,6 +80,7 @@
     text-align: center;
     padding: 40px 0;
 }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -95,12 +97,12 @@
             {% for post in posts %}
             <article class="blog-card">
                 <div class="blog-card-content">
-                    <h3><a href="/post/{{ post.id }}">{{ post.title }}</a></h3>
+                    <h3><a href="/post/{{ post.slug }}">{{ post.title }}</a></h3>
                     <div class="blog-meta">
-                        By {{ post.author }} • {{ post.date.strftime('%B %d, %Y') }}
+                        By {{ post.author_name }} • {{ post.published_at[:10] }}
                     </div>
                     <p class="blog-excerpt">{{ post.excerpt }}</p>
-                    <a href="/post/{{ post.id }}" class="read-more">Read more →</a>
+                    <a href="/post/{{ post.slug }}" class="read-more">Read more →</a>
                 </div>
             </article>
             {% endfor %}

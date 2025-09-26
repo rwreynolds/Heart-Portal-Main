@@ -28,6 +28,21 @@
                 <li><a href="{{ get_main_app_url() }}/about">About</a></li>
                 <li><a href="{{ get_main_app_url() }}/creator">Creator</a></li>
                 <li><a href="{{ get_main_app_url() }}/contact">Contact</a></li>
+                {% if get_current_user and get_current_user() %}
+                <li class="dropdown">
+                    <a href="#">👤 {{ get_current_user().username }}</a>
+                    <div class="dropdown-content">
+                        <a href="{{ get_main_app_url() }}/dashboard">📊 My Dashboard</a>
+                        {% if get_current_user().is_admin %}
+                        <a href="{{ get_main_app_url() }}/admin">👑 Admin Dashboard</a>
+                        {% endif %}
+                        <a href="{{ get_main_app_url() }}/logout">🚪 Sign Out</a>
+                    </div>
+                </li>
+                {% else %}
+                <li><a href="{{ get_main_app_url() }}/login">🔐 Login</a></li>
+                <li><a href="{{ get_main_app_url() }}/register">📝 Sign Up</a></li>
+                {% endif %}
             </ul>
         </nav>
     </div>

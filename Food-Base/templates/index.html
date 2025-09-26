@@ -3,6 +3,7 @@
 {% block title %}Food Storage - Heart Portal{% endblock %}
 
 {% block additional_css %}
+<style>
         /* Food-Base specific styles */
         .stats-cards {
             display: grid;
@@ -333,6 +334,7 @@
         .status-warning {
             background: #ffc107;
         }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -446,7 +448,7 @@
         async function loadAllFoods() {
             showLoading();
             try {
-                const response = await fetch('/api/foods');
+                const response = await fetch('./api/foods');
                 const data = await response.json();
 
                 if (response.ok) {
@@ -475,12 +477,12 @@
 
             showLoading();
             try {
-                let url = '/api/search';
+                let url = './api/search';
                 const params = new URLSearchParams();
 
                 if (query) params.append('q', query);
                 if (category) {
-                    url = `/api/categories/${encodeURIComponent(category)}`;
+                    url = `./api/categories/${encodeURIComponent(category)}`;
                 }
 
                 if (query && !category) {
@@ -627,7 +629,7 @@
         // Refresh statistics
         async function refreshStats() {
             try {
-                const response = await fetch('/api/stats');
+                const response = await fetch('./api/stats');
                 const data = await response.json();
 
                 if (response.ok) {
@@ -646,7 +648,7 @@
         // View food details
         async function viewFoodDetails(foodId) {
             try {
-                const response = await fetch(`/api/foods/${foodId}`);
+                const response = await fetch(`./api/foods/${foodId}`);
                 const food = await response.json();
 
                 if (response.ok) {
@@ -742,7 +744,7 @@
             }
 
             try {
-                const response = await fetch(`/api/foods/${foodId}`, {
+                const response = await fetch(`./api/foods/${foodId}`, {
                     method: 'DELETE'
                 });
 
@@ -771,7 +773,7 @@
             const statusDisplay = document.getElementById('status-display');
 
             try {
-                const response = await fetch('/api/health');
+                const response = await fetch('./api/health');
                 const status = await response.json();
 
                 if (response.ok && status.status === 'healthy') {

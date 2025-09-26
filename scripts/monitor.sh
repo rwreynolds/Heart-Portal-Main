@@ -177,17 +177,34 @@ show_service_status() {
     local service_name="$1"
     local ports="$2"
     local health_score
+    local pid_info=""
 
     # Handle multiple ports
     local main_port="${ports%%,*}"
     health_score=$(check_service_health "$service_name" "$main_port")
 
-    if [ "$health_score" -ge 70 ]; then
-        success "✓ $service_name (ports: $ports) - Healthy ($health_score%)"
-    elif [ "$health_score" -ge 40 ]; then
-        warning "⚠ $service_name (ports: $ports) - Degraded ($health_score%)"
+    # Get PID information for the main port
+    local pids
+    pids=$(execute_command "lsof -ti :$main_port 2>/dev/null" || echo "")
+    if [ -n "$pids" ]; then
+        # Handle multiple PIDs by taking the first one and counting total
+        local first_pid=$(echo "$pids" | head -n1)
+        local pid_count=$(echo "$pids" | wc -l | tr -d ' ')
+        if [ "$pid_count" -eq 1 ]; then
+            pid_info=" [PID: $first_pid]"
+        else
+            pid_info=" [PIDs: $first_pid +$(($pid_count - 1)) more]"
+        fi
     else
-        error "✗ $service_name (ports: $ports) - Unhealthy ($health_score%)"
+        pid_info=" [No PID]"
+    fi
+
+    if [ "$health_score" -ge 70 ]; then
+        success "✓ $service_name (ports: $ports)$pid_info - Healthy ($health_score%)"
+    elif [ "$health_score" -ge 40 ]; then
+        warning "⚠ $service_name (ports: $ports)$pid_info - Degraded ($health_score%)"
+    else
+        error "✗ $service_name (ports: $ports)$pid_info - Unhealthy ($health_score%)"
     fi
 
     # Show additional details for main app

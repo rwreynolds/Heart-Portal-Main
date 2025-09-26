@@ -330,6 +330,109 @@ sudo ./scripts/setup-ssl.sh --domain example.com # Setup for specific domain
 
 ---
 
+## 💻 Local Development Scripts
+
+### `restart-clean.sh` - Clean Local Application Restart
+**Updated:** Now uses shared .env configuration
+
+#### **Commands:**
+```bash
+./scripts/restart-clean.sh                       # Stop all processes and restart using .env
+```
+
+#### **What It Does:**
+1. **Process Cleanup** - Kills all existing Python Flask processes
+2. **Clean Start** - Waits for complete process termination
+3. **Environment Loading** - Uses shared `.env` file for configuration
+4. **Service Startup** - Starts all 7 Flask applications using centralized environment
+5. **Status Report** - Shows PIDs and access information
+
+#### **Features:**
+- ✅ Uses shared `.env` file (no hardcoded environment variables)
+- ✅ Dynamic path resolution (works from any directory)
+- ✅ Clean process termination before restart
+- ✅ Consistent environment across all applications
+
+#### **Example Output:**
+```
+🧹 Stopping all Flask applications...
+🚀 Starting all applications using shared .env configuration...
+▶️ Starting Main App (port 3000)...
+▶️ Starting Nutrition Database (port 5000)...
+...
+✅ All applications started with PIDs:
+   Main App: 46709
+   Nutrition: 46710
+🌐 Access through: http://localhost:8080
+```
+
+---
+
+### `start-all-apps.sh` - Local Development Server Startup
+**Updated:** Now uses shared .env configuration
+
+#### **Commands:**
+```bash
+./scripts/start-all-apps.sh                     # Start all Flask apps using .env config
+```
+
+#### **What It Does:**
+1. **Process Management** - Cleans up existing application processes
+2. **Environment Loading** - Uses shared `.env` file automatically
+3. **Service Startup** - Starts all Heart Portal applications
+4. **Status Reporting** - Confirms successful startup with access URLs
+
+#### **Applications Started:**
+- Main App (port 3000)
+- Blog Manager (port 5002)
+- Nutrition Database (port 5000)
+- Food Base (port 5001)
+- Sodium Tracker (port 5003)
+- Fluid Tracker (port 5004)
+- Weight Tracker (port 5005)
+
+#### **Features:**
+- ✅ Uses shared `.env` file for `REVERSE_PROXY_MODE=true`
+- ✅ Automatic process cleanup before starting
+- ✅ Dynamic project root detection
+- ✅ No hardcoded paths or environment variables
+
+---
+
+### `start-proxy.sh` - Nginx Reverse Proxy Startup
+**Updated:** Simplified for nginx-only operation
+
+#### **Commands:**
+```bash
+./scripts/start-proxy.sh                        # Start nginx reverse proxy on port 8080
+```
+
+#### **What It Does:**
+1. **Nginx Validation** - Checks if nginx is installed
+2. **Process Cleanup** - Stops existing nginx processes
+3. **Proxy Start** - Starts nginx with Heart Portal configuration
+4. **URL Guide** - Shows all application access URLs
+
+#### **Features:**
+- ✅ No redundant environment variables (Flask apps handle their own .env)
+- ✅ Clean nginx-only operation
+- ✅ Comprehensive URL mapping guide
+- ✅ Dependency checking (nginx installation)
+
+#### **Access URLs:**
+```
+📍 Access your applications at:
+   🏠 Main App:         http://localhost:8080/
+   📝 Blog:            http://localhost:8080/blog/
+   🔍 Nutrition:       http://localhost:8080/nutrition/
+   🍎 Food Storage:    http://localhost:8080/food/
+   🧂 Sodium Tracker:  http://localhost:8080/sodium/
+   💧 Fluid Tracker:   http://localhost:8080/fluid/
+   ⚖️ Weight Tracker:  http://localhost:8080/weight/
+```
+
+---
+
 ## 🗄️ Data Management Scripts
 
 ### `download-database.sh` - Database Synchronization
@@ -399,6 +502,25 @@ sudo ./scripts/setup-ssl.sh --domain example.com # Setup for specific domain
 
 # 4. Monitor deployment success
 ./scripts/monitor.sh all
+```
+
+### 💻 **Local Development Workflow**
+```bash
+# 1. Start local development environment (all Flask apps)
+./scripts/restart-clean.sh
+
+# 2. Start nginx reverse proxy for testing
+./scripts/start-proxy.sh
+
+# 3. Access applications through reverse proxy
+# http://localhost:8080 (main navigation)
+# http://localhost:8080/blog/ (blog manager)
+# http://localhost:8080/nutrition/ (nutrition database)
+# etc.
+
+# 4. Stop all services when done
+pkill -f "python.*app.py"
+pkill nginx
 ```
 
 ### 🚨 **Troubleshooting Workflow**
@@ -619,6 +741,12 @@ nginx (80/443) → SSL Termination & Reverse Proxy
 2. Use `./scripts/deploy.sh` for all deployments (handles git automatically)
 3. Monitor deployments with `./scripts/monitor.sh all`
 4. Keep rollback ready with `./scripts/rollback.sh` if issues arise
+
+### **Environment Configuration**
+1. **Single Source of Truth**: All environment variables are managed through the shared `.env` file in the project root
+2. **No Script Overrides**: Local development scripts (`restart-clean.sh`, `start-all-apps.sh`) rely entirely on `.env` file
+3. **Consistent Configuration**: `REVERSE_PROXY_MODE=true` is set in `.env` to ensure proper navigation URLs
+4. **No Hardcoded Values**: All scripts use dynamic path resolution and environment loading
 
 ### **Troubleshooting**
 1. Start with `./scripts/troubleshoot.sh quick` for fast diagnosis
