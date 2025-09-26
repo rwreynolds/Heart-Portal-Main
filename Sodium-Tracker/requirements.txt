@@ -26,4 +26,4 @@ markupsafe>=2.1.0
 blinker>=1.6.0
 
 # Additional dependencies for sodium tracking
-sqlite3
+# sqlite3 is built into Python - no need to install via pip
