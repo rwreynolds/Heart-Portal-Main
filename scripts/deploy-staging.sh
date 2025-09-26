@@ -135,7 +135,10 @@ git pull origin "$BRANCH"
 echo "Setting up staging environment..."
 if [ -f "$PRODUCTION_DIR/.env" ]; then
     cp "$PRODUCTION_DIR/.env" "$STAGING_DIR/.env"
-    echo "✅ Copied .env from production"
+
+    # Override staging-specific settings
+    sed -i 's/STAGING_MODE=false/STAGING_MODE=true/' "$STAGING_DIR/.env"
+    echo "✅ Copied .env from production and configured for staging"
 fi
 
 # Create staging systemd services
