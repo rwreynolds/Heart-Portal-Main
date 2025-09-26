@@ -157,6 +157,7 @@ Restart=always
 RestartSec=10
 Environment=FLASK_ENV=staging
 Environment=PORT=3001
+Environment=STAGING_MODE=true
 
 [Install]
 WantedBy=multi-user.target
@@ -189,6 +190,7 @@ Restart=always
 RestartSec=10
 Environment=FLASK_ENV=staging
 Environment=PORT=${port}
+Environment=STAGING_MODE=true
 
 [Install]
 WantedBy=multi-user.target
