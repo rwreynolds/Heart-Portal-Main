@@ -260,7 +260,12 @@ def add_entry():
 
 @app.route('/history')
 def history():
-    """View fluid intake history"""
+    """View fluid intake history - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     page = request.args.get('page', 1, type=int)
     per_page = 50
     offset = (page - 1) * per_page
@@ -305,7 +310,12 @@ def history():
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    """Manage user settings"""
+    """Manage user settings - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     if request.method == 'POST':
         default_goal = request.form.get('default_daily_goal', 2000)
         alert_threshold = request.form.get('alert_threshold', 80)

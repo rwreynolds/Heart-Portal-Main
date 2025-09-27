@@ -224,7 +224,7 @@
             {% else %}
                 <div class="no-data">
                     <p>No weight recorded today</p>
-                    <a href="{{ url_for('add_entry') }}" class="btn" style="margin-top: 15px;">Record Weight</a>
+                    <a href="/weight/add_entry" class="btn" style="margin-top: 15px;">Record Weight</a>
                 </div>
             {% endif %}
         </div>
@@ -332,17 +332,17 @@
                 {% endfor %}
             </div>
             <div style="text-align: center; margin-top: 20px;">
-                <a href="{{ url_for('history') }}" class="btn btn-secondary">View All History</a>
+                <a href="/weight/history" class="btn btn-secondary">View All History</a>
             </div>
         </div>
     {% endif %}
 
     <!-- Action Buttons -->
     <div class="actions">
-        <a href="{{ url_for('add_entry') }}" class="btn">📝 Record Weight</a>
-        <a href="{{ url_for('history') }}" class="btn btn-secondary">📊 View History</a>
-        <a href="{{ url_for('set_goal') }}" class="btn btn-secondary">🎯 Set Goal</a>
-        <a href="{{ url_for('settings') }}" class="btn btn-secondary">⚙️ Settings</a>
+        <a href="/weight/add_entry" class="btn">📝 Record Weight</a>
+        <a href="/weight/history" class="btn btn-secondary">📊 View History</a>
+        <a href="/weight/set_goal" class="btn btn-secondary">🎯 Set Goal</a>
+        <a href="/weight/settings" class="btn btn-secondary">⚙️ Settings</a>
     </div>
 </div>
 {% endblock %}

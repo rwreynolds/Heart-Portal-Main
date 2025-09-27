@@ -2,7 +2,7 @@
 
 import os
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from flask import Flask, render_template, request, redirect, url_for, jsonify, g
 import logging
 from dotenv import load_dotenv
@@ -205,9 +205,14 @@ def index():
 
 @app.route('/add_entry', methods=['GET', 'POST'])
 def add_entry():
-    """Add new weight entry"""
+    """Add new weight entry - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     if request.method == 'POST':
-        date = request.form['date']
+        entry_date = request.form['date']
         weight_input = float(request.form['weight'])
         unit = request.form['unit']
         time_of_day = request.form['time_of_day']
@@ -225,10 +230,10 @@ def add_entry():
         db.execute('''
             INSERT INTO weight_entries (date, weight_lbs, weight_kg, time_of_day, notes)
             VALUES (?, ?, ?, ?, ?)
-        ''', (date, weight_lbs, weight_kg, time_of_day, notes))
+        ''', (entry_date, weight_lbs, weight_kg, time_of_day, notes))
         db.commit()
 
-        logger.info(f"Weight entry added: {weight_lbs}lbs/{weight_kg}kg on {date}")
+        logger.info(f"Weight entry added: {weight_lbs}lbs/{weight_kg}kg on {entry_date}")
         return redirect(url_for('index'))
 
     # Get user settings for default unit
@@ -238,11 +243,17 @@ def add_entry():
 
     return render_template('add_entry.html',
                          preferred_unit=preferred_unit,
+                         today=date.today().isoformat(),
                          base_url=get_base_url())
 
 @app.route('/history')
 def history():
-    """View weight history"""
+    """View weight history - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     db = get_db()
 
     # Get all entries, paginated
@@ -272,7 +283,12 @@ def history():
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    """User settings management"""
+    """User settings management - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     db = get_db()
 
     if request.method == 'POST':
