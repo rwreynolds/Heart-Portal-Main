@@ -138,6 +138,9 @@ if [ -f "$PRODUCTION_DIR/.env" ]; then
 
     # Override staging-specific settings
     sed -i 's/STAGING_MODE=false/STAGING_MODE=true/' "$STAGING_DIR/.env"
+
+    # Add staging-specific URL configuration
+    echo "STAGING_BASE_URL=http://heartfailureportal.com:8081" >> "$STAGING_DIR/.env"
     echo "✅ Copied .env from production and configured for staging"
 fi
 

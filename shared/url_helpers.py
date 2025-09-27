@@ -16,7 +16,7 @@ def is_reverse_proxy_mode():
 def get_base_url():
     """Get the base URL for the current environment"""
     if is_staging_mode():
-        return os.environ.get('STAGING_BASE_URL', 'https://heartfailureportal.com:8082')
+        return os.environ.get('STAGING_BASE_URL', 'http://heartfailureportal.com:8081')
     elif is_reverse_proxy_mode():
         return 'http://localhost:8080'
     else:
