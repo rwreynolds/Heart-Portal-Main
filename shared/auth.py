@@ -220,6 +220,21 @@ def login_required(f):
 
 def get_current_user():
     """Get the current logged-in user"""
+    # Staging mode bypass for testing
+    if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
+        # Create a fake user for staging tests
+        fake_user = User(
+            id=999,
+            username='staging_test_user',
+            email='test@staging.local',
+            password_hash='fake_hash',
+            created_at=datetime.now().isoformat(),
+            is_active=True,
+            is_admin=False
+        )
+        g.current_user = fake_user
+        return fake_user
+
     if hasattr(g, 'current_user'):
         return g.current_user
 

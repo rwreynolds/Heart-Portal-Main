@@ -141,7 +141,8 @@ if [ -f "$PRODUCTION_DIR/.env" ]; then
 
     # Add staging-specific URL configuration
     echo "STAGING_BASE_URL=http://heartfailureportal.com:8081" >> "$STAGING_DIR/.env"
-    echo "✅ Copied .env from production and configured for staging"
+    echo "STAGING_AUTH_BYPASS=true" >> "$STAGING_DIR/.env"
+    echo "✅ Copied .env from production and configured for staging with auth bypass"
 fi
 
 # Create staging systemd services
