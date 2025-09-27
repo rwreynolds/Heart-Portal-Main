@@ -282,7 +282,7 @@
 
             <!-- Actions -->
             <div class="actions">
-                <a href="{{ get_sodium_url() }}" class="btn btn-primary">← Back to Dashboard</a>
+                <a href="/sodium/" class="btn btn-primary">← Back to Dashboard</a>
             </div>
 
             <!-- Flash Messages -->
@@ -298,7 +298,7 @@
 
             <!-- Settings Form -->
             <div class="settings-card">
-                <form method="POST" action="{{ get_sodium_url() }}/settings">
+                <form method="POST" action="/sodium/settings">
                     <div class="form-group">
                         <label for="default_daily_goal">Default Daily Sodium Goal (mg)</label>
                         <input type="number" id="default_daily_goal" name="default_daily_goal"
@@ -321,7 +321,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Save Settings</button>
-                        <a href="{{ get_sodium_url() }}" class="btn btn-secondary">Cancel</a>
+                        <a href="/sodium/" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
 

@@ -282,7 +282,7 @@
 
             <!-- Entry Form -->
             <div class="form-card">
-                <form method="POST" action="{{ get_sodium_url() }}/add_entry">
+                <form method="POST" action="/sodium/add_entry">
                     <div class="form-group">
                         <label for="food_item">Food Item <span class="required">*</span></label>
                         <input type="text" id="food_item" name="food_item" required
@@ -329,7 +329,7 @@
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">Add Entry</button>
-                        <a href="{{ get_sodium_url() }}" class="btn btn-secondary">Cancel</a>
+                        <a href="/sodium/" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
 

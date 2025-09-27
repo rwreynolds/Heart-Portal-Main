@@ -322,9 +322,9 @@
 
     <!-- Action Buttons -->
     <div class="actions">
-        <a href="{{ get_sodium_url() }}/add_entry" class="btn btn-primary">📝 Add Sodium Entry</a>
-        <a href="{{ get_sodium_url() }}/history" class="btn btn-secondary">📊 View History</a>
-        <a href="{{ get_sodium_url() }}/settings" class="btn btn-secondary">⚙️ Settings</a>
+        <a href="/sodium/add_entry" class="btn btn-primary">📝 Add Sodium Entry</a>
+        <a href="/sodium/history" class="btn btn-secondary">📊 View History</a>
+        <a href="/sodium/settings" class="btn btn-secondary">⚙️ Settings</a>
     </div>
 
     <!-- Recent Entries -->
@@ -348,7 +348,7 @@
             </ul>
         {% else %}
             <div class="no-entries">
-                No entries for today yet. <a href="{{ get_sodium_url() }}/add_entry">Add your first entry</a>!
+                No entries for today yet. <a href="/sodium/add_entry">Add your first entry</a>!
             </div>
         {% endif %}
     </div>
