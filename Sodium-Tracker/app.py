@@ -219,7 +219,12 @@ def index():
 
 @app.route('/add_entry', methods=['GET', 'POST'])
 def add_entry():
-    """Add a new sodium entry"""
+    """Add a new sodium entry - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     if request.method == 'POST':
         data = request.form
         entry_date = data.get('date', date.today().isoformat())
@@ -258,7 +263,12 @@ def add_entry():
 
 @app.route('/history')
 def history():
-    """View sodium intake history"""
+    """View sodium intake history - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     page = request.args.get('page', 1, type=int)
     per_page = 50
     offset = (page - 1) * per_page
@@ -302,7 +312,12 @@ def history():
 
 @app.route('/settings', methods=['GET', 'POST'])
 def settings():
-    """Manage user settings"""
+    """Manage user settings - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     if request.method == 'POST':
         default_goal = request.form.get('default_daily_goal', 2300)
         alert_threshold = request.form.get('alert_threshold', 80)
@@ -360,7 +375,12 @@ def api_daily_intake(target_date):
 
 @app.route('/delete_entry/<int:entry_id>', methods=['POST'])
 def delete_entry(entry_id):
-    """Delete a sodium entry"""
+    """Delete a sodium entry - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
