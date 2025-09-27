@@ -133,7 +133,7 @@
 
     <!-- Actions -->
     <div class="actions">
-        <a href="{{ url_for('index') }}" class="btn btn-primary">← Back to Dashboard</a>
+        <a href="{{ get_sodium_url() }}" class="btn btn-primary">← Back to Dashboard</a>
     </div>
 
     <!-- History Table -->
@@ -172,7 +172,7 @@
             </table>
         {% else %}
             <div class="no-data">
-                No sodium tracking data found. <a href="{{ url_for('add_entry') }}">Start tracking</a> to see your history!
+                No sodium tracking data found. <a href="{{ get_sodium_url() }}/add_entry">Start tracking</a> to see your history!
             </div>
         {% endif %}
     </div>
