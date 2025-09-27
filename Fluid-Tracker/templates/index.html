@@ -315,9 +315,9 @@
 
     <!-- Action Buttons -->
     <div class="actions">
-        <a href="{{ url_for('add_entry') }}" class="btn">📝 Add Fluid Entry</a>
-        <a href="{{ url_for('history') }}" class="btn btn-secondary">📊 View History</a>
-        <a href="{{ url_for('settings') }}" class="btn btn-secondary">⚙️ Settings</a>
+        <a href="/fluid/add_entry" class="btn">📝 Add Fluid Entry</a>
+        <a href="/fluid/history" class="btn btn-secondary">📊 View History</a>
+        <a href="/fluid/settings" class="btn btn-secondary">⚙️ Settings</a>
     </div>
 
     <!-- Recent Entries -->
@@ -341,7 +341,7 @@
             </ul>
         {% else %}
             <div class="no-entries">
-                No entries for today yet. <a href="{{ url_for('add_entry') }}">Add your first entry</a>!
+                No entries for today yet. <a href="/fluid/add_entry">Add your first entry</a>!
             </div>
         {% endif %}
     </div>
