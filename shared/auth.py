@@ -259,7 +259,13 @@ def get_current_user():
             is_active=True,
             is_admin=is_admin
         )
-        g.current_user = fake_user
+
+        # Try to set g.current_user but don't fail if g is not available
+        try:
+            g.current_user = fake_user
+        except:
+            pass  # Flask g might not be available in all contexts
+
         return fake_user
 
     if hasattr(g, 'current_user'):
