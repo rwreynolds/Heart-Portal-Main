@@ -78,7 +78,8 @@ app.jinja_env.globals.update(
 def blog_list():
     """Public blog post listing page"""
     posts = get_published_posts()
-    return render_template('blog.html', posts=posts)
+    current_user = get_current_user()
+    return render_template('blog.html', posts=posts, current_user=current_user)
 
 @app.route('/post/<slug>')
 def blog_post(slug):
