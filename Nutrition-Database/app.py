@@ -46,14 +46,21 @@ except ImportError:
     def get_current_user():
         # Staging mode bypass for testing
         if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
+            # Check if admin mode is enabled for staging
+            is_admin = os.environ.get('STAGING_ADMIN_MODE', '').lower() == 'true'
+            user_id = 998 if is_admin else 999
+            username = 'staging_admin_user' if is_admin else 'staging_test_user'
+            email = 'admin@staging.local' if is_admin else 'test@staging.local'
+
             # Create a fake user for staging tests
             class FakeUser:
                 def __init__(self):
-                    self.id = 999
-                    self.username = 'staging_test_user'
-                    self.email = 'test@staging.local'
+                    self.id = user_id
+                    self.username = username
+                    self.email = email
                     self.is_authenticated = True
                     self.is_anonymous = False
+                    self.is_admin = is_admin
             return FakeUser()
         return None
 

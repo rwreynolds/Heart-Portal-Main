@@ -208,15 +208,21 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         # Staging mode bypass for testing
         if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
+            # Check if admin mode is enabled for staging
+            is_admin = os.environ.get('STAGING_ADMIN_MODE', '').lower() == 'true'
+            user_id = 998 if is_admin else 999
+            username = 'staging_admin_user' if is_admin else 'staging_test_user'
+            email = 'admin@staging.local' if is_admin else 'test@staging.local'
+
             # Create a fake user for staging tests
             fake_user = User(
-                id=999,
-                username='staging_test_user',
-                email='test@staging.local',
+                id=user_id,
+                username=username,
+                email=email,
                 password_hash='fake_hash',
                 created_at=datetime.now().isoformat(),
                 is_active=True,
-                is_admin=False
+                is_admin=is_admin
             )
             g.current_user = fake_user
             return f(*args, **kwargs)
@@ -237,15 +243,21 @@ def get_current_user():
     """Get the current logged-in user"""
     # Staging mode bypass for testing
     if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
+        # Check if admin mode is enabled for staging
+        is_admin = os.environ.get('STAGING_ADMIN_MODE', '').lower() == 'true'
+        user_id = 998 if is_admin else 999
+        username = 'staging_admin_user' if is_admin else 'staging_test_user'
+        email = 'admin@staging.local' if is_admin else 'test@staging.local'
+
         # Create a fake user for staging tests
         fake_user = User(
-            id=999,
-            username='staging_test_user',
-            email='test@staging.local',
+            id=user_id,
+            username=username,
+            email=email,
             password_hash='fake_hash',
             created_at=datetime.now().isoformat(),
             is_active=True,
-            is_admin=False
+            is_admin=is_admin
         )
         g.current_user = fake_user
         return fake_user
