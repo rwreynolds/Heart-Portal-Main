@@ -95,6 +95,17 @@ deploy_staging_to_server() {
         return 1
     fi
 
+    # Check if local .env.staging exists
+    if [ ! -f ".env.staging" ]; then
+        error ".env.staging file not found in local directory"
+        echo "Please create .env.staging with staging configuration"
+        return 1
+    fi
+
+    # Copy .env.staging to server
+    log "Copying staging environment configuration..."
+    scp -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" .env.staging heartportal@"$SERVER_HOST":/tmp/staging.env
+
     # Create the staging deployment script
     local staging_script=$(cat << 'SCRIPT_END'
 #!/bin/bash
@@ -131,18 +142,14 @@ echo "Switching to multiuser-auth branch..."
 git checkout "$BRANCH"
 git pull origin "$BRANCH"
 
-# Copy environment configuration from production
+# Move staging environment configuration
 echo "Setting up staging environment..."
-if [ -f "$PRODUCTION_DIR/.env" ]; then
-    cp "$PRODUCTION_DIR/.env" "$STAGING_DIR/.env"
-
-    # Override staging-specific settings
-    sed -i 's/STAGING_MODE=false/STAGING_MODE=true/' "$STAGING_DIR/.env"
-
-    # Add staging-specific URL configuration
-    echo "STAGING_BASE_URL=http://heartfailureportal.com:8081" >> "$STAGING_DIR/.env"
-    echo "STAGING_AUTH_BYPASS=true" >> "$STAGING_DIR/.env"
-    echo "✅ Copied .env from production and configured for staging with auth bypass"
+if [ -f "/tmp/staging.env" ]; then
+    mv "/tmp/staging.env" "$STAGING_DIR/.env"
+    echo "✅ Staging environment configuration installed"
+else
+    echo "❌ Staging environment file not found (was .env.staging copied?)"
+    exit 1
 fi
 
 # Create staging systemd services

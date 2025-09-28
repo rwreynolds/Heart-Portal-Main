@@ -1,5 +1,6 @@
 # Environment variables (contains API keys)
 .env
+.env.staging
 
 # API configuration (may contain sensitive data)
 api_config.json
