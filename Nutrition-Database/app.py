@@ -44,6 +44,17 @@ except ImportError:
     def get_user_from_session(token):
         return None
     def get_current_user():
+        # Staging mode bypass for testing
+        if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
+            # Create a fake user for staging tests
+            class FakeUser:
+                def __init__(self):
+                    self.id = 999
+                    self.username = 'staging_test_user'
+                    self.email = 'test@staging.local'
+                    self.is_authenticated = True
+                    self.is_anonymous = False
+            return FakeUser()
         return None
 
 # Import shared URL helpers
