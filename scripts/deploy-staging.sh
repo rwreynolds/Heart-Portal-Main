@@ -58,6 +58,31 @@ check_environment() {
     success "Environment check passed - you're working locally"
 }
 
+# Commit any uncommitted changes
+commit_changes_if_needed() {
+    log "Checking for uncommitted changes..."
+
+    # Check if there are any changes to commit
+    if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+        log "Found uncommitted changes, committing them..."
+
+        # Add all changes (modified, new, deleted)
+        git add -A
+
+        # Create commit with timestamp
+        local commit_msg="Update for staging deployment $(date '+%Y-%m-%d %H:%M:%S')
+
+🔧 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+        git commit -m "$commit_msg"
+        success "Changes committed successfully"
+    else
+        success "No uncommitted changes found"
+    fi
+}
+
 # Push multiuser-auth branch to GitHub if needed
 push_branch_to_github() {
     log "Checking multiuser-auth branch status..."
@@ -380,6 +405,11 @@ main() {
 
     # Check environment
     if ! check_environment; then
+        exit 1
+    fi
+
+    # Commit any uncommitted changes first
+    if ! commit_changes_if_needed; then
         exit 1
     fi
 
