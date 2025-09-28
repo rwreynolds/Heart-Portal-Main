@@ -152,11 +152,16 @@ else
     exit 1
 fi
 
+# Read environment variables from the staging .env file
+echo "Reading staging environment configuration..."
+STAGING_ADMIN_MODE_VALUE=$(grep "^STAGING_ADMIN_MODE=" "$STAGING_DIR/.env" | cut -d'=' -f2)
+echo "🔧 STAGING_ADMIN_MODE will be set to: $STAGING_ADMIN_MODE_VALUE"
+
 # Create staging systemd services
 echo "Creating staging systemd services..."
 
 # Main service
-sudo tee /etc/systemd/system/heart-portal-staging-main.service > /dev/null << 'SERVICE_MAIN'
+sudo tee /etc/systemd/system/heart-portal-staging-main.service > /dev/null << SERVICE_MAIN
 [Unit]
 Description=Heart Portal Staging Main Application
 After=network.target
@@ -173,7 +178,7 @@ Environment=FLASK_ENV=staging
 Environment=PORT=3001
 Environment=STAGING_MODE=true
 Environment=STAGING_AUTH_BYPASS=true
-Environment=STAGING_ADMIN_MODE=true
+Environment=STAGING_ADMIN_MODE=${STAGING_ADMIN_MODE_VALUE}
 
 [Install]
 WantedBy=multi-user.target
@@ -208,7 +213,7 @@ Environment=FLASK_ENV=staging
 Environment=PORT=${port}
 Environment=STAGING_MODE=true
 Environment=STAGING_AUTH_BYPASS=true
-Environment=STAGING_ADMIN_MODE=true
+Environment=STAGING_ADMIN_MODE=${STAGING_ADMIN_MODE_VALUE}
 
 [Install]
 WantedBy=multi-user.target
