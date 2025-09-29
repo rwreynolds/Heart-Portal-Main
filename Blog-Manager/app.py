@@ -100,7 +100,7 @@ def user_dashboard():
         return redirect(f"{main_app_url}/login?next={request.url}")
 
     # Get user's posts
-    user_posts = get_user_posts(current_user['id'])
+    user_posts = get_user_posts(current_user.id)
 
     return render_template('user_dashboard.html', posts=user_posts)
 
@@ -123,8 +123,8 @@ def create_post():
             post_id = create_post(
                 title=title,
                 content=content,
-                author_id=current_user['id'],
-                author_name=current_user['username'],
+                author_id=current_user.id,
+                author_name=current_user.username,
                 excerpt=excerpt,
                 visibility=visibility,
                 tags=tags
@@ -149,7 +149,7 @@ def edit_post(post_id):
         return redirect(f"{main_app_url}/login?next={request.url}")
 
     # Get user's posts to verify ownership
-    user_posts = get_user_posts(current_user['id'])
+    user_posts = get_user_posts(current_user.id)
     post = next((p for p in user_posts if p['id'] == post_id), None)
 
     if not post:
@@ -191,7 +191,7 @@ def delete_user_post(post_id):
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    success = delete_post(post_id, author_id=current_user['id'])
+    success = delete_post(post_id, author_id=current_user.id)
 
     if success:
         flash('Post deleted successfully!', 'success')
@@ -224,7 +224,7 @@ def approve_user_post(post_id):
         return redirect(url_for('blog_list'))
 
     review_notes = request.form.get('review_notes', '')
-    success = approve_post(post_id, current_user['id'], review_notes)
+    success = approve_post(post_id, current_user.id, review_notes)
 
     if success:
         flash('Post approved and published!', 'success')
@@ -242,7 +242,7 @@ def reject_user_post(post_id):
         return redirect(url_for('blog_list'))
 
     review_notes = request.form.get('review_notes', '')
-    success = reject_post(post_id, current_user['id'], review_notes)
+    success = reject_post(post_id, current_user.id, review_notes)
 
     if success:
         flash('Post rejected.', 'success')
