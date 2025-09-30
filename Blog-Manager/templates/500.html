@@ -108,10 +108,10 @@
             <nav class="nav">
                 <div class="logo">❤️ Heart Portal</div>
                 <ul class="nav-links">
-                    <li><a href="http://localhost:3000">Home</a></li>
-                    <li><a href="/">Blog</a></li>
-                    <li><a href="http://localhost:3000/about">About</a></li>
-                    <li><a href="http://localhost:3000/contact">Contact</a></li>
+                    <li><a href="{{ get_main_app_url() }}">Home</a></li>
+                    <li><a href="{{ get_blog_url() }}">Blog</a></li>
+                    <li><a href="{{ get_main_app_url() }}/about">About</a></li>
+                    <li><a href="{{ get_main_app_url() }}/contact">Contact</a></li>
                 </ul>
             </nav>
         </div>
@@ -122,7 +122,7 @@
             <h1>500</h1>
             <h2>Server Error</h2>
             <p>Sorry, something went wrong on our end.</p>
-            <a href="/" class="btn">Return to Blog</a>
+            <a href="{{ get_blog_url() }}" class="btn">Return to Blog</a>
         </div>
     </section>
 

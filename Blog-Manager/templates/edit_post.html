@@ -2,9 +2,12 @@
 
 {% block title %}Edit Post - Heart Portal{% endblock %}
 
-{% block head %}
-    <meta name="description" content="Edit your blog post on Heart Portal">
-    <style>
+{% block additional_css %}
+<style>
+    /* Override global body padding for better header clearance */
+    body {
+        padding-top: 120px !important;
+    }
         .edit-container {
             max-width: 900px;
             margin: 0 auto;
@@ -377,7 +380,7 @@
         </div>
 
         <div class="form-actions">
-            <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary">
+            <a href="{{ get_blog_url() }}dashboard" class="btn btn-secondary">
                 ← Back to Dashboard
             </a>
             <div>

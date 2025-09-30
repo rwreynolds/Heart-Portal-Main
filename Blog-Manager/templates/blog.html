@@ -94,8 +94,8 @@
             <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; text-align: center;">
                 <h3 style="margin-bottom: 15px; color: white;">✍️ Manage Your Blog Posts</h3>
                 <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                    <a href="dashboard" class="btn" style="background: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">📊 My Dashboard</a>
-                    <a href="create" class="btn" style="background: #2196F3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">✏️ Create New Post</a>
+                    <a href="{{ get_blog_url() }}dashboard" class="btn" style="background: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">📊 My Dashboard</a>
+                    <a href="{{ get_blog_url() }}create" class="btn" style="background: #2196F3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">✏️ Create New Post</a>
                 </div>
                 <p style="margin-top: 15px; font-size: 0.9rem; color: rgba(255,255,255,0.9);">
                     Welcome back, {{ current_user.username }}! Create and manage your blog posts to share your heart health journey.
@@ -112,12 +112,12 @@
             {% for post in posts %}
             <article class="blog-card">
                 <div class="blog-card-content">
-                    <h3><a href="/post/{{ post.slug }}">{{ post.title }}</a></h3>
+                    <h3><a href="{{ get_blog_url() }}post/{{ post.slug }}">{{ post.title }}</a></h3>
                     <div class="blog-meta">
                         By {{ post.author_name }} • {{ post.published_at[:10] }}
                     </div>
                     <p class="blog-excerpt">{{ post.excerpt }}</p>
-                    <a href="/post/{{ post.slug }}" class="read-more">Read more →</a>
+                    <a href="{{ get_blog_url() }}post/{{ post.slug }}" class="read-more">Read more →</a>
                 </div>
             </article>
             {% endfor %}

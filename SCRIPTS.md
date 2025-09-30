@@ -17,20 +17,31 @@ This document provides comprehensive documentation for the Heart Portal consolid
 
 ```bash
 # === BULK SERVICE OPERATIONS ===
-./scripts/manage-services.sh start               # Start all Heart Portal services
-./scripts/manage-services.sh stop                # Stop all Heart Portal services
-./scripts/manage-services.sh restart             # Restart all Heart Portal services
-./scripts/manage-services.sh status              # Show status of all services
+./scripts/manage-services.sh start               # Start all Heart Portal services (remote)
+./scripts/manage-services.sh stop                # Stop all Heart Portal services (remote)
+./scripts/manage-services.sh restart             # Restart all Heart Portal services (remote)
+./scripts/manage-services.sh status              # Show status of all services (remote)
 
 # === INDIVIDUAL SERVICE CONTROL ===
-./scripts/manage-services.sh start [service]     # Start specific service
-./scripts/manage-services.sh stop [service]      # Stop specific service
-./scripts/manage-services.sh restart [service]   # Restart specific service
-./scripts/manage-services.sh status [service]    # Check specific service status
+./scripts/manage-services.sh start [service]     # Start specific service (remote)
+./scripts/manage-services.sh stop [service]      # Stop specific service (remote)
+./scripts/manage-services.sh restart [service]   # Restart specific service (remote)
+./scripts/manage-services.sh status [service]    # Check specific service status (remote)
 
-# === SERVICE UPDATES ===
+# === LOCAL DEVELOPMENT MODE ===
+./scripts/manage-services.sh start --local       # Start all services locally (Flask processes)
+./scripts/manage-services.sh stop --local        # Stop all local Flask processes
+./scripts/manage-services.sh restart --local     # Restart all local Flask processes
+./scripts/manage-services.sh status --local      # Show local Flask process status
+
+# === MIXED LOCAL/REMOTE OPERATIONS ===
+./scripts/manage-services.sh start [service] --local    # Start specific service locally
+./scripts/manage-services.sh stop [service] --local     # Stop specific local service
+./scripts/manage-services.sh restart [service] --local  # Restart specific local service
+./scripts/manage-services.sh status [service] --local   # Check specific local service
+
+# === SERVICE UPDATES (REMOTE ONLY) ===
 ./scripts/manage-services.sh update              # Update main service (fix port conflicts)
-./scripts/manage-services.sh reload              # Reload all service configurations
 ```
 
 #### **Service Names:**
@@ -43,31 +54,68 @@ This document provides comprehensive documentation for the Heart Portal consolid
 - `weight` - Weight Tracker (port 5005)
 
 #### **Examples:**
+
+**Remote Server Operations (Default):**
 ```bash
-# Start only the main app and nutrition database
+# Start only the main app and nutrition database on remote server
 ./scripts/manage-services.sh start main
 ./scripts/manage-services.sh start nutrition
 
-# Check status of tracker services
+# Check status of tracker services on remote server
 ./scripts/manage-services.sh status sodium
 ./scripts/manage-services.sh status fluid
 ./scripts/manage-services.sh status weight
 
-# Restart problematic service
+# Restart problematic service on remote server
 ./scripts/manage-services.sh restart main
 
-# Fix main app port conflicts
+# Fix main app port conflicts on remote server
 ./scripts/manage-services.sh update
 ```
 
+**Local Development Operations:**
+```bash
+# Start all services locally for development (Flask processes)
+./scripts/manage-services.sh start --local
+
+# Start specific services locally
+./scripts/manage-services.sh start blog --local
+./scripts/manage-services.sh start main --local
+
+# Check local development status
+./scripts/manage-services.sh status --local
+./scripts/manage-services.sh status blog --local
+
+# Restart local services (useful for testing changes)
+./scripts/manage-services.sh restart blog --local
+./scripts/manage-services.sh restart --local
+
+# Stop all local development services
+./scripts/manage-services.sh stop --local
+```
+
+**Mixed Operations:**
+```bash
+# Check remote server status, then start local development
+./scripts/manage-services.sh status
+./scripts/manage-services.sh start --local
+
+# Test locally, then deploy and restart remote
+./scripts/manage-services.sh stop --local
+./scripts/deploy-staging.sh
+./scripts/manage-services.sh restart
+```
+
 #### **Features:**
-- ✅ Unified service lifecycle management
-- ✅ Individual or bulk service operations
-- ✅ Automatic port conflict resolution for main app
-- ✅ Local/remote execution detection
-- ✅ Health verification after operations
-- ✅ Systemd service integration
-- ✅ Error handling and recovery
+- ✅ **Dual Environment Support**: Remote server (systemd) and local development (Flask processes)
+- ✅ **Unified service lifecycle management**: start, stop, restart, status operations
+- ✅ **Individual or bulk service operations**: Target specific services or manage all at once
+- ✅ **Local Development Mode**: `--local` flag for Flask process management
+- ✅ **Automatic port conflict resolution**: Built-in port 3000 conflict detection and resolution
+- ✅ **Environment detection**: Automatically detects local vs remote execution context
+- ✅ **Health verification**: Post-operation service health checks and port connectivity tests
+- ✅ **Systemd integration**: Full systemd service management for production deployment
+- ✅ **Error handling and recovery**: Comprehensive error reporting and auto-recovery features
 
 ---
 

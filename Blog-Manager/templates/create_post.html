@@ -2,9 +2,12 @@
 
 {% block title %}Create New Post - Heart Portal{% endblock %}
 
-{% block head %}
-    <meta name="description" content="Create a new blog post on Heart Portal - Share your health journey">
-    <style>
+{% block additional_css %}
+<style>
+    /* Override global body padding for better header clearance */
+    body {
+        padding-top: 120px !important;
+    }
         .create-container {
             max-width: 900px;
             margin: 0 auto;
@@ -338,7 +341,7 @@ Remember to focus on your personal experience and what might help others on thei
         </div>
 
         <div class="form-actions">
-            <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary">
+            <a href="{{ get_blog_url() }}dashboard" class="btn btn-secondary">
                 ← Back to Dashboard
             </a>
             <div>

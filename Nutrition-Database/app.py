@@ -585,52 +585,27 @@ def add_enhanced_provider():
 @app.route('/redirect/nutrition')
 def redirect_to_nutrition():
     """Redirect to Nutrition Database - environment-aware"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/nutrition-database/')
-    return redirect('http://localhost:5000')
+    return redirect(get_nutrition_url())
 
 @app.route('/redirect/foodbase')
 def redirect_to_foodbase():
     """Redirect to Food-Base - environment-aware"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/food-base/')
-    return redirect('http://localhost:5001')
+    return redirect(get_foodbase_url())
 
 @app.route('/redirect/sodium')
 def redirect_to_sodium():
     """Redirect to Sodium Tracker - environment-aware"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/sodium-tracker/')
-    return redirect('http://localhost:5003')
+    return redirect(get_sodium_url())
 
 @app.route('/redirect/fluid')
 def redirect_to_fluid():
     """Redirect to Fluid Tracker - environment-aware"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/fluid-tracker/')
-    return redirect('http://localhost:5004')
+    return redirect(get_fluid_url())
 
 @app.route('/redirect/weight')
 def redirect_to_weight():
     """Redirect to Weight Tracker - environment-aware"""
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/weight-tracker/')
-    return redirect('http://localhost:5005')
+    return redirect(get_weight_url())
 
 # Helper functions for formatting results
 

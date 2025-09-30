@@ -22,9 +22,10 @@ from url_helpers import (
 )
 
 # Import database functions
+import database
 from database import (
     init_blog_database, get_published_posts, get_post_by_slug,
-    get_user_posts, get_pending_posts, create_post, update_post,
+    get_user_posts, get_pending_posts, update_post,
     approve_post, reject_post, delete_post, migrate_sample_posts
 )
 
@@ -120,11 +121,11 @@ def create_post():
         tags = request.form.get('tags', '')
 
         if title and content:
-            post_id = create_post(
-                title=title,
-                content=content,
-                author_id=current_user.id,
-                author_name=current_user.username,
+            post_id = database.create_post(
+                title,
+                content,
+                current_user.id,
+                current_user.username,
                 excerpt=excerpt,
                 visibility=visibility,
                 tags=tags
@@ -134,7 +135,7 @@ def create_post():
             if visibility == 'public':
                 flash('Your public post has been submitted for review.', 'info')
 
-            return redirect(url_for('user_dashboard'))
+            return redirect('/dashboard')
         else:
             flash('Title and content are required.', 'error')
 
@@ -154,7 +155,7 @@ def edit_post(post_id):
 
     if not post:
         flash('Post not found or access denied.', 'error')
-        return redirect(url_for('user_dashboard'))
+        return redirect('/dashboard')
 
     if request.method == 'POST':
         title = request.form.get('title')
@@ -179,7 +180,7 @@ def edit_post(post_id):
         else:
             flash('Failed to update post.', 'error')
 
-        return redirect(url_for('user_dashboard'))
+        return redirect('/dashboard')
 
     return render_template('edit_post.html', post=post)
 
@@ -198,7 +199,7 @@ def delete_user_post(post_id):
     else:
         flash('Failed to delete post or access denied.', 'error')
 
-    return redirect(url_for('user_dashboard'))
+    return redirect('/dashboard')
 
 # ADMIN ROUTES (Site owner only)
 
@@ -231,7 +232,7 @@ def approve_user_post(post_id):
     else:
         flash('Failed to approve post.', 'error')
 
-    return redirect(url_for('admin_dashboard'))
+    return redirect('/admin')
 
 @app.route('/admin/reject/<int:post_id>', methods=['POST'])
 def reject_user_post(post_id):
@@ -249,7 +250,7 @@ def reject_user_post(post_id):
     else:
         flash('Failed to reject post.', 'error')
 
-    return redirect(url_for('admin_dashboard'))
+    return redirect('/admin')
 
 @app.route('/admin/delete/<int:post_id>', methods=['POST'])
 def delete_admin_post(post_id):
@@ -267,73 +268,33 @@ def delete_admin_post(post_id):
     else:
         flash('Failed to delete post.', 'error')
 
-    return redirect(url_for('admin_dashboard'))
+    return redirect('/admin')
 
 # Environment-aware redirect functions for Tools menu
 @app.route('/redirect/nutrition')
 def redirect_to_nutrition():
     """Redirect to Nutrition Database - environment-aware"""
-    # Check if we're running in production (server has heartfailureportal.com in hostname)
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/nutrition-database/')
-    
-    # Local development
-    return redirect('http://localhost:5000')
+    return redirect(get_nutrition_url())
 
 @app.route('/redirect/foodbase')
 def redirect_to_foodbase():
     """Redirect to Food-Base - environment-aware"""
-    # Check if we're running in production (server has heartfailureportal.com in hostname)
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/food-base/')
-    
-    # Local development
-    return redirect('http://localhost:5001')
+    return redirect(get_foodbase_url())
 
 @app.route('/redirect/sodium')
 def redirect_to_sodium():
     """Redirect to Sodium Tracker - environment-aware"""
-    # Check if we're running in production (server has heartfailureportal.com in hostname)
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/sodium-tracker/')
-
-    # Local development
-    return redirect('http://localhost:5003')
+    return redirect(get_sodium_url())
 
 @app.route('/redirect/fluid')
 def redirect_to_fluid():
     """Redirect to Fluid Tracker - environment-aware"""
-    # Check if we're running in production (server has heartfailureportal.com in hostname)
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/fluid-tracker/')
-
-    # Local development
-    return redirect('http://localhost:5004')
+    return redirect(get_fluid_url())
 
 @app.route('/redirect/weight')
 def redirect_to_weight():
     """Redirect to Weight Tracker - environment-aware"""
-    # Check if we're running in production (server has heartfailureportal.com in hostname)
-    if os.path.exists('/etc/hostname'):
-        with open('/etc/hostname', 'r') as f:
-            hostname = f.read().strip()
-        if 'ubuntu' in hostname or 'heartfailure' in hostname:
-            return redirect('http://heartfailureportal.com/weight-tracker/')
-
-    # Local development
-    return redirect('http://localhost:5005')
+    return redirect(get_weight_url())
 
 @app.errorhandler(404)
 def page_not_found(e):

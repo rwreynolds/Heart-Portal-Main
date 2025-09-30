@@ -2,9 +2,12 @@
 
 {% block title %}My Blog Posts - Heart Portal{% endblock %}
 
-{% block head %}
-    <meta name="description" content="Manage your blog posts on Heart Portal - Create, edit, and publish your content">
-    <style>
+{% block additional_css %}
+<style>
+    /* Override global body padding for better header clearance */
+    body {
+        padding-top: 120px !important;
+    }
         .dashboard-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -252,7 +255,7 @@
 
     <div class="dashboard-header">
         <h1 class="dashboard-title">My Blog Posts</h1>
-        <a href="{{ url_for('create_post') }}" class="btn-create">
+        <a href="{{ get_blog_url() }}create" class="btn-create">
             ✏️ Create New Post
         </a>
     </div>
@@ -278,15 +281,15 @@
                     </div>
 
                     <div class="post-actions">
-                        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn-small btn-edit">
+                        <a href="{{ get_blog_url() }}edit/{{ post.id }}" class="btn-small btn-edit">
                             Edit
                         </a>
-                        <form method="POST" action="{{ url_for('delete_user_post', post_id=post.id) }}" style="display: inline;"
+                        <form method="POST" action="/delete/{{ post.id }}" style="display: inline;"
                               onsubmit="return confirm('Are you sure you want to delete this post?')">
                             <button type="submit" class="btn-small btn-delete">Delete</button>
                         </form>
                         {% if post.status == 'published' and post.visibility == 'public' %}
-                            <a href="{{ url_for('blog_post', slug=post.slug) }}" class="btn-small"
+                            <a href="{{ get_blog_url() }}post/{{ post.slug }}" class="btn-small"
                                style="background-color: #6c757d; color: white;" target="_blank">
                                 View
                             </a>
@@ -299,7 +302,7 @@
         <div class="empty-state">
             <h3>No blog posts yet</h3>
             <p>Start sharing your thoughts and experiences with the Heart Portal community.</p>
-            <a href="{{ url_for('create_post') }}" class="btn-create" style="margin-top: 20px;">
+            <a href="{{ get_blog_url() }}create" class="btn-create" style="margin-top: 20px;">
                 Create Your First Post
             </a>
         </div>
