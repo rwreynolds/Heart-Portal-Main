@@ -224,7 +224,7 @@
             {% else %}
                 <div class="no-data">
                     <p>No weight recorded today</p>
-                    <a href="/weight/add_entry" class="btn" style="margin-top: 15px;">Record Weight</a>
+                    <a href="{{ get_weight_url() }}add_entry" class="btn" style="margin-top: 15px;">Record Weight</a>
                 </div>
             {% endif %}
         </div>
@@ -273,12 +273,12 @@
                     {% endif %}
                 </div>
                 <div style="text-align: center; margin-top: 20px;">
-                    <a href="{{ url_for('set_goal') }}" class="btn btn-secondary">Update Goal</a>
+                    <a href="{{ get_weight_url() }}set_goal" class="btn btn-secondary">Update Goal</a>
                 </div>
             {% else %}
                 <div class="no-data">
                     <p>No weight goal set</p>
-                    <a href="{{ url_for('set_goal') }}" class="btn" style="margin-top: 15px;">Set Goal</a>
+                    <a href="{{ get_weight_url() }}set_goal" class="btn" style="margin-top: 15px;">Set Goal</a>
                 </div>
             {% endif %}
         </div>
@@ -332,17 +332,17 @@
                 {% endfor %}
             </div>
             <div style="text-align: center; margin-top: 20px;">
-                <a href="/weight/history" class="btn btn-secondary">View All History</a>
+                <a href="{{ get_weight_url() }}history" class="btn btn-secondary">View All History</a>
             </div>
         </div>
     {% endif %}
 
     <!-- Action Buttons -->
     <div class="actions">
-        <a href="/weight/add_entry" class="btn">📝 Record Weight</a>
-        <a href="/weight/history" class="btn btn-secondary">📊 View History</a>
-        <a href="/weight/set_goal" class="btn btn-secondary">🎯 Set Goal</a>
-        <a href="/weight/settings" class="btn btn-secondary">⚙️ Settings</a>
+        <a href="{{ get_weight_url() }}add_entry" class="btn">📝 Record Weight</a>
+        <a href="{{ get_weight_url() }}history" class="btn btn-secondary">📊 View History</a>
+        <a href="{{ get_weight_url() }}set_goal" class="btn btn-secondary">🎯 Set Goal</a>
+        <a href="{{ get_weight_url() }}settings" class="btn btn-secondary">⚙️ Settings</a>
     </div>
 </div>
 {% endblock %}

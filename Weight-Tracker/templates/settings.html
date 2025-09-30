@@ -380,13 +380,13 @@
                 <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 10px;">
                     <h3 style="color: #667eea; margin-bottom: 10px;">Weight Goal</h3>
                     <p style="color: #6b7280; margin-bottom: 15px;">Set or update your weight goal</p>
-                    <a href="{{ url_for('set_goal') }}" class="btn">🎯 Manage Goal</a>
+                    <a href="{{ get_weight_url() }}set_goal" class="btn">🎯 Manage Goal</a>
                 </div>
 
                 <div style="text-align: center; padding: 20px; background: #f8fafc; border-radius: 10px;">
                     <h3 style="color: #667eea; margin-bottom: 10px;">View History</h3>
                     <p style="color: #6b7280; margin-bottom: 15px;">See all your weight entries</p>
-                    <a href="{{ url_for('history') }}" class="btn btn-secondary">📊 View History</a>
+                    <a href="{{ get_weight_url() }}history" class="btn btn-secondary">📊 View History</a>
                 </div>
             </div>
         </div>

@@ -133,7 +133,7 @@
 
     <!-- Actions -->
     <div class="actions">
-        <a href="/fluid/" class="btn btn-primary">← Back to Dashboard</a>
+        <a href="{{ get_fluid_url() }}" class="btn btn-primary">← Back to Dashboard</a>
     </div>
 
     <!-- History Table -->
@@ -172,7 +172,7 @@
             </table>
         {% else %}
             <div class="no-data">
-                No fluid tracking data found. <a href="/fluid/add_entry">Start tracking</a> to see your history!
+                No fluid tracking data found. <a href="{{ get_fluid_url() }}add_entry">Start tracking</a> to see your history!
             </div>
         {% endif %}
     </div>

@@ -337,9 +337,9 @@
         </div>
 
         <div class="actions">
-            <a href="{{ url_for('add_entry') }}" class="btn">📝 Record Weight</a>
-            <a href="{{ url_for('set_goal') }}" class="btn btn-secondary">🎯 Set Goal</a>
-            <a href="{{ url_for('settings') }}" class="btn btn-secondary">⚙️ Settings</a>
+            <a href="{{ get_weight_url() }}add_entry" class="btn">📝 Record Weight</a>
+            <a href="{{ get_weight_url() }}set_goal" class="btn btn-secondary">🎯 Set Goal</a>
+            <a href="{{ get_weight_url() }}settings" class="btn btn-secondary">⚙️ Settings</a>
         </div>
 
         {% if entries %}
@@ -444,7 +444,7 @@
                 <div class="no-data">
                     <h3>No weight entries yet</h3>
                     <p>Start tracking your weight to see your history here</p>
-                    <a href="{{ url_for('add_entry') }}" class="btn" style="margin-top: 20px;">📝 Record Your First Weight</a>
+                    <a href="{{ get_weight_url() }}add_entry" class="btn" style="margin-top: 20px;">📝 Record Your First Weight</a>
                 </div>
             </div>
         {% endif %}
