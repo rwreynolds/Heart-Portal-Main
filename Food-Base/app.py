@@ -20,7 +20,7 @@ from auth import get_current_user
 # Import shared URL helpers
 from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
-    get_sodium_url, get_fluid_url, get_weight_url
+    get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
 # Import database components
@@ -57,7 +57,8 @@ def utility_processor():
         get_foodbase_url=get_foodbase_url,
         get_sodium_url=get_sodium_url,
         get_fluid_url=get_fluid_url,
-        get_weight_url=get_weight_url
+        get_weight_url=get_weight_url,
+        get_bp_url=get_bp_url
     )
 
 # Register template global functions
@@ -69,6 +70,7 @@ app.jinja_env.globals.update(
     get_sodium_url=get_sodium_url,
     get_fluid_url=get_fluid_url,
     get_weight_url=get_weight_url,
+    get_bp_url=get_bp_url,
     get_current_user=get_current_user
 )
 

@@ -221,6 +221,35 @@
             border: 1px solid #f5c6cb;
         }
 
+        .back-button-container {
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-back i {
+            font-size: 0.8rem;
+        }
+
         @media (max-width: 768px) {
             .dashboard-header {
                 flex-direction: column;
@@ -241,6 +270,12 @@
 
 {% block content %}
 <div class="dashboard-container">
+    <div class="back-button-container">
+        <a href="{{ get_blog_url() }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Heart Health Blog
+        </a>
+    </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">
@@ -284,7 +319,7 @@
                         <a href="{{ get_blog_url() }}edit/{{ post.id }}" class="btn-small btn-edit">
                             Edit
                         </a>
-                        <form method="POST" action="/delete/{{ post.id }}" style="display: inline;"
+                        <form method="POST" action="{{ get_blog_url() }}delete/{{ post.id }}" style="display: inline;"
                               onsubmit="return confirm('Are you sure you want to delete this post?')">
                             <button type="submit" class="btn-small btn-delete">Delete</button>
                         </form>

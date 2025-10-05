@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Blood Pressure Monitor{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div style="text-align: center; color: white; padding: 60px 20px;">
+        <h1 style="font-size: 4rem; margin-bottom: 20px;">🩺 500</h1>
+        <h2 style="font-size: 2rem; margin-bottom: 20px;">Internal Server Error</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 40px;">
+            Something went wrong with the blood pressure monitoring system.<br>
+            Please try again in a few moments.
+        </p>
+        <a href="{{ get_bp_url() }}"
+           style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; transition: all 0.3s;">
+            🏠 Return to BP Monitor Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

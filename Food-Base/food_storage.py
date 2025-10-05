@@ -224,7 +224,7 @@ class FoodStorageService:
             # Update allowed fields
             allowed_fields = [
                 'description', 'brand_owner', 'brand_name', 'subbrand_name',
-                'ingredients', 'market_country', 'serving_size', 'serving_size_unit'
+                'ingredients', 'market_country', 'serving_size', 'serving_size_unit', 'notes'
             ]
             
             updated_fields = []
@@ -302,15 +302,27 @@ class FoodStorageService:
             total_foods = Food.query.count()
             unique_brands = db.session.query(Food.brand_owner).distinct().count()
             data_types = db.session.query(Food.data_type).distinct().count()
-            
+
+            # Count foods by data type
+            foundation_foods = Food.query.filter_by(data_type='Foundation').count()
+            branded_foods = Food.query.filter_by(data_type='Branded').count()
+
+            # Get recent additions (last 7 days)
+            from datetime import datetime, timedelta
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            recent_additions = Food.query.filter(Food.saved_at >= week_ago).count()
+
             # Get last saved food
             last_food = Food.query.order_by(Food.saved_at.desc()).first()
             last_saved = last_food.saved_at.isoformat() if last_food else None
-            
+
             return {
                 'total_foods': total_foods,
                 'unique_brands': unique_brands,
                 'data_types': data_types,
+                'foundation_foods': foundation_foods,
+                'branded_foods': branded_foods,
+                'recent_additions': recent_additions,
                 'last_saved': last_saved
             }
         except Exception as e:
@@ -318,6 +330,9 @@ class FoodStorageService:
                 'total_foods': 0,
                 'unique_brands': 0,
                 'data_types': 0,
+                'foundation_foods': 0,
+                'branded_foods': 0,
+                'recent_additions': 0,
                 'last_saved': None,
                 'error': str(e)
             }

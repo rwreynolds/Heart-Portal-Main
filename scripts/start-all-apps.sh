@@ -12,6 +12,7 @@ pkill -f "Food-Base.*python" 2>/dev/null || true
 pkill -f "Sodium-Tracker.*python" 2>/dev/null || true
 pkill -f "Fluid-Tracker.*python" 2>/dev/null || true
 pkill -f "Weight-Tracker.*python" 2>/dev/null || true
+pkill -f "BP-Monitor.*python" 2>/dev/null || true
 
 # Wait for processes to terminate
 sleep 2
@@ -48,6 +49,10 @@ echo "✅ Fluid Tracker started on port 5004"
 # Weight Tracker (port 5005)
 cd ../Weight-Tracker && python3 app.py &
 echo "✅ Weight Tracker started on port 5005"
+
+# BP Monitor (port 5006)
+cd ../BP-Monitor && python3 app.py &
+echo "✅ BP Monitor started on port 5006"
 
 echo ""
 echo "🎉 All applications started using shared .env configuration!"

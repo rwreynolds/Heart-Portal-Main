@@ -52,6 +52,7 @@ This document provides comprehensive documentation for the Heart Portal consolid
 - `sodium` - Sodium Tracker (port 5003)
 - `fluid` - Fluid Tracker (port 5004)
 - `weight` - Weight Tracker (port 5005)
+- `bp` - BP Monitor (port 5006)
 
 #### **Examples:**
 
@@ -153,6 +154,7 @@ This document provides comprehensive documentation for the Heart Portal consolid
 - `sodium` - Sodium Tracker monitoring
 - `fluid` - Fluid Tracker monitoring
 - `weight` - Weight Tracker monitoring
+- `bp` - BP Monitor monitoring
 - `nginx` - Nginx reverse proxy monitoring
 - `ssl` - SSL certificate monitoring
 
@@ -177,6 +179,7 @@ This document provides comprehensive documentation for the Heart Portal consolid
 ./scripts/monitor.sh sodium
 ./scripts/monitor.sh fluid
 ./scripts/monitor.sh weight
+./scripts/monitor.sh bp
 ```
 
 #### **Features:**
@@ -438,6 +441,7 @@ sudo ./scripts/setup-ssl.sh --domain example.com # Setup for specific domain
 - Sodium Tracker (port 5003)
 - Fluid Tracker (port 5004)
 - Weight Tracker (port 5005)
+- BP Monitor (port 5006)
 
 #### **Features:**
 - ✅ Uses shared `.env` file for `REVERSE_PROXY_MODE=true`
@@ -627,6 +631,7 @@ pkill nginx
 | **Sodium Tracker** | 5003 | Daily sodium intake tracking | `heart-portal-sodium` |
 | **Fluid Tracker** | 5004 | Daily fluid intake monitoring | `heart-portal-fluid` |
 | **Weight Tracker** | 5005 | Daily weight tracking | `heart-portal-weight` |
+| **BP Monitor** | 5006 | Blood pressure monitoring | `heart-portal-bp` |
 | **Nginx** | 80, 443 | Reverse proxy and SSL | `nginx` |
 
 ### **Service Dependencies**
@@ -638,7 +643,8 @@ nginx (80/443) → SSL Termination & Reverse Proxy
     ├── → heart-portal-blog (5002)        → Blog System
     ├── → heart-portal-sodium (5003)      → Sodium Tracking
     ├── → heart-portal-fluid (5004)       → Fluid Tracking
-    └── → heart-portal-weight (5005)      → Weight Tracking
+    ├── → heart-portal-weight (5005)      → Weight Tracking
+    └── → heart-portal-bp (5006)          → Blood Pressure Monitoring
 ```
 
 ### **Production URLs**

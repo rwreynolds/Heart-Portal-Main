@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Blood Pressure Monitor - Heart Portal{% endblock %}
+
+{% block additional_css %}
+<style>
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
+
+.dashboard-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.card h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bp-display {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.bp-reading {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.hr-reading {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #10b981;
+    margin-bottom: 10px;
+}
+
+.reading-time {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.category-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+.category-normal {
+    background-color: #f0fdf4;
+    color: #16a34a;
+}
+
+.category-elevated {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.category-stage1 {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+.category-stage2 {
+    background-color: #fdf2f8;
+    color: #be185d;
+}
+
+.category-crisis {
+    background-color: #fef2f2;
+    color: #dc2626;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 5px;
+}
+
+.btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #6b7280;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.recent-entries {
+    margin-top: 20px;
+}
+
+.entry-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.entry-date {
+    font-weight: 500;
+    color: #374151;
+}
+
+.entry-values {
+    text-align: right;
+}
+
+.entry-bp {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.entry-hr {
+    font-size: 0.9rem;
+    color: #10b981;
+}
+
+.entry-time {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.no-data {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 40px;
+}
+
+.actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2rem;
+    }
+
+    .bp-reading {
+        font-size: 2rem;
+    }
+
+    .hr-reading {
+        font-size: 1.5rem;
+    }
+
+    .actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .entry-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div class="dashboard-header">
+        <h1>🩺 Blood Pressure & Heart Rate Monitor</h1>
+        <p>Track your blood pressure and heart rate together for complete cardiovascular monitoring</p>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Today's Latest Reading -->
+        <div class="card">
+            <h2>📅 Today's Latest Reading</h2>
+            {% if today_entries %}
+                {% set latest = today_entries[0] %}
+                <div class="bp-display">
+                    <div class="bp-reading">{{ latest.systolic }}/{{ latest.diastolic }}</div>
+                    <div style="color: #6b7280; margin-bottom: 10px;">mmHg</div>
+                    {% if latest.heart_rate %}
+                        <div class="hr-reading">{{ latest.heart_rate }} bpm</div>
+                    {% endif %}
+                    <div class="reading-time">{{ latest.time or 'Time not recorded' }} - {{ latest.position.title() }} position</div>
+
+                    <!-- Blood Pressure Category -->
+                    {% set sys, dia = latest.systolic, latest.diastolic %}
+                    {% if sys >= 180 or dia >= 120 %}
+                        <div class="category-indicator category-crisis">⚠️ Hypertensive Crisis</div>
+                    {% elif sys >= 140 or dia >= 90 %}
+                        <div class="category-indicator category-stage2">🔴 Stage 2 Hypertension</div>
+                    {% elif sys >= 130 or dia >= 80 %}
+                        <div class="category-indicator category-stage1">🟡 Stage 1 Hypertension</div>
+                    {% elif sys >= 120 and dia < 80 %}
+                        <div class="category-indicator category-elevated">🟠 Elevated</div>
+                    {% else %}
+                        <div class="category-indicator category-normal">✅ Normal</div>
+                    {% endif %}
+
+                    {% if latest.notes %}
+                        <p style="margin-top: 15px; font-style: italic; color: #6b7280; font-size: 0.9rem;">{{ latest.notes }}</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="no-data">
+                    <p>No readings recorded today</p>
+                    <a href="{{ get_bp_url() }}add_entry" class="btn" style="margin-top: 15px;">📝 Record Reading</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Weekly Averages -->
+        <div class="card">
+            <h2>📊 7-Day Averages</h2>
+            {% if stats.avg_systolic_week %}
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ "%.0f"|format(stats.avg_systolic_week) }}</div>
+                        <div class="stat-label">Systolic</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ "%.0f"|format(stats.avg_diastolic_week) }}</div>
+                        <div class="stat-label">Diastolic</div>
+                    </div>
+                    {% if stats.avg_heart_rate_week %}
+                        <div class="stat-item">
+                            <div class="stat-value">{{ "%.0f"|format(stats.avg_heart_rate_week) }}</div>
+                            <div class="stat-label">Heart Rate</div>
+                        </div>
+                    {% endif %}
+                </div>
+                {% if settings %}
+                    <div style="margin-top: 15px; text-align: center; font-size: 0.9rem; color: #6b7280;">
+                        Target: {{ settings.bp_target_systolic }}/{{ settings.bp_target_diastolic }} mmHg
+                        {% if settings.hr_target_min and settings.hr_target_max %}
+                            • HR: {{ settings.hr_target_min }}-{{ settings.hr_target_max }} bpm
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="no-data">
+                    <p>Need more readings for averages</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">Record readings for a few days to see trends</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Trend Analysis -->
+        <div class="card">
+            <h2>📈 2-Week Trends</h2>
+            {% if trends %}
+                <div style="text-align: center; margin: 20px 0;">
+                    <div style="margin-bottom: 15px;">
+                        <strong>Systolic:</strong>
+                        {% if trends.systolic == 'stable' %}
+                            <span style="color: #059669;">➡️ Stable</span>
+                        {% elif trends.systolic == 'increasing' %}
+                            <span style="color: #dc2626;">⬆️ Increasing</span>
+                        {% else %}
+                            <span style="color: #059669;">⬇️ Decreasing</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <strong>Diastolic:</strong>
+                        {% if trends.diastolic == 'stable' %}
+                            <span style="color: #059669;">➡️ Stable</span>
+                        {% elif trends.diastolic == 'increasing' %}
+                            <span style="color: #dc2626;">⬆️ Increasing</span>
+                        {% else %}
+                            <span style="color: #059669;">⬇️ Decreasing</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="no-data">
+                    <p>Need more data for trend analysis</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px;">Record readings for 2 weeks to see trends</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Entries -->
+    {% if recent_entries %}
+        <div class="card">
+            <h2>📋 Recent Readings</h2>
+            <div class="recent-entries">
+                {% for entry in recent_entries[:5] %}
+                    <div class="entry-item">
+                        <div>
+                            <div class="entry-date">{{ entry.date }}</div>
+                            <div class="entry-time">{{ entry.time or 'No time' }} - {{ entry.position.title() }}</div>
+                        </div>
+                        <div class="entry-values">
+                            <div class="entry-bp">{{ entry.systolic }}/{{ entry.diastolic }} mmHg</div>
+                            {% if entry.heart_rate %}
+                                <div class="entry-hr">{{ entry.heart_rate }} bpm</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="{{ get_bp_url() }}history" class="btn btn-secondary">📊 View All History</a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="actions">
+        <a href="{{ get_bp_url() }}add_entry" class="btn">📝 Record Reading</a>
+        <a href="{{ get_bp_url() }}history" class="btn btn-secondary">📊 View History</a>
+        <a href="{{ get_bp_url() }}analytics" class="btn btn-secondary">📈 Analytics</a>
+        <a href="{{ get_bp_url() }}settings" class="btn btn-secondary">⚙️ Settings</a>
+    </div>
+</div>
+{% endblock %}

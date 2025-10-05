@@ -67,7 +67,7 @@ except ImportError:
 # Import shared URL helpers
 from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
-    get_sodium_url, get_fluid_url, get_weight_url
+    get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
 # Configure Jinja2 to use shared templates
@@ -88,7 +88,8 @@ def utility_processor():
         get_foodbase_url=get_foodbase_url,
         get_sodium_url=get_sodium_url,
         get_fluid_url=get_fluid_url,
-        get_weight_url=get_weight_url
+        get_weight_url=get_weight_url,
+        get_bp_url=get_bp_url
     )
 
 # Authentication helper function

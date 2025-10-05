@@ -1,442 +1,372 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Set Weight Goal - Weight Tracker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding-top: 80px;
-        }
+{% block title %}Set Weight Goal - Heart Portal{% endblock %}
 
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-        }
+{% block additional_css %}
+<style>
+.back-button-container {
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 10;
+}
 
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+.btn-back {
+    background-color: #6c757d !important;
+    color: white !important;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 10;
+}
 
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
+.btn-back:hover {
+    background-color: #5a6268 !important;
+    color: white !important;
+    text-decoration: none;
+}
 
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
+.btn-back i {
+    font-size: 0.8rem;
+}
 
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
 
-        .nav-links a:hover {
-            color: #fecaca;
-        }
+.page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
 
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-        }
+.card h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 
-        .page-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+.form-group {
+    margin-bottom: 25px;
+}
 
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #374151;
+}
 
-        .card h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
 
-        .form-group {
-            margin-bottom: 25px;
-        }
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
-        }
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 15px;
+    align-items: end;
+}
 
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
+.form-help {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
 
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 5px;
+}
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 120px;
-            gap: 15px;
-            align-items: end;
-        }
+.btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+}
 
-        .form-help {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin-top: 5px;
-        }
+.btn-secondary {
+    background: #6b7280;
+}
 
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            margin: 5px;
-        }
+.btn-secondary:hover {
+    background: #4b5563;
+}
 
-        .btn:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-        }
+.btn-success {
+    background: #10b981;
+}
 
-        .btn-secondary {
-            background: #6b7280;
-        }
+.btn-success:hover {
+    background: #059669;
+}
 
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
 
-        .btn-success {
-            background: #10b981;
-        }
+.goal-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
 
-        .btn-success:hover {
-            background: #059669;
-        }
+.goal-type {
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
 
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
+.goal-type:hover {
+    border-color: #667eea;
+    background: #eff6ff;
+}
 
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: white;
-            text-decoration: none;
-            margin-bottom: 20px;
-            transition: color 0.3s;
-        }
+.goal-type.selected {
+    border-color: #667eea;
+    background: #eff6ff;
+}
 
-        .back-link:hover {
-            color: #fecaca;
-        }
+.goal-type-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
 
-        .goal-types {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 10px;
-        }
+.goal-type-title {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 5px;
+}
 
-        .goal-type {
-            background: #f8fafc;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+.goal-type-desc {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
 
-        .goal-type:hover {
-            border-color: #667eea;
-            background: #eff6ff;
-        }
+.current-goal {
+    background: #f0f9ff;
+    border: 2px solid #0ea5e9;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
 
-        .goal-type.selected {
-            border-color: #667eea;
-            background: #eff6ff;
-        }
+.current-goal h3 {
+    color: #0369a1;
+    margin-bottom: 10px;
+}
 
-        .goal-type-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
+.goal-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
 
-        .goal-type-title {
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 5px;
-        }
+.goal-stat {
+    text-align: center;
+}
 
-        .goal-type-desc {
-            font-size: 0.9rem;
-            color: #6b7280;
-        }
+.goal-stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #0369a1;
+}
 
-        .current-goal {
-            background: #f0f9ff;
-            border: 2px solid #0ea5e9;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
+.goal-stat-label {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
 
-        .current-goal h3 {
-            color: #0369a1;
-            margin-bottom: 10px;
-        }
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 2rem;
+    }
 
-        .goal-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 
-        .goal-stat {
-            text-align: center;
-        }
+    .form-actions {
+        flex-direction: column;
+        align-items: center;
+    }
 
-        .goal-stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #0369a1;
-        }
+    .goal-types {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
 
-        .goal-stat-label {
-            font-size: 0.9rem;
-            color: #6b7280;
-        }
-
-        @media (max-width: 768px) {
-            .nav {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .nav-links {
-                gap: 20px;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .page-header h1 {
-                font-size: 2rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .form-actions {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .goal-types {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <nav class="nav">
-            <a href="{{ base_url }}/" class="logo">❤️ Heart Portal</a>
-            <ul class="nav-links">
-                <li><a href="{{ base_url }}/">Home</a></li>
-                <li><a href="{{ base_url }}/blog">Blog</a></li>
-                <li><a href="{{ base_url }}/redirect/nutrition">🔍 Nutrition</a></li>
-                <li><a href="{{ base_url }}/redirect/foodbase">🍎 Food Base</a></li>
-                <li><a href="{{ base_url }}/redirect/sodium">🧂 Sodium</a></li>
-                <li><a href="{{ base_url }}/redirect/fluid">💧 Fluid</a></li>
-                <li><a href="{{ base_url }}/about">About</a></li>
-                <li><a href="{{ base_url }}/contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <div class="container">
-        <a href="{{ url_for('index') }}" class="back-link">← Back to Dashboard</a>
-
-        <div class="page-header">
-            <h1>🎯 Set Weight Goal</h1>
-            <p>Define your weight management target</p>
-        </div>
-
-        {% if current_goal %}
-            <div class="current-goal">
-                <h3>📊 Current Goal</h3>
-                <div class="goal-info">
-                    <div class="goal-stat">
-                        <div class="goal-stat-value">
-                            {% if preferred_unit == 'lbs' %}
-                                {{ "%.1f"|format(current_goal.target_weight_lbs) }}
-                            {% else %}
-                                {{ "%.1f"|format(current_goal.target_weight_kg) }}
-                            {% endif %}
-                        </div>
-                        <div class="goal-stat-label">Target ({{ preferred_unit }})</div>
-                    </div>
-                    <div class="goal-stat">
-                        <div class="goal-stat-value">{{ current_goal.goal_type.title() }}</div>
-                        <div class="goal-stat-label">Goal Type</div>
-                    </div>
-                    <div class="goal-stat">
-                        <div class="goal-stat-value">{{ current_goal.created_at[:10] }}</div>
-                        <div class="goal-stat-label">Set Date</div>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
-
-        <div class="card">
-            <h2>🎯 {{ 'Update' if current_goal else 'Set' }} Weight Goal</h2>
-
-            <form method="POST">
-                <div class="form-group">
-                    <label for="target_weight">Target Weight</label>
-                    <div class="form-row">
-                        <input type="number" id="target_weight" name="target_weight" step="0.1" min="0" max="1000" required
-                               {% if current_goal %}
-                                   value="{% if preferred_unit == 'lbs' %}{{ current_goal.target_weight_lbs }}{% else %}{{ current_goal.target_weight_kg }}{% endif %}"
-                               {% endif %}>
-                        <select id="unit" name="unit">
-                            <option value="lbs" {% if preferred_unit == 'lbs' %}selected{% endif %}>lbs</option>
-                            <option value="kg" {% if preferred_unit == 'kg' %}selected{% endif %}>kg</option>
-                        </select>
-                    </div>
-                    <div class="form-help">Enter your target weight in your preferred unit</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="goal_type">Goal Type</label>
-                    <div class="goal-types">
-                        <div class="goal-type {% if not current_goal or current_goal.goal_type == 'lose' %}selected{% endif %}" onclick="selectGoalType('lose', this)">
-                            <div class="goal-type-icon">⬇️</div>
-                            <div class="goal-type-title">Lose Weight</div>
-                            <div class="goal-type-desc">Reduce current weight</div>
-                        </div>
-                        <div class="goal-type {% if current_goal and current_goal.goal_type == 'gain' %}selected{% endif %}" onclick="selectGoalType('gain', this)">
-                            <div class="goal-type-icon">⬆️</div>
-                            <div class="goal-type-title">Gain Weight</div>
-                            <div class="goal-type-desc">Increase current weight</div>
-                        </div>
-                        <div class="goal-type {% if current_goal and current_goal.goal_type == 'maintain' %}selected{% endif %}" onclick="selectGoalType('maintain', this)">
-                            <div class="goal-type-icon">➡️</div>
-                            <div class="goal-type-title">Maintain Weight</div>
-                            <div class="goal-type-desc">Keep current weight stable</div>
-                        </div>
-                    </div>
-                    <input type="hidden" id="goal_type" name="goal_type" value="{{ current_goal.goal_type if current_goal else 'lose' }}">
-                    <div class="form-help">Choose what you want to achieve with your weight</div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-success">
-                        {{ '🔄 Update Goal' if current_goal else '🎯 Set Goal' }}
-                    </button>
-                    <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Goal Tips -->
-        <div class="card">
-            <h2>💡 Weight Goal Tips</h2>
-            <div style="color: #6b7280; line-height: 1.8;">
-                <p><strong>🎯 Realistic Goals:</strong> Aim for 1-2 pounds per week for weight loss, or similar for weight gain.</p>
-                <p><strong>📈 Consistency:</strong> Regular daily weigh-ins help track progress and identify trends.</p>
-                <p><strong>🏥 Medical Guidance:</strong> Always consult your healthcare provider before setting weight goals, especially with heart conditions.</p>
-                <p><strong>🔄 Flexibility:</strong> You can update your goal anytime as your needs change.</p>
-                <p><strong>⚖️ Balance:</strong> Focus on overall health, not just the number on the scale.</p>
-            </div>
-        </div>
+{% block content %}
+<div class="container" style="padding-top: 80px;">
+    <!-- Back Button -->
+    <div class="back-button-container">
+        <a href="{{ get_weight_url() }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Weight Dashboard
+        </a>
     </div>
 
-    <script>
-        function selectGoalType(goalType, element) {
-            // Remove selected class from all goal types
-            document.querySelectorAll('.goal-type').forEach(type => {
-                type.classList.remove('selected');
-            });
+    <div class="page-header">
+        <h1>🎯 Set Weight Goal</h1>
+        <p>Define your weight management target</p>
+    </div>
 
-            // Add selected class to clicked element
-            element.classList.add('selected');
+    {% if current_goal %}
+        <div class="current-goal">
+            <h3>📊 Current Goal</h3>
+            <div class="goal-info">
+                <div class="goal-stat">
+                    <div class="goal-stat-value">
+                        {% if preferred_unit == 'lbs' %}
+                            {{ "%.1f"|format(current_goal.target_weight_lbs) }}
+                        {% else %}
+                            {{ "%.1f"|format(current_goal.target_weight_kg) }}
+                        {% endif %}
+                    </div>
+                    <div class="goal-stat-label">Target ({{ preferred_unit }})</div>
+                </div>
+                <div class="goal-stat">
+                    <div class="goal-stat-value">{{ current_goal.goal_type.title() }}</div>
+                    <div class="goal-stat-label">Goal Type</div>
+                </div>
+                <div class="goal-stat">
+                    <div class="goal-stat-value">{{ current_goal.created_at[:10] }}</div>
+                    <div class="goal-stat-label">Set Date</div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
-            // Update hidden input
-            document.getElementById('goal_type').value = goalType;
-        }
+    <div class="card">
+        <h2>🎯 {{ 'Update' if current_goal else 'Set' }} Weight Goal</h2>
 
-        // Auto-focus target weight input
-        document.getElementById('target_weight').focus();
-    </script>
-</body>
-</html>
+        <form method="POST">
+            <div class="form-group">
+                <label for="target_weight">Target Weight</label>
+                <div class="form-row">
+                    <input type="number" id="target_weight" name="target_weight" step="0.1" min="0" max="1000" required
+                           {% if current_goal %}
+                               value="{% if preferred_unit == 'lbs' %}{{ current_goal.target_weight_lbs }}{% else %}{{ current_goal.target_weight_kg }}{% endif %}"
+                           {% endif %}>
+                    <select id="unit" name="unit">
+                        <option value="lbs" {% if preferred_unit == 'lbs' %}selected{% endif %}>lbs</option>
+                        <option value="kg" {% if preferred_unit == 'kg' %}selected{% endif %}>kg</option>
+                    </select>
+                </div>
+                <div class="form-help">Enter your target weight in your preferred unit</div>
+            </div>
+
+            <div class="form-group">
+                <label for="goal_type">Goal Type</label>
+                <div class="goal-types">
+                    <div class="goal-type {% if not current_goal or current_goal.goal_type == 'lose' %}selected{% endif %}" onclick="selectGoalType('lose', this)">
+                        <div class="goal-type-icon">⬇️</div>
+                        <div class="goal-type-title">Lose Weight</div>
+                        <div class="goal-type-desc">Reduce current weight</div>
+                    </div>
+                    <div class="goal-type {% if current_goal and current_goal.goal_type == 'gain' %}selected{% endif %}" onclick="selectGoalType('gain', this)">
+                        <div class="goal-type-icon">⬆️</div>
+                        <div class="goal-type-title">Gain Weight</div>
+                        <div class="goal-type-desc">Increase current weight</div>
+                    </div>
+                    <div class="goal-type {% if current_goal and current_goal.goal_type == 'maintain' %}selected{% endif %}" onclick="selectGoalType('maintain', this)">
+                        <div class="goal-type-icon">➡️</div>
+                        <div class="goal-type-title">Maintain Weight</div>
+                        <div class="goal-type-desc">Keep current weight stable</div>
+                    </div>
+                </div>
+                <input type="hidden" id="goal_type" name="goal_type" value="{{ current_goal.goal_type if current_goal else 'lose' }}">
+                <div class="form-help">Choose what you want to achieve with your weight</div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">
+                    {{ '🔄 Update Goal' if current_goal else '🎯 Set Goal' }}
+                </button>
+                <a href="{{ get_weight_url() }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Goal Tips -->
+    <div class="card">
+        <h2>💡 Weight Goal Tips</h2>
+        <div style="color: #6b7280; line-height: 1.8;">
+            <p><strong>🎯 Realistic Goals:</strong> Aim for 1-2 pounds per week for weight loss, or similar for weight gain.</p>
+            <p><strong>📈 Consistency:</strong> Regular daily weigh-ins help track progress and identify trends.</p>
+            <p><strong>🏥 Medical Guidance:</strong> Always consult your healthcare provider before setting weight goals, especially with heart conditions.</p>
+            <p><strong>🔄 Flexibility:</strong> You can update your goal anytime as your needs change.</p>
+            <p><strong>⚖️ Balance:</strong> Focus on overall health, not just the number on the scale.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function selectGoalType(goalType, element) {
+        // Remove selected class from all goal types
+        document.querySelectorAll('.goal-type').forEach(type => {
+            type.classList.remove('selected');
+        });
+
+        // Add selected class to clicked element
+        element.classList.add('selected');
+
+        // Update hidden input
+        document.getElementById('goal_type').value = goalType;
+    }
+
+    // Auto-focus target weight input
+    document.getElementById('target_weight').focus();
+</script>
+{% endblock %}

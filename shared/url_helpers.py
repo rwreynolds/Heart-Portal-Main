@@ -90,3 +90,12 @@ def get_weight_url():
         return f"{get_base_url()}/weight/"
     else:
         return 'http://localhost:5005'
+
+def get_bp_url():
+    """Get the blood pressure monitor URL"""
+    if is_production_mode():
+        return f"{get_base_url()}/bp-monitor/"
+    elif is_staging_mode() or is_reverse_proxy_mode():
+        return f"{get_base_url()}/bp-monitor/"
+    else:
+        return 'http://localhost:5006'

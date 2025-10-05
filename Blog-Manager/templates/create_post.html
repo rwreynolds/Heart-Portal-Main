@@ -27,7 +27,7 @@
         }
 
         .create-subtitle {
-            color: #6c757d;
+            color: #000000;
             font-size: 1.1rem;
             margin: 0;
         }
@@ -224,6 +224,35 @@
             border: 1px solid #f5c6cb;
         }
 
+        .back-button-container {
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-back i {
+            font-size: 0.8rem;
+        }
+
         @media (max-width: 768px) {
             .create-container {
                 padding: 15px;
@@ -254,6 +283,12 @@
 
 {% block content %}
 <div class="create-container">
+    <div class="back-button-container">
+        <a href="{{ get_blog_url() }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Heart Health Blog
+        </a>
+    </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">
@@ -340,15 +375,13 @@ Remember to focus on your personal experience and what might help others on thei
             <div class="help-text">Write your post content using HTML tags for formatting. Focus on being helpful and authentic.</div>
         </div>
 
-        <div class="form-actions">
+        <div class="form-actions" style="justify-content: center;">
+            <button type="submit" class="btn btn-success">
+                💾 Save
+            </button>
             <a href="{{ get_blog_url() }}dashboard" class="btn btn-secondary">
-                ← Back to Dashboard
+                Cancel
             </a>
-            <div>
-                <button type="submit" class="btn btn-primary">
-                    📝 Create Post
-                </button>
-            </div>
         </div>
     </form>
 </div>

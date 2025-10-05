@@ -1,400 +1,330 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Record Weight - Weight Tracker</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding-top: 80px;
-        }
+{% block title %}Record Weight - Weight Tracker{% endblock %}
 
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-        }
+{% block additional_css %}
+<style>
+.back-button-container {
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 10;
+}
 
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
+.btn-back {
+    background-color: #6c757d !important;
+    color: white !important;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 10;
+}
 
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
+.btn-back:hover {
+    background-color: #5a6268 !important;
+    color: white !important;
+    text-decoration: none;
+}
 
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-        }
+.btn-back i {
+    font-size: 0.8rem;
+}
 
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+}
 
-        .nav-links a:hover {
-            color: #fecaca;
-        }
+.page-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+.card {
+    background: white;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
 
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-        }
+.form-group {
+    margin-bottom: 25px;
+}
 
-        .page-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #374151;
+}
 
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
 
-        .form-group {
-            margin-bottom: 25px;
-        }
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
 
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
-        }
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 15px;
+    align-items: end;
+}
 
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
+.btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    transition: all 0.3s;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    margin: 5px;
+}
 
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
+.btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+}
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 120px;
-            gap: 15px;
-            align-items: end;
-        }
+.btn-secondary {
+    background: #6b7280;
+}
 
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            transition: all 0.3s;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            margin: 5px;
-        }
+.btn-secondary:hover {
+    background: #4b5563;
+}
 
-        .btn:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-        }
+.btn-success {
+    background: #10b981;
+}
 
-        .btn-secondary {
-            background: #6b7280;
-        }
+.btn-success:hover {
+    background: #059669;
+}
 
-        .btn-secondary:hover {
-            background: #4b5563;
-        }
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
 
-        .btn-success {
-            background: #10b981;
-        }
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
 
-        .btn-success:hover {
-            background: #059669;
-        }
+.quick-action {
+    background: #f8fafc;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
 
-        .form-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
+.quick-action:hover {
+    border-color: #667eea;
+    background: #eff6ff;
+}
 
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 30px;
-        }
+.quick-action.selected {
+    border-color: #667eea;
+    background: #eff6ff;
+}
 
-        .quick-action {
-            background: #f8fafc;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+.quick-action-title {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 5px;
+}
 
-        .quick-action:hover {
-            border-color: #667eea;
-            background: #eff6ff;
-        }
+.quick-action-desc {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
 
-        .quick-action.selected {
-            border-color: #667eea;
-            background: #eff6ff;
-        }
+.input-help {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
 
-        .quick-action-title {
-            font-weight: 500;
-            color: #374151;
-            margin-bottom: 5px;
-        }
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 2rem;
+    }
 
-        .quick-action-desc {
-            font-size: 0.9rem;
-            color: #6b7280;
-        }
+    .form-row {
+        grid-template-columns: 1fr;
+    }
 
-        .input-help {
-            font-size: 0.9rem;
-            color: #6b7280;
-            margin-top: 5px;
-        }
+    .form-actions {
+        flex-direction: column;
+        align-items: center;
+    }
 
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: white;
-            text-decoration: none;
-            margin-bottom: 20px;
-            transition: color 0.3s;
-        }
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
 
-        .back-link:hover {
-            color: #fecaca;
-        }
-
-        @media (max-width: 768px) {
-            .nav {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .nav-links {
-                gap: 20px;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .page-header h1 {
-                font-size: 2rem;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .form-actions {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .quick-actions {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <nav class="nav">
-            <a href="{{ base_url }}/" class="logo">❤️ Heart Portal</a>
-            <ul class="nav-links">
-                <li><a href="{{ base_url }}/">Home</a></li>
-                <li><a href="{{ base_url }}/blog">Blog</a></li>
-                <li><a href="{{ base_url }}/redirect/nutrition">🔍 Nutrition</a></li>
-                <li><a href="{{ base_url }}/redirect/foodbase">🍎 Food Base</a></li>
-                <li><a href="{{ base_url }}/redirect/sodium">🧂 Sodium</a></li>
-                <li><a href="{{ base_url }}/redirect/fluid">💧 Fluid</a></li>
-                <li><a href="{{ base_url }}/about">About</a></li>
-                <li><a href="{{ base_url }}/contact">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-
-    <div class="container">
-        <a href="{{ url_for('index') }}" class="back-link">← Back to Dashboard</a>
-
-        <div class="page-header">
-            <h1>📝 Record Weight</h1>
-            <p>Log your daily weight measurement</p>
-        </div>
-
-        <div class="card">
-            <form method="POST">
-                <div class="form-group">
-                    <label for="date">Date</label>
-                    <input type="date" id="date" name="date" value="{{ today }}" required>
-                    <div class="input-help">Select the date for this weight measurement</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="weight">Weight</label>
-                    <div class="form-row">
-                        <input type="number" id="weight" name="weight" step="0.1" min="0" max="1000" required>
-                        <select id="unit" name="unit">
-                            <option value="lbs" {% if preferred_unit == 'lbs' %}selected{% endif %}>lbs</option>
-                            <option value="kg" {% if preferred_unit == 'kg' %}selected{% endif %}>kg</option>
-                        </select>
-                    </div>
-                    <div class="input-help">Enter your weight measurement</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="time_of_day">Time of Day</label>
-                    <div class="quick-actions">
-                        <div class="quick-action" onclick="selectTimeOfDay('morning', this)">
-                            <div class="quick-action-title">🌅 Morning</div>
-                            <div class="quick-action-desc">After waking up</div>
-                        </div>
-                        <div class="quick-action" onclick="selectTimeOfDay('afternoon', this)">
-                            <div class="quick-action-title">☀️ Afternoon</div>
-                            <div class="quick-action-desc">Mid-day</div>
-                        </div>
-                        <div class="quick-action" onclick="selectTimeOfDay('evening', this)">
-                            <div class="quick-action-title">🌆 Evening</div>
-                            <div class="quick-action-desc">Before dinner</div>
-                        </div>
-                        <div class="quick-action" onclick="selectTimeOfDay('night', this)">
-                            <div class="quick-action-title">🌙 Night</div>
-                            <div class="quick-action-desc">Before bed</div>
-                        </div>
-                    </div>
-                    <select id="time_of_day" name="time_of_day" style="display: none;">
-                        <option value="morning" selected>Morning</option>
-                        <option value="afternoon">Afternoon</option>
-                        <option value="evening">Evening</option>
-                        <option value="night">Night</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="notes">Notes (Optional)</label>
-                    <textarea id="notes" name="notes" placeholder="Any additional notes about your weight measurement..."></textarea>
-                    <div class="input-help">Optional notes about circumstances, medications, etc.</div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-success">💾 Save Weight Entry</button>
-                    <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
-                </div>
-            </form>
-        </div>
+{% block content %}
+<div class="container" style="padding-top: 80px;">
+    <!-- Back Button -->
+    <div class="back-button-container">
+        <a href="{{ get_weight_url() }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Weight Dashboard
+        </a>
     </div>
 
-    <script>
-        // Set today's date as default
-        document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    <div class="page-header">
+        <h1>📝 Record Weight</h1>
+        <p>Log your daily weight measurement</p>
+    </div>
 
-        // Handle time of day selection
-        function selectTimeOfDay(timeOfDay, element) {
-            // Remove selected class from all quick actions
-            document.querySelectorAll('.quick-action').forEach(action => {
-                action.classList.remove('selected');
-            });
+    <div class="card">
+        <form method="POST">
+            <div class="form-group">
+                <label for="date">Date</label>
+                <input type="date" id="date" name="date" value="{{ today }}" required>
+                <div class="input-help">Select the date for this weight measurement</div>
+            </div>
 
-            // Add selected class to clicked element
-            element.classList.add('selected');
+            <div class="form-group">
+                <label for="weight">Weight</label>
+                <div class="form-row">
+                    <input type="number" id="weight" name="weight" step="0.1" min="0" max="1000" required>
+                    <select id="unit" name="unit">
+                        <option value="lbs" {% if preferred_unit == 'lbs' %}selected{% endif %}>lbs</option>
+                        <option value="kg" {% if preferred_unit == 'kg' %}selected{% endif %}>kg</option>
+                    </select>
+                </div>
+                <div class="input-help">Enter your weight measurement</div>
+            </div>
 
-            // Update hidden select
-            document.getElementById('time_of_day').value = timeOfDay;
-        }
+            <div class="form-group">
+                <label for="time_of_day">Time of Day</label>
+                <div class="quick-actions">
+                    <div class="quick-action" onclick="selectTimeOfDay('morning', this)">
+                        <div class="quick-action-title">🌅 Morning</div>
+                        <div class="quick-action-desc">After waking up</div>
+                    </div>
+                    <div class="quick-action" onclick="selectTimeOfDay('afternoon', this)">
+                        <div class="quick-action-title">☀️ Afternoon</div>
+                        <div class="quick-action-desc">Mid-day</div>
+                    </div>
+                    <div class="quick-action" onclick="selectTimeOfDay('evening', this)">
+                        <div class="quick-action-title">🌆 Evening</div>
+                        <div class="quick-action-desc">Before dinner</div>
+                    </div>
+                    <div class="quick-action" onclick="selectTimeOfDay('night', this)">
+                        <div class="quick-action-title">🌙 Night</div>
+                        <div class="quick-action-desc">Before bed</div>
+                    </div>
+                </div>
+                <select id="time_of_day" name="time_of_day" style="display: none;">
+                    <option value="morning" selected>Morning</option>
+                    <option value="afternoon">Afternoon</option>
+                    <option value="evening">Evening</option>
+                    <option value="night">Night</option>
+                </select>
+            </div>
 
-        // Set default time of day based on current time
-        document.addEventListener('DOMContentLoaded', function() {
-            const hour = new Date().getHours();
-            let defaultTime = 'morning';
+            <div class="form-group">
+                <label for="notes">Notes (Optional)</label>
+                <textarea id="notes" name="notes" placeholder="Any additional notes about your weight measurement..."></textarea>
+                <div class="input-help">Optional notes about circumstances, medications, etc.</div>
+            </div>
 
-            if (hour >= 12 && hour < 17) {
-                defaultTime = 'afternoon';
-            } else if (hour >= 17 && hour < 21) {
-                defaultTime = 'evening';
-            } else if (hour >= 21 || hour < 6) {
-                defaultTime = 'night';
-            }
+            <div class="form-actions">
+                <button type="submit" class="btn btn-success">💾 Save Weight Entry</button>
+                <a href="{{ get_weight_url() }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
 
-            // Select the appropriate quick action
-            const quickActions = document.querySelectorAll('.quick-action');
-            quickActions.forEach((action, index) => {
-                const times = ['morning', 'afternoon', 'evening', 'night'];
-                if (times[index] === defaultTime) {
-                    selectTimeOfDay(defaultTime, action);
-                }
-            });
+<script>
+    // Set today's date as default
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+
+    // Handle time of day selection
+    function selectTimeOfDay(timeOfDay, element) {
+        // Remove selected class from all quick actions
+        document.querySelectorAll('.quick-action').forEach(action => {
+            action.classList.remove('selected');
         });
 
-        // Auto-focus weight input
-        document.getElementById('weight').focus();
-    </script>
-</body>
-</html>
+        // Add selected class to clicked element
+        element.classList.add('selected');
+
+        // Update hidden select
+        document.getElementById('time_of_day').value = timeOfDay;
+    }
+
+    // Set default time of day based on current time
+    document.addEventListener('DOMContentLoaded', function() {
+        const hour = new Date().getHours();
+        let defaultTime = 'morning';
+
+        if (hour >= 12 && hour < 17) {
+            defaultTime = 'afternoon';
+        } else if (hour >= 17 && hour < 21) {
+            defaultTime = 'evening';
+        } else if (hour >= 21 || hour < 6) {
+            defaultTime = 'night';
+        }
+
+        // Select the appropriate quick action
+        const quickActions = document.querySelectorAll('.quick-action');
+        quickActions.forEach((action, index) => {
+            const times = ['morning', 'afternoon', 'evening', 'night'];
+            if (times[index] === defaultTime) {
+                selectTimeOfDay(defaultTime, action);
+            }
+        });
+    });
+
+    // Auto-focus weight input
+    document.getElementById('weight').focus();
+</script>
+{% endblock %}

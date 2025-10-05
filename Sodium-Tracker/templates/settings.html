@@ -120,6 +120,35 @@
         .main-content {
             padding: 40px 0;
         }
+        .back-button-container {
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 10;
+        }
+        .btn-back {
+            background-color: #6c757d !important;
+            color: white !important;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            display: inline-flex !important;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 10;
+        }
+        .btn-back:hover {
+            background-color: #5a6268 !important;
+            color: white !important;
+            text-decoration: none;
+        }
+        .btn-back i {
+            font-size: 0.8rem;
+        }
         .page-header {
             text-align: center;
             margin-bottom: 40px;
@@ -274,15 +303,17 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
+            <!-- Back Button -->
+            <div class="back-button-container">
+                <a href="{{ get_sodium_url() }}" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Sodium Dashboard
+                </a>
+            </div>
+
             <!-- Page Header -->
             <div class="page-header">
                 <h1>⚙️ Settings</h1>
                 <p>Configure your sodium tracking preferences</p>
-            </div>
-
-            <!-- Actions -->
-            <div class="actions">
-                <a href="/sodium/" class="btn btn-primary">← Back to Dashboard</a>
             </div>
 
             <!-- Flash Messages -->
@@ -298,7 +329,7 @@
 
             <!-- Settings Form -->
             <div class="settings-card">
-                <form method="POST" action="/sodium/settings">
+                <form method="POST" action="/settings">
                     <div class="form-group">
                         <label for="default_daily_goal">Default Daily Sodium Goal (mg)</label>
                         <input type="number" id="default_daily_goal" name="default_daily_goal"

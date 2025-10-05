@@ -38,7 +38,8 @@ class Food(db.Model):
     serving_size = db.Column(db.Float)
     serving_size_unit = db.Column(db.String(20))
     household_serving_fulltext = db.Column(db.String(200))
-    
+    notes = db.Column(Text)  # User notes about this food
+
     # Storage metadata
     saved_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -76,10 +77,21 @@ class Food(db.Model):
             'market_country': self.market_country,
             'serving_size': self.serving_size,
             'serving_unit': self.serving_size_unit,
+            'notes': self.notes,
             'saved_at': self.saved_at.isoformat(),
+            'date_added': self.saved_at.isoformat(),  # For compatibility with frontend
             'updated_at': self.updated_at.isoformat(),
             'nutrients': [n.to_dict() for n in self.nutrients],
-            'portions': [p.to_dict() for p in self.portions]
+            'portions': [p.to_dict() for p in self.portions],
+            # Common nutrient values for easy frontend access
+            'calories': self.calories,
+            'protein': self.protein,
+            'total_fat': self.fat,
+            'carbohydrates': self.carbs,
+            'fiber': self.get_nutrient_value(1079),
+            'sugars': self.get_nutrient_value(2000),
+            'sodium': self.sodium,
+            'calcium': self.get_nutrient_value(1087)
         }
     
     def get_nutrient_value(self, nutrient_id):

@@ -4,6 +4,39 @@
 
 {% block additional_css %}
 <style>
+.back-button-container {
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 10;
+}
+
+.btn-back {
+    background-color: #6c757d !important;
+    color: white !important;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 10;
+}
+
+.btn-back:hover {
+    background-color: #5a6268 !important;
+    color: white !important;
+    text-decoration: none;
+}
+
+.btn-back i {
+    font-size: 0.8rem;
+}
+
 .main-content {
     padding: 40px 0;
 }
@@ -82,7 +115,7 @@
 .btn {
     padding: 12px 24px;
     border: none;
-    border-radius: 8px;
+    border-radius: 25px;
     text-decoration: none;
     font-weight: bold;
     transition: all 0.3s ease;
@@ -91,12 +124,12 @@
 }
 
 .btn-primary {
-    background: #dc2626;
+    background: #667eea;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #b91c1c;
+    background: #5a67d8;
 }
 
 .actions {
@@ -124,16 +157,18 @@
 {% endblock %}
 
 {% block content %}
-<div class="main-container">
+<div class="container" style="padding-top: 80px;">
+    <!-- Back Button -->
+    <div class="back-button-container">
+        <a href="{{ get_fluid_url() }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Fluid Dashboard
+        </a>
+    </div>
+
     <!-- Page Header -->
     <div class="page-header">
         <h1>📊 Fluid History</h1>
         <p>Review your daily fluid intake over time</p>
-    </div>
-
-    <!-- Actions -->
-    <div class="actions">
-        <a href="{{ get_fluid_url() }}" class="btn btn-primary">← Back to Dashboard</a>
     </div>
 
     <!-- History Table -->

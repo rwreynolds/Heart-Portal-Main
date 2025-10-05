@@ -694,6 +694,12 @@
                                 ${formatNutritionalInfo(food)}
                             </div>
                         </div>
+                        ${food.notes ? `
+                            <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                                <h3 style="margin: 0 0 10px 0; color: #856404; font-size: 1rem;">📝 Notes</h3>
+                                <p style="margin: 0; color: #856404; white-space: pre-wrap;">${food.notes}</p>
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -732,9 +738,203 @@
             }
         }
 
-        // Edit food (placeholder)
-        function editFood(foodId) {
-            showAlert('Edit functionality coming soon!', 'info');
+        // Edit food
+        async function editFood(foodId) {
+            try {
+                const response = await fetch(`./api/foods/${foodId}`);
+                const food = await response.json();
+
+                if (response.ok) {
+                    displayEditModal(food);
+                } else {
+                    showAlert('Failed to load food details: ' + food.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error loading food for editing', 'error');
+            }
+        }
+
+        // Display edit modal
+        function displayEditModal(food) {
+            const modalHtml = `
+                <div id="edit-food-modal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.7);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                " onclick="event.target.id === 'edit-food-modal' && closeEditModal()">
+                    <div style="
+                        background: white;
+                        border-radius: 12px;
+                        max-width: 700px;
+                        width: 90%;
+                        max-height: 85vh;
+                        display: flex;
+                        flex-direction: column;
+                        box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+                    " onclick="event.stopPropagation()">
+                        <div style="
+                            padding: 25px;
+                            border-bottom: 2px solid #e5e5e7;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            flex-shrink: 0;
+                        ">
+                            <h2 style="margin: 0; color: #333;">Edit Food: ${food.name || food.description}</h2>
+                            <button onclick="closeEditModal()" style="
+                                background: none;
+                                border: none;
+                                font-size: 28px;
+                                cursor: pointer;
+                                color: #666;
+                                padding: 0;
+                                width: 30px;
+                                height: 30px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            ">&times;</button>
+                        </div>
+                        <form id="edit-food-form" onsubmit="saveEditedFood(event, ${food.id})" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                            <div style="padding: 25px; overflow-y: auto; flex: 1;">
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Description *</label>
+                                    <input type="text" name="description"
+                                           value="${food.description || ''}" required
+                                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Brand Owner</label>
+                                    <input type="text" name="brand_owner"
+                                           value="${food.brand_owner || ''}"
+                                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Brand Name</label>
+                                    <input type="text" name="brand_name"
+                                           value="${food.brand_name || ''}"
+                                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Ingredients</label>
+                                    <textarea name="ingredients" rows="4"
+                                              style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${food.ingredients || ''}</textarea>
+                                </div>
+
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Serving Size</label>
+                                        <input type="number" name="serving_size"
+                                               step="0.01" value="${food.serving_size || ''}"
+                                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    </div>
+
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Serving Unit</label>
+                                        <input type="text" name="serving_size_unit"
+                                               value="${food.serving_unit || food.serving_size_unit || ''}"
+                                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Market Country</label>
+                                    <input type="text" name="market_country"
+                                           value="${food.market_country || ''}"
+                                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Notes</label>
+                                    <textarea name="notes" rows="4"
+                                              placeholder="Add personal notes about this food item..."
+                                              style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">${food.notes || ''}</textarea>
+                                    <div style="font-size: 0.9rem; color: #666; margin-top: 5px;">
+                                        Add personal notes, reminders, or preferences about this food
+                                    </div>
+                                </div>
+
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                                    <p style="margin: 0; color: #666; font-size: 0.9rem;">
+                                        <strong>Note:</strong> Nutritional information cannot be edited.
+                                        FDC ID: ${food.fdc_id} | Data Type: ${food.data_type}
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="
+                                padding: 20px 25px;
+                                border-top: 2px solid #e5e5e7;
+                                display: flex;
+                                justify-content: flex-end;
+                                gap: 10px;
+                                flex-shrink: 0;
+                                background: white;
+                            ">
+                                <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            const modal = document.getElementById('edit-food-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Save edited food
+        async function saveEditedFood(event, foodId) {
+            event.preventDefault();
+
+            const form = event.target;
+            const formData = new FormData(form);
+            const updateData = {};
+
+            // Build update object from form data
+            for (let [key, value] of formData.entries()) {
+                if (value.trim()) {  // Only include non-empty values
+                    updateData[key] = value;
+                }
+            }
+
+            try {
+                const response = await fetch(`./api/foods/${foodId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('Food updated successfully!', 'success');
+                    closeEditModal();
+                    await refreshFoodList();  // Refresh the food list
+                } else {
+                    showAlert('Failed to update food: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Error updating food', 'error');
+            }
         }
 
         // Delete food
@@ -777,12 +977,7 @@
                 const status = await response.json();
 
                 if (response.ok && status.status === 'healthy') {
-                    statusDisplay.innerHTML = `
-                        <div class="alert alert-success">
-                            <span class="status-indicator status-connected"></span>
-                            Food-Base is running normally (${status.foods_stored} foods stored)
-                        </div>
-                    `;
+                    statusDisplay.innerHTML = '';
                 } else {
                     statusDisplay.innerHTML = `
                         <div class="alert alert-error">

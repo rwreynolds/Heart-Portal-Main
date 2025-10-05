@@ -20,6 +20,7 @@ SERVICES=(
     "heart-portal-sodium:5003"
     "heart-portal-fluid:5004"
     "heart-portal-weight:5005"
+    "heart-portal-bp:5006"
     "nginx:80,443"
 )
 

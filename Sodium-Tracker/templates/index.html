@@ -267,17 +267,6 @@
     </div>
     {% endif %}
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <!-- Dashboard Grid -->
     <div class="dashboard-grid">
         <!-- Progress Card -->
@@ -348,7 +337,7 @@
             </ul>
         {% else %}
             <div class="no-entries">
-                No entries for today yet. <a href="/sodium/add_entry">Add your first entry</a>!
+                No entries for today yet. <a href="{{ get_sodium_url() }}add_entry">Add your first entry</a>!
             </div>
         {% endif %}
     </div>

@@ -17,7 +17,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from auth import init_auth_db, authenticate_user, create_user, get_current_user, login_required, create_session, invalidate_session, make_user_admin, get_all_users, deactivate_user, activate_user, remove_admin_privileges, delete_user
 from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
-    get_sodium_url, get_fluid_url, get_weight_url
+    get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
 # Add Blog-Manager directory to path for blog database functions
@@ -54,6 +54,7 @@ app.jinja_env.globals.update(
     get_sodium_url=get_sodium_url,
     get_fluid_url=get_fluid_url,
     get_weight_url=get_weight_url,
+    get_bp_url=get_bp_url,
     get_current_user=get_current_user
 )
 
@@ -117,6 +118,11 @@ def redirect_to_fluid():
 def redirect_to_weight():
     """Redirect to Weight Tracker - environment-aware"""
     return redirect(get_weight_url())
+
+@app.route('/redirect/bp')
+def redirect_to_bp():
+    """Redirect to BP/HR Monitor - environment-aware"""
+    return redirect(get_bp_url())
 
 @app.errorhandler(404)
 def page_not_found(e):

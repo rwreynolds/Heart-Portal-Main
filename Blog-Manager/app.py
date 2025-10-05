@@ -18,7 +18,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from auth import get_current_user
 from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
-    get_sodium_url, get_fluid_url, get_weight_url
+    get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
 # Import database functions
@@ -58,7 +58,8 @@ def utility_processor():
         get_foodbase_url=get_foodbase_url,
         get_sodium_url=get_sodium_url,
         get_fluid_url=get_fluid_url,
-        get_weight_url=get_weight_url
+        get_weight_url=get_weight_url,
+        get_bp_url=get_bp_url
     )
 
 # Register template global functions
@@ -70,6 +71,7 @@ app.jinja_env.globals.update(
     get_sodium_url=get_sodium_url,
     get_fluid_url=get_fluid_url,
     get_weight_url=get_weight_url,
+    get_bp_url=get_bp_url,
     get_current_user=get_current_user
 )
 
@@ -135,7 +137,7 @@ def create_post():
             if visibility == 'public':
                 flash('Your public post has been submitted for review.', 'info')
 
-            return redirect('/dashboard')
+            return redirect(f"{get_blog_url()}dashboard")
         else:
             flash('Title and content are required.', 'error')
 
@@ -199,7 +201,7 @@ def delete_user_post(post_id):
     else:
         flash('Failed to delete post or access denied.', 'error')
 
-    return redirect('/dashboard')
+    return redirect(f"{get_blog_url()}dashboard")
 
 # ADMIN ROUTES (Site owner only)
 

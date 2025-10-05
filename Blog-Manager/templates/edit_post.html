@@ -237,6 +237,35 @@
             border: 1px solid #bee5eb;
         }
 
+        .back-button-container {
+            margin-bottom: 20px;
+        }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-back i {
+            font-size: 0.8rem;
+        }
+
         .review-notes {
             background-color: #fff3cd;
             border: 1px solid #ffeaa7;
@@ -287,6 +316,12 @@
 
 {% block content %}
 <div class="edit-container">
+    <div class="back-button-container">
+        <a href="{{ get_blog_url() }}dashboard" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">
@@ -380,9 +415,6 @@
         </div>
 
         <div class="form-actions">
-            <a href="{{ get_blog_url() }}dashboard" class="btn btn-secondary">
-                ← Back to Dashboard
-            </a>
             <div>
                 <button type="submit" class="btn btn-primary">
                     💾 Update Post

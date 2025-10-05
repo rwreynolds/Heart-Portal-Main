@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found - Blood Pressure Monitor{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <div style="text-align: center; color: white; padding: 60px 20px;">
+        <h1 style="font-size: 4rem; margin-bottom: 20px;">🩺 404</h1>
+        <h2 style="font-size: 2rem; margin-bottom: 20px;">Page Not Found</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 40px;">
+            The blood pressure monitoring page you're looking for doesn't exist.
+        </p>
+        <a href="{{ get_bp_url() }}"
+           style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold; transition: all 0.3s;">
+            🏠 Return to BP Monitor Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

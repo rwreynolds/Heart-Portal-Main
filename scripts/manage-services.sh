@@ -20,6 +20,7 @@ SERVICES=(
     "heart-portal-sodium:5003"
     "heart-portal-fluid:5004"
     "heart-portal-weight:5005"
+    "heart-portal-bp:5006"
 )
 
 # Colors for output
@@ -247,6 +248,7 @@ start_local_service() {
         sodium) service_dir="Sodium-Tracker" ;;
         fluid) service_dir="Fluid-Tracker" ;;
         weight) service_dir="Weight-Tracker" ;;
+        bp) service_dir="BP-Monitor" ;;
         *)
             error "Unknown service: $service_short"
             return 1
