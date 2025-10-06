@@ -341,8 +341,7 @@ def settings():
         conn.commit()
         conn.close()
 
-        flash('Settings updated successfully!', 'success')
-        return redirect(f"{get_fluid_url()}settings")
+        return redirect(url_for('index'))
 
     # Get current settings
     conn = sqlite3.connect(DATABASE_PATH)

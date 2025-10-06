@@ -314,7 +314,7 @@ def settings():
 
         db.commit()
         logger.info("Settings updated successfully")
-        return redirect(f"{get_weight_url()}settings")
+        return redirect(url_for('index'))
 
     # Get current settings
     current_settings = db.execute('SELECT * FROM user_settings ORDER BY id DESC LIMIT 1').fetchone()

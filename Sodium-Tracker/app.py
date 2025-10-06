@@ -10,6 +10,7 @@ import sqlite3
 from datetime import datetime, date
 import json
 from dotenv import load_dotenv
+from urllib.parse import quote
 
 # Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -169,7 +170,7 @@ def index():
     current_user = get_current_user()
     if not current_user:
         main_app_url = get_main_app_url()
-        return redirect(f"{main_app_url}/login?next={request.url}")
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
     today = date.today()
     today_str = today.isoformat()
@@ -224,7 +225,7 @@ def add_entry():
     current_user = get_current_user()
     if not current_user:
         main_app_url = get_main_app_url()
-        return redirect(f"{main_app_url}/login?next={request.url}")
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
     if request.method == 'POST':
         data = request.form
@@ -267,7 +268,7 @@ def history():
     current_user = get_current_user()
     if not current_user:
         main_app_url = get_main_app_url()
-        return redirect(f"{main_app_url}/login?next={request.url}")
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
     page = request.args.get('page', 1, type=int)
     per_page = 50
@@ -316,7 +317,7 @@ def settings():
     current_user = get_current_user()
     if not current_user:
         main_app_url = get_main_app_url()
-        return redirect(f"{main_app_url}/login?next={request.url}")
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
     if request.method == 'POST':
         default_goal = request.form.get('default_daily_goal', 2300)
@@ -342,7 +343,7 @@ def settings():
         conn.commit()
         conn.close()
 
-        return redirect(get_sodium_url())
+        return redirect(url_for('index'))
 
     # Get current settings
     conn = sqlite3.connect(DATABASE_PATH)
@@ -378,7 +379,7 @@ def delete_entry(entry_id):
     current_user = get_current_user()
     if not current_user:
         main_app_url = get_main_app_url()
-        return redirect(f"{main_app_url}/login?next={request.url}")
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
