@@ -15,8 +15,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 30px;
+            margin-top: 60px;
             padding-bottom: 20px;
-            border-bottom: 3px solid #dc2626;
         }
 
         .admin-title {
@@ -221,7 +221,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="admin-container">
+<div class="admin-container" style="padding-top: 20px !important;">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">

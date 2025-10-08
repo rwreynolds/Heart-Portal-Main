@@ -6,39 +6,37 @@
 <style>
 .content {
     background: white;
-    margin: 40px 0;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    overflow: hidden;
+    padding: 80px 0;
 }
-.content-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 60px 40px;
+.hero {
     text-align: center;
+    padding: 60px 0 40px;
+    color: white;
 }
-.content-header h1 {
+.hero h1 {
     font-size: 3rem;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
-.content-header p {
+.hero p {
     font-size: 1.2rem;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
-.content-body {
-    padding: 60px 40px;
-    line-height: 1.8;
-}
-.content-body h2 {
+.content h2 {
     color: #667eea;
     margin-top: 40px;
     margin-bottom: 20px;
 }
-.content-body h3 {
+.content h3 {
     color: #555;
     margin-top: 30px;
     margin-bottom: 15px;
+}
+.content p {
+    line-height: 1.8;
+}
+.content ul {
+    line-height: 1.8;
 }
 .creator-info {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -87,14 +85,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="main-container">
-    <div class="content">
-        <div class="content-header">
-            <h1>About the Creator</h1>
-            <p>Passionate about improving heart health through technology</p>
-        </div>
+<section class="hero" style="padding-top: 20px !important;">
+    <div class="main-container">
+        <h1>About the Creator</h1>
+        <p>Passionate about improving heart health through technology</p>
+    </div>
+</section>
 
-        <div class="content-body">
+<section class="content">
+    <div class="main-container">
             <div class="creator-info">
                 <h2>👋 Hello! I'm the creator of Heart Portal</h2>
                 <p>Heart Portal was born from a passion for combining technology with healthcare to make a meaningful difference in people's lives. As someone deeply interested in both software development and health advocacy, I recognized the need for specialized tools that could help heart failure patients better manage their nutrition.</p>
@@ -149,9 +148,8 @@
             <p>Creating Heart Portal has been both a technical challenge and a deeply meaningful project. I hope this platform serves as a valuable resource in your heart health journey. Remember, while technology can provide helpful tools and information, your healthcare team remains your most important resource.</p>
 
             <p><em>Stay heart-healthy!</em> ❤️</p>
-        </div>
     </div>
-</div>
+</section>
 
 <footer class="footer">
     <div class="main-container">

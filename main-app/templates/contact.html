@@ -6,28 +6,27 @@
 <style>
 .content {
     background: white;
-    margin: 40px 0;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    overflow: hidden;
+    padding: 80px 0;
 }
-.content-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 60px 40px;
+.hero {
     text-align: center;
+    padding: 60px 0 40px;
+    color: white;
 }
-.content-header h1 {
+.hero h1 {
     font-size: 3rem;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
-.content-header p {
+.hero p {
     font-size: 1.2rem;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
-.content-body {
-    padding: 60px 40px;
+.content h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+.content p {
     line-height: 1.8;
 }
 .contact-grid {
@@ -143,15 +142,16 @@
 {% endblock %}
 
 {% block content %}
-<div class="main-container">
-    <div class="content">
-        <div class="content-header">
-            <h1>Contact Us</h1>
-            <p>We'd love to hear from you about your Heart Portal experience</p>
-        </div>
+<section class="hero" style="padding-top: 20px !important;">
+    <div class="main-container">
+        <h1>Contact Us</h1>
+        <p>We'd love to hear from you about your Heart Portal experience</p>
+    </div>
+</section>
 
-        <div class="content-body">
-            <div class="contact-grid">
+<section class="content">
+    <div class="main-container">
+        <div class="contact-grid">
                 <div class="contact-form">
                     <h2>Send us a Message</h2>
                     <p>Have feedback, questions, or suggestions? We value your input and are committed to improving Heart Portal.</p>
@@ -209,14 +209,13 @@
                 </div>
             </div>
 
-            <div style="background: #fff3cd; color: #856404; padding: 20px; border-radius: 10px; border-left: 4px solid #ffc107; margin-top: 40px;">
-                <h3>⚠️ Important Medical Disclaimer</h3>
-                <p><strong>This contact form is for platform feedback and technical support only.</strong> Heart Portal is not a medical service and cannot provide medical advice, diagnosis, or treatment recommendations.</p>
-                <p>For medical questions or emergencies, please contact your healthcare provider or emergency services immediately.</p>
-            </div>
+        <div style="background: #fff3cd; color: #856404; padding: 20px; border-radius: 10px; border-left: 4px solid #ffc107; margin-top: 40px;">
+            <h3>⚠️ Important Medical Disclaimer</h3>
+            <p><strong>This contact form is for platform feedback and technical support only.</strong> Heart Portal is not a medical service and cannot provide medical advice, diagnosis, or treatment recommendations.</p>
+            <p>For medical questions or emergencies, please contact your healthcare provider or emergency services immediately.</p>
         </div>
     </div>
-</div>
+</section>
 
 <footer class="footer">
     <div class="main-container">

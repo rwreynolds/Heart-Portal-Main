@@ -6,50 +6,53 @@
 <style>
 .content {
     background: white;
-    margin: 40px 0;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    padding: 80px 0;
 }
-.content-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 60px 40px;
+.hero {
     text-align: center;
+    padding: 60px 0 40px;
+    color: white;
 }
-.content-header h1 {
+.hero h1 {
     font-size: 3rem;
     margin-bottom: 20px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
-.content-header p {
+.hero p {
     font-size: 1.2rem;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
-.content-body {
-    padding: 60px 40px;
-    line-height: 1.8;
-}
-.content-body h2 {
+.content h2 {
     color: #667eea;
     margin-top: 40px;
     margin-bottom: 20px;
 }
-.content-body h3 {
+.content h3 {
     color: #555;
     margin-top: 30px;
     margin-bottom: 15px;
 }
+.content p {
+    line-height: 1.8;
+}
+.content ul {
+    line-height: 1.8;
+}
 .feature-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
+    gap: 40px;
     margin: 40px 0;
 }
 .feature-card {
-    background: #f8f9fa;
-    padding: 30px;
-    border-radius: 10px;
-    border-left: 4px solid #667eea;
+    text-align: center;
+    padding: 40px 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+.feature-card:hover {
+    transform: translateY(-5px);
 }
 .feature-card h4 {
     color: #667eea;
@@ -76,14 +79,15 @@
 {% endblock %}
 
 {% block content %}
-<div class="main-container">
-    <div class="content">
-        <div class="content-header">
-            <h1>About Heart Portal</h1>
-            <p>Empowering heart failure patients through comprehensive nutrition management</p>
-        </div>
+<section class="hero" style="padding-top: 20px !important;">
+    <div class="main-container">
+        <h1>About Heart Portal</h1>
+        <p>Empowering heart failure patients through comprehensive nutrition management</p>
+    </div>
+</section>
 
-        <div class="content-body">
+<section class="content">
+    <div class="main-container">
             <h2>Our Mission</h2>
             <p>Heart Portal is designed specifically for individuals living with heart failure, providing comprehensive tools and resources to help manage nutrition and improve quality of life. We believe that proper nutrition education and management are crucial components of heart failure care.</p>
 
@@ -124,9 +128,8 @@
 
             <h2>Our Commitment</h2>
             <p>We are committed to providing accurate, up-to-date nutritional information and resources. Our platform is continuously updated to reflect the latest guidelines and best practices in heart failure nutrition management.</p>
-        </div>
     </div>
-</div>
+</section>
 
 <footer class="footer">
     <div class="main-container">

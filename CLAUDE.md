@@ -145,6 +145,7 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - ✅ **Nutrition Database Styling Fixes** - Fixed fake header overlay and hero section consistency
 - ✅ **Form Layout Consistency** - Fixed Data Types section styling in Advanced Food Search
 - ✅ **Tab Navigation Styling** - Enhanced visibility of inactive tab buttons for better user experience
+- ✅ **Page Styling Standardization** - Unified hero sections and content sections across all Main App pages
 - Header background changed to red (#dc2626) in main app
 - Environment-aware JavaScript for local/production compatibility
 - Fixed deployment script syntax errors
@@ -168,6 +169,7 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - ✅ **Inconsistent Hero Sections** - Standardized hero section styling across applications
 - ✅ **Form Element Styling** - Data Types section now matches other Advanced Search form elements
 - ✅ **Tab Button Visibility** - Inactive tabs now clearly visible instead of appearing disabled
+- ✅ **Inconsistent Page Layouts** - Standardized hero sections (20px top padding) and content sections (80px padding) across all Main App pages
 
 ## Known Server Status (Last Checked)
 - ✅ **heart-portal-nutrition** (port 5000): Running normally
@@ -187,12 +189,17 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 
 ## Templates Status
 ### Main App Templates (main-app/templates/)
-- ✅ landing.html - Main landing page with red header & sticky navigation
-- ✅ about.html - About the portal page with sticky navigation
-- ✅ creator.html - About creator page with sticky navigation
-- ✅ contact.html - Contact form page with sticky navigation
+- ✅ landing.html - Main landing page with standardized hero (20px padding) and sticky navigation
+- ✅ about.html - About portal page with standardized content section (80px padding)
+- ✅ creator.html - About creator page with standardized content section (80px padding)
+- ✅ contact.html - Contact form page with standardized content section (80px padding)
 - ✅ 404.html - Error page with sticky navigation
 - ✅ 500.html - Error page with sticky navigation
+
+### Admin Templates (main-app/templates/admin/)
+- ✅ blog.html - Blog moderation page with 20px title padding (no red border)
+- ✅ dashboard.html - System administration page with 20px title padding (no red border)
+- ✅ users.html - User management page with 20px title padding (no red border)
 
 ### All Applications Feature Status
 - ✅ **Sticky Navigation** - Fixed header across all apps and pages
@@ -283,6 +290,45 @@ sudo ./scripts/setup-ssl.sh
 - **Weight-Tracker Blank Page**: Fixed Flask `close_db()` TypeError by renaming teardown function to avoid naming conflicts
 - **Missing Tracker Redirects**: Added `/redirect/sodium`, `/redirect/fluid`, `/redirect/weight` routes to all component applications
 - **BuildError for Tracker URLs**: Fixed by ensuring all templates have the required `url_for()` redirect routes
+- **Inconsistent Page Layouts**: Standardized hero sections and content sections across all Main App pages with consistent padding and structure
+
+## Page Styling Standards
+
+### Hero Sections
+All hero sections across the application follow these standards:
+- **Top Padding**: 20px (applied via inline style: `style="padding-top: 20px !important;"`)
+- **Base Padding**: `padding: 60px 0 40px;` (vertical centering)
+- **Text Color**: White
+- **Title Font Size**: `3rem` with `text-shadow: 2px 2px 4px rgba(0,0,0,0.3)`
+- **Subtitle Font Size**: `1.2rem` with `text-shadow: 1px 1px 2px rgba(0,0,0,0.3)`
+- **Structure**: `<section class="hero"><div class="main-container">...</div></section>`
+
+### Content Sections
+All content sections follow these standards:
+- **Padding**: `padding: 80px 0;` (vertical spacing, no horizontal)
+- **Background**: `background: white;`
+- **Width Control**: `<section class="content"><div class="main-container">...</div></section>`
+- **Max Width**: 1200px (from `.main-container`)
+- **Heading Color**: `color: #667eea;` (purple accent)
+- **Text Line Height**: `line-height: 1.8;`
+
+### Admin Page Titles
+All admin pages follow these standards:
+- **Top Padding**: 20px (applied via inline style: `style="padding-top: 20px !important;"`)
+- **Border**: No red border under titles (previously removed)
+- **Header Margin**: `margin-top: 60px;` (clearance for fixed navbar)
+
+### Pages Using These Standards
+- **Main App**: landing.html, about.html, creator.html, contact.html
+- **Admin Pages**: blog.html, dashboard.html, users.html
+- **Blog Manager**: blog.html (hero section)
+- **Nutrition Database**: index.html (hero section with gradient background)
+
+### Implementation Notes
+- Use inline `style="padding-top: 20px !important;"` for hero sections to override base styles
+- Use `<section class="content"><div class="main-container">` structure for proper width control
+- Avoid nested `.content-body` divs within `.content` sections
+- CSS selectors should target `.content h2`, `.content p`, etc. directly
 
 ## Documentation
 - **README.md**: Comprehensive project documentation for GitHub display
