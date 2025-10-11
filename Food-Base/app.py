@@ -3,12 +3,15 @@ Food-Base Component - Flask Application
 Stores and manages food data captured from API-Manager
 """
 
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify, render_template, redirect, send_file, make_response
 import os
 import sys
 from datetime import datetime
 from jinja2 import ChoiceLoader, FileSystemLoader
 from dotenv import load_dotenv
+import csv
+import json
+import io
 
 # Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -276,6 +279,196 @@ def health_check():
             'error': str(e),
             'timestamp': datetime.now().isoformat()
         }), 500
+
+# Export routes
+@app.route('/api/export/csv', methods=['POST'])
+def export_csv():
+    """Export selected foods to CSV format"""
+    try:
+        data = request.get_json()
+        food_ids = data.get('food_ids', [])
+
+        if not food_ids:
+            return jsonify({'error': 'No food IDs provided'}), 400
+
+        # Get foods data
+        foods = []
+        for food_id in food_ids:
+            food = storage_service.get_food_by_id(food_id)
+            if food:
+                foods.append(food)
+
+        # Create CSV in memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Write header
+        writer.writerow([
+            'Food Name', 'Brand', 'FDC ID', 'Data Type',
+            'Calories (kcal)', 'Protein (g)', 'Total Fat (g)',
+            'Carbohydrates (g)', 'Fiber (g)', 'Sugars (g)',
+            'Sodium (mg)', 'Calcium (mg)', 'Date Added'
+        ])
+
+        # Write data rows
+        for food in foods:
+            writer.writerow([
+                food.get('name', 'N/A'),
+                food.get('brand_owner', ''),
+                food.get('fdc_id', ''),
+                food.get('data_type', ''),
+                food.get('calories', ''),
+                food.get('protein', ''),
+                food.get('total_fat', ''),
+                food.get('carbohydrates', ''),
+                food.get('fiber', ''),
+                food.get('sugars', ''),
+                food.get('sodium', ''),
+                food.get('calcium', ''),
+                food.get('date_added', '')
+            ])
+
+        # Create response
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'food_storage_{datetime.now().strftime("%Y%m%d")}.csv'
+        )
+
+    except Exception as e:
+        return jsonify({'error': f'Export failed: {str(e)}'}), 500
+
+@app.route('/api/export/json', methods=['POST'])
+def export_json():
+    """Export selected foods to JSON format"""
+    try:
+        data = request.get_json()
+        food_ids = data.get('food_ids', [])
+
+        if not food_ids:
+            return jsonify({'error': 'No food IDs provided'}), 400
+
+        # Get foods data
+        foods = []
+        for food_id in food_ids:
+            food = storage_service.get_food_by_id(food_id)
+            if food:
+                foods.append(food)
+
+        # Create JSON structure
+        export_data = {
+            'export_date': datetime.now().isoformat(),
+            'total_foods': len(foods),
+            'foods': foods
+        }
+
+        # Create response
+        json_str = json.dumps(export_data, indent=2)
+        return send_file(
+            io.BytesIO(json_str.encode('utf-8')),
+            mimetype='application/json',
+            as_attachment=True,
+            download_name=f'food_storage_{datetime.now().strftime("%Y%m%d")}.json'
+        )
+
+    except Exception as e:
+        return jsonify({'error': f'Export failed: {str(e)}'}), 500
+
+@app.route('/api/export/pdf', methods=['POST'])
+def export_pdf():
+    """Export selected foods to PDF format"""
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter, landscape
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib.units import inch
+
+        data = request.get_json()
+        food_ids = data.get('food_ids', [])
+
+        if not food_ids:
+            return jsonify({'error': 'No food IDs provided'}), 400
+
+        # Get foods data
+        foods = []
+        for food_id in food_ids:
+            food = storage_service.get_food_by_id(food_id)
+            if food:
+                foods.append(food)
+
+        # Create PDF in memory
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+        elements = []
+
+        # Styles
+        styles = getSampleStyleSheet()
+
+        # Title
+        title = Paragraph('<b>Food Storage Export</b>', styles['Title'])
+        elements.append(title)
+        elements.append(Spacer(1, 0.3*inch))
+
+        # Export info
+        info_text = f'Export Date: {datetime.now().strftime("%Y-%m-%d %H:%M")}<br/>Total Foods: {len(foods)}'
+        info = Paragraph(info_text, styles['Normal'])
+        elements.append(info)
+        elements.append(Spacer(1, 0.3*inch))
+
+        # Table data
+        table_data = [[
+            'Food Name', 'Brand', 'Calories', 'Protein (g)',
+            'Fat (g)', 'Carbs (g)', 'Sodium (mg)'
+        ]]
+
+        for food in foods:
+            table_data.append([
+                food.get('name', 'N/A')[:30],  # Truncate long names
+                food.get('brand_owner', '')[:20],
+                food.get('calories', 'N/A'),
+                food.get('protein', 'N/A'),
+                food.get('total_fat', 'N/A'),
+                food.get('carbohydrates', 'N/A'),
+                food.get('sodium', 'N/A')
+            ])
+
+        # Create table
+        table = Table(table_data, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey])
+        ]))
+
+        elements.append(table)
+
+        # Build PDF
+        doc.build(elements)
+        buffer.seek(0)
+
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'food_storage_{datetime.now().strftime("%Y%m%d")}.pdf'
+        )
+
+    except ImportError:
+        return jsonify({
+            'error': 'PDF export requires reportlab library. Install with: pip install reportlab'
+        }), 500
+    except Exception as e:
+        return jsonify({'error': f'PDF export failed: {str(e)}'}), 500
 
 # Redirect routes for inter-component navigation
 @app.route('/redirect/nutrition')

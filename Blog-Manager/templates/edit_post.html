@@ -168,7 +168,7 @@
         .form-actions {
             display: flex;
             gap: 15px;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             margin-top: 30px;
             padding-top: 20px;
@@ -415,11 +415,12 @@
         </div>
 
         <div class="form-actions">
-            <div>
-                <button type="submit" class="btn btn-primary">
-                    💾 Update Post
-                </button>
-            </div>
+            <a href="{{ get_blog_url() }}dashboard" class="btn btn-secondary">
+                ✖ Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                💾 Update Post
+            </button>
         </div>
     </form>
 </div>

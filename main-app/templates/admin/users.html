@@ -290,6 +290,35 @@
             font-size: 0.9rem;
         }
 
+        .back-button-container {
+            margin-bottom: 20px;
+            padding-top: 40px;
+        }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(108, 117, 125, 0.3);
+            color: white;
+            text-decoration: none;
+        }
+
+        .btn-back i {
+            margin-right: 5px;
+        }
+
         .flash-messages {
             margin-bottom: 20px;
         }
@@ -378,25 +407,16 @@
         {% endif %}
     {% endwith %}
 
+    <div class="back-button-container">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
+        </a>
+    </div>
+
     <div class="admin-header">
         <h1 class="admin-title">User Management</h1>
         <div class="admin-badge">👑 Site Administrator</div>
     </div>
-
-    <nav class="admin-nav">
-        <a href="{{ url_for('admin_dashboard') }}" class="nav-card">
-            <span class="nav-icon">📊</span>
-            <h3 class="nav-title">Dashboard</h3>
-        </a>
-        <a href="{{ url_for('admin_users') }}" class="nav-card active">
-            <span class="nav-icon">👥</span>
-            <h3 class="nav-title">User Management</h3>
-        </a>
-        <a href="{{ url_for('admin_blog') }}" class="nav-card">
-            <span class="nav-icon">📝</span>
-            <h3 class="nav-title">Blog Moderation</h3>
-        </a>
-    </nav>
 
     <div class="users-section">
         <div class="section-header">

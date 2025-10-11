@@ -1,0 +1,19 @@
+[Unit]
+Description=Heart Portal BP Monitor (Production with Venv)
+After=network.target
+
+[Service]
+Type=simple
+User=heartportal
+WorkingDirectory=/opt/heart-portal/production/BP-Monitor
+Environment="PATH=/opt/heart-portal/production/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONPATH=/opt/heart-portal/production"
+Environment="FLASK_APP=app.py"
+ExecStart=/opt/heart-portal/production/venv/bin/python app.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

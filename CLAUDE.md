@@ -43,6 +43,8 @@ Multi-component Flask application for heart failure nutrition management with US
 - SSH Key: /Users/mrrobot/.ssh/id_ed25519
 - User: heartportal
 - Project Path: /opt/heart-portal
+- Production Path: /opt/heart-portal (will add venv)
+- Staging Path: /opt/heart-portal-staging (will add venv)
 - Services: Managed via systemctl (heart-portal-main, heart-portal-nutrition, heart-portal-food, heart-portal-blog, heart-portal-sodium, heart-portal-fluid, heart-portal-weight)
 
 ### Server Connection
@@ -61,7 +63,12 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 
 ### Deployment Process
 ```bash
-./scripts/deploy.sh     # Push to GitHub and deploy to server
+# After venv migration (recommended):
+./scripts/deploy-venv.sh              # Deploy to production (with venv)
+./scripts/deploy-venv.sh staging      # Deploy to staging environment
+
+# Legacy deployment (before venv migration):
+./scripts/deploy.sh                   # Push to GitHub and deploy to server
 ```
 
 ### Production Rollback
@@ -97,11 +104,25 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - `Food-Base/app.py`: Food storage Flask app
 - `Blog-Manager/app.py`: Blog system Flask app
 - `README.md`: GitHub repository documentation (excluded from server)
-- `scripts/deploy.sh`: Local deployment script
+- `requirements.txt`: Python dependencies for virtual environment
+- `venv/`: Local virtual environment (not synced to server)
+
+### Scripts
+- `scripts/deploy-venv.sh`: Deployment script with venv support (recommended)
+- `scripts/deploy.sh`: Legacy deployment script
+- `scripts/setup-venv-server.sh`: One-time server venv migration script
 - `scripts/rollback.sh`: Production rollback script
 - `scripts/dev-check.sh`: Environment verification
 - `scripts/download-database.sh`: Database sync script
-- `SCRIPTS.md`: Comprehensive documentation for all scripts (see for detailed usage)
+- `SCRIPTS.md`: Comprehensive documentation for all scripts
+
+### Documentation
+- `CLAUDE.md`: Development and deployment instructions (this file)
+- `SERVER_VENV_SETUP.md`: Virtual environment migration guide
+- `VENV_MIGRATION_QUICKSTART.md`: Quick start guide for venv migration
+- `DB_MIGRATE_POSTGRES.md`: PostgreSQL migration plan
+- `VENV_SETUP.md`: Local virtual environment documentation
+- `QUICK_START.md`: Quick reference for common tasks
 
 ## SSL/HTTPS Configuration
 - `nginx/heart-portal.conf`: Nginx reverse proxy configuration
@@ -123,6 +144,15 @@ ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
 - Git workflow enforcement
 
 ## Recent Changes
+- ✅ **Form Button Standardization Complete** - All forms now follow Cancel (left) → Action (right) pattern with centered layout
+- ✅ **Tracker Color Consistency** - Sodium Tracker and Weight Tracker action buttons now use blue (#2563eb)
+- ✅ **History Page Action Buttons** - Added "Add Entry" buttons below content cards on Sodium, Fluid, and Weight History pages
+- ✅ **Admin Navigation Cleanup** - Removed redundant navigation cards from admin pages, centered remaining elements
+- ✅ **Virtual Environment Support** - Production and staging environments with isolated dependencies
+- ✅ **Server Venv Migration** - Zero-downtime migration scripts and systemd service templates
+- ✅ **Deployment Scripts Updated** - New `deploy-venv.sh` with staging/production support
+- ✅ **Local Virtual Environment** - Full venv setup with requirements.txt for all dependencies
+- ✅ **PostgreSQL Ready** - psycopg2 installed in venv, ready for database migration
 - ✅ **Script Consolidation** - Reduced 19 scripts to 12 (-37%), eliminated overlaps and conflicts
 - ✅ **New Consolidated Scripts** - `manage-services.sh`, `monitor.sh`, `troubleshoot.sh` with enhanced features
 - ✅ **Script Organization** - All scripts moved to `scripts/` folder with updated cross-references
@@ -329,6 +359,110 @@ All admin pages follow these standards:
 - Use `<section class="content"><div class="main-container">` structure for proper width control
 - Avoid nested `.content-body` divs within `.content` sections
 - CSS selectors should target `.content h2`, `.content p`, etc. directly
+
+## UI Standardization (2025-01-11)
+
+### Form Button Layout Standard
+All forms across the application now follow a consistent button layout pattern:
+
+**Pattern**: Cancel (left) → Action (right), centered layout
+
+**Button Specifications**:
+- **Cancel Button**: Gray (#6b7280), ✖ icon, on the left
+- **Action Button**: Colored (blue #2563eb for trackers, green #10b981 for success actions), appropriate icon, on the right
+- **Layout**: Centered with `justify-content: center;` and 15px gap
+- **Icons**: ✖ for Cancel, 💾 for Save, ➕ for Add, 🔄 for Update, 🎯 for Set Goal
+
+**Files Updated**:
+- `Blog-Manager/templates/edit_post.html` - Added Cancel button, centered both buttons
+- `Blog-Manager/templates/create_post.html` - Swapped positions, renamed "Save" to "Save Post"
+- `BP-Monitor/templates/add_entry.html` - Swapped Cancel and Save Reading
+- `BP-Monitor/templates/settings.html` - Swapped Cancel and Save Settings
+- `Sodium-Tracker/templates/add_entry.html` - Swapped buttons, changed to blue (#2563eb)
+- `Sodium-Tracker/templates/settings.html` - Swapped buttons, changed to blue, updated title
+- `Fluid-Tracker/templates/add_entry.html` - Swapped Cancel and Add Entry
+- `Fluid-Tracker/templates/settings.html` - Swapped Cancel and Save Settings
+- `Weight-Tracker/templates/add_entry.html` - Swapped Cancel and Save Weight Entry
+- `Weight-Tracker/templates/settings.html` - Swapped Cancel and Save Settings, changed to blue (#2563eb)
+- `Weight-Tracker/templates/set_goal.html` - Swapped Cancel and Set Goal, changed to blue (#2563eb)
+
+### Tracker Color Consistency
+**Standard**: Sodium Tracker and Weight Tracker action buttons use blue (#2563eb) for consistency
+
+**Files Updated**:
+- `Sodium-Tracker/templates/add_entry.html` - Changed from red to blue
+- `Sodium-Tracker/templates/settings.html` - Changed from red to blue
+- `Sodium-Tracker/templates/history.html` - Add Entry button uses blue
+- `Weight-Tracker/templates/settings.html` - Changed from green to blue
+- `Weight-Tracker/templates/set_goal.html` - Changed from green to blue
+
+### History Page Action Buttons
+**Pattern**: "Add Entry" button below content card with 20px top margin
+
+**Files Updated**:
+- `Sodium-Tracker/templates/history.html` - Added "Add Sodium Entry" button below card
+- `Fluid-Tracker/templates/history.html` - Added "Add Fluid Entry" button below card
+- `Weight-Tracker/templates/history.html` - Added "Add Weight Entry" button below card, removed top action buttons
+
+### Admin Navigation Cleanup
+**Changes**: Removed redundant navigation cards and buttons, centered remaining elements
+
+**Files Updated**:
+- `main-app/templates/admin/dashboard.html`:
+  - Removed Dashboard navigation card (redundant on dashboard page)
+  - Removed User Dashboard button from Quick Actions
+  - Centered User Management and Blog Moderation cards
+  - Centered Quick Actions buttons
+  - Removed `target="_blank"` from View Public Blog link
+- `main-app/templates/admin/users.html`:
+  - Removed Dashboard, User Management, and Blog Moderation navigation cards
+
+### Standard Back Button Implementation
+All standard back buttons follow:
+- **Color**: Gray (#6c757d)
+- **Icon**: Left arrow (fas fa-arrow-left)
+- **Padding**: 10px 20px on button
+- **Container Padding**: 40px top padding
+- **Text**: "Back to [Destination]"
+
+## Virtual Environment Migration
+
+### Overview
+The project now supports isolated Python virtual environments for both local development and server deployment (production + staging).
+
+### Local Development (Already Setup)
+```bash
+source venv/bin/activate        # Activate local venv
+# ... work ...
+deactivate                      # Deactivate when done
+```
+
+### Server Migration (Not Yet Implemented)
+To migrate server to venv structure:
+
+1. **Read the guide:** `VENV_MIGRATION_QUICKSTART.md`
+2. **Run migration:** `./scripts/setup-venv-server.sh` (on server)
+3. **Switchover:** Replace systemd services (5 min downtime)
+4. **Use new deployment:** `./scripts/deploy-venv.sh`
+
+### Benefits of Virtual Environments:
+- ✅ **Dependency Isolation** - Production and staging have separate packages
+- ✅ **PostgreSQL Ready** - psycopg2 installed in venv without system pollution
+- ✅ **Easy Rollbacks** - Keep old venv for instant fallback
+- ✅ **Clean System** - Server Python remains untouched
+- ✅ **Staging Testing** - Test new packages before production
+
+### Server Structure After Migration:
+```
+/opt/
+├── heart-portal/          # Production with venv
+│   └── venv/             # Isolated Python packages
+│
+└── heart-portal-staging/  # Staging with separate venv
+    └── venv/             # Separate Python packages
+```
+
+See `SERVER_VENV_SETUP.md` for detailed migration guide.
 
 ## Documentation
 - **README.md**: Comprehensive project documentation for GitHub display

@@ -1,0 +1,20 @@
+[Unit]
+Description=Heart Portal Main App (Staging with Venv)
+After=network.target
+
+[Service]
+Type=simple
+User=heartportal
+WorkingDirectory=/opt/heart-portal-staging/main-app
+Environment="PATH=/opt/heart-portal-staging/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONPATH=/opt/heart-portal-staging"
+Environment="FLASK_APP=main_app.py"
+Environment="FLASK_PORT=3100"
+ExecStart=/opt/heart-portal-staging/venv/bin/python main_app.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

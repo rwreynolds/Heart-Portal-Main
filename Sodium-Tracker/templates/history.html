@@ -124,12 +124,12 @@
 }
 
 .btn-primary {
-    background: #dc2626;
+    background: #2563eb;
     color: white;
 }
 
 .btn-primary:hover {
-    background: #b91c1c;
+    background: #1d4ed8;
 }
 
 .actions {
@@ -210,6 +210,10 @@
                 No sodium tracking data found. <a href="{{ get_sodium_url() }}add_entry">Start tracking</a> to see your history!
             </div>
         {% endif %}
+    </div>
+
+    <div class="actions" style="margin-top: 20px;">
+        <a href="{{ get_sodium_url() }}add_entry" class="btn btn-primary">➕ Add Sodium Entry</a>
     </div>
 </div>
 {% endblock %}

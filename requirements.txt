@@ -1,0 +1,98 @@
+# Heart Portal - Complete Requirements
+# All dependencies for the entire multi-component application
+
+# ============================================
+# Core Flask & Web Framework
+# ============================================
+flask>=3.1.0
+werkzeug>=3.1.0
+jinja2>=3.1.0
+itsdangerous>=2.2.0
+markupsafe>=2.1.0
+blinker>=1.6.0
+click>=8.1.0
+
+# ============================================
+# Database & ORM
+# ============================================
+flask-sqlalchemy>=3.0.0
+sqlalchemy>=2.0.0
+flask-migrate>=4.0.0
+
+# PostgreSQL support (for future migration)
+psycopg2-binary>=2.9.9
+
+# ============================================
+# Forms & Validation
+# ============================================
+flask-wtf>=1.1.0
+wtforms>=3.0.0
+bleach>=6.0.0
+
+# ============================================
+# HTTP & API
+# ============================================
+requests>=2.31.0
+
+# ============================================
+# Environment & Configuration
+# ============================================
+python-dotenv>=1.0.0
+
+# ============================================
+# Date/Time Utilities
+# ============================================
+python-dateutil>=2.8.0
+babel>=2.12.0
+
+# ============================================
+# Text Processing & Markdown
+# ============================================
+markdown>=3.4.0
+mistune>=3.0.0
+python-slugify>=8.0.0
+
+# ============================================
+# Data Processing & Analysis
+# ============================================
+pandas>=2.0.0
+numpy>=1.24.0
+
+# ============================================
+# Export Functionality
+# ============================================
+# CSV export (built-in with Python)
+# JSON export (built-in with Python)
+# PDF export
+reportlab>=4.0.0
+
+# ============================================
+# Development & Testing (optional)
+# ============================================
+# pytest>=7.4.0
+# pytest-flask>=1.2.0
+# flask-testing>=0.8.1
+
+# ============================================
+# Production Server (optional, for deployment)
+# ============================================
+# gunicorn>=21.2.0
+# gevent>=23.9.0
+
+# ============================================
+# Security & Authentication
+# ============================================
+# Note: Using custom auth module in shared/auth.py
+# Werkzeug provides password hashing
+
+# ============================================
+# Component-Specific Notes
+# ============================================
+# Main App: Landing page, authentication, admin
+# Blog-Manager: Blog posts, moderation, markdown
+# Nutrition-Database: USDA API integration
+# Food-Base: Food storage, SQLite database
+# Sodium-Tracker: Daily sodium tracking
+# Fluid-Tracker: Daily fluid tracking
+# Weight-Tracker: Daily weight tracking
+# BP-Monitor: Blood pressure monitoring

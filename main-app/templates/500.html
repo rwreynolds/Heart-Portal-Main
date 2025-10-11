@@ -1,211 +1,57 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Error - Heart Failure Portal</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-        }
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: #fecaca;
-        }
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-            top: 100%;
-            right: 0;
-        }
-        .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .dropdown-content a:hover {
-            background-color: #b91c1c;
-        }
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-        .dropdown-submenu {
-            position: relative;
-        }
-        .submenu-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .submenu-content {
-            display: none;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            background-color: #dc2626;
-            min-width: 200px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 5px;
-        }
-        .dropdown-submenu:hover .submenu-content {
-            display: block;
-        }
-        .submenu-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            border-radius: 5px;
-        }
-        .submenu-content a:hover {
-            background-color: #b91c1c;
-        }
-        .error-content {
-            text-align: center;
-            padding: 100px 0;
-            color: white;
-        }
-        .error-content h1 {
-            font-size: 6rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        .error-content h2 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-        .error-content p {
-            font-size: 1.2rem;
-            margin-bottom: 40px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-        }
-        .btn {
-            display: inline-block;
-            padding: 15px 30px;
-            background: white;
-            color: #667eea;
-            text-decoration: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            transition: all 0.3s;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .footer {
-            background: #333;
-            color: white;
-            text-align: center;
-            padding: 40px 0;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <div class="logo">❤️ Heart Portal</div>
-                <ul class="nav-links">
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/blog">Blog</a></li>
-                    <li class="dropdown">
-                        <a href="#">Tools</a>
-                        <div class="dropdown-content">
-                            <a href="{{ url_for('redirect_to_nutrition') }}">🔍 Nutrition Database</a>
-                            <a href="{{ url_for('redirect_to_foodbase') }}">🍎 Food Storage</a>
-                            <div class="dropdown-submenu">
-                                <a href="#" class="submenu-title">📊 Trackers ▶</a>
-                                <div class="submenu-content">
-                                    <a href="{{ url_for('redirect_to_sodium') }}">🧂 Sodium Tracker</a>
-                                    <a href="{{ url_for('redirect_to_fluid') }}">💧 Fluid Tracker</a>
-                                    <a href="{{ url_for('redirect_to_weight') }}">⚖️ Weight Tracker</a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    <li><a href="/about">About</a></li>
-                    <li><a href="/creator">Creator</a></li>
-                    <li><a href="/contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+{% extends "base.html" %}
 
-    <section class="error-content">
-        <div class="container">
-            <h1>500</h1>
-            <h2>Server Error</h2>
-            <p>Sorry, something went wrong on our end. Please try again later.</p>
-            <a href="/" class="btn">Return Home</a>
-        </div>
-    </section>
+{% block title %}Server Error - Heart Failure Portal{% endblock %}
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 Heart Failure Portal. Created to support heart health through better nutrition.</p>
-        </div>
-    </footer>
-</body>
-</html>
+{% block additional_css %}
+<style>
+    .error-content {
+        text-align: center;
+        padding: 100px 0;
+        min-height: calc(100vh - 200px);
+    }
+    .error-content h1 {
+        font-size: 6rem;
+        margin-bottom: 20px;
+        color: #dc2626;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .error-content h2 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: #2c3e50;
+    }
+    .error-content p {
+        font-size: 1.2rem;
+        margin-bottom: 40px;
+        color: #6c757d;
+    }
+    .btn {
+        display: inline-block;
+        padding: 15px 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        transition: all 0.3s;
+        font-weight: 600;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        text-decoration: none;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="error-content">
+    <div class="main-container">
+        <h1>500</h1>
+        <h2>Server Error</h2>
+        <p>Sorry, something went wrong on our end. Please try again later.</p>
+        <a href="{{ get_main_app_url() }}" class="btn">Return Home</a>
+    </div>
+</section>
+{% endblock %}

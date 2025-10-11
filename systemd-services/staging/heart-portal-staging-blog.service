@@ -1,0 +1,20 @@
+[Unit]
+Description=Heart Portal Blog Manager (Staging with Venv)
+After=network.target
+
+[Service]
+Type=simple
+User=heartportal
+WorkingDirectory=/opt/heart-portal-staging/Blog-Manager
+Environment="PATH=/opt/heart-portal-staging/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONPATH=/opt/heart-portal-staging"
+Environment="FLASK_APP=app.py"
+Environment="FLASK_PORT=5102"
+ExecStart=/opt/heart-portal-staging/venv/bin/python app.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

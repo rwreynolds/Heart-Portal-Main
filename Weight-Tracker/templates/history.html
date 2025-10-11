@@ -267,12 +267,6 @@
         <p>View your complete weight tracking record</p>
     </div>
 
-    <div class="actions">
-        <a href="{{ get_weight_url() }}add_entry" class="btn">📝 Record Weight</a>
-        <a href="{{ get_weight_url() }}set_goal" class="btn btn-secondary">🎯 Set Goal</a>
-        <a href="{{ get_weight_url() }}settings" class="btn btn-secondary">⚙️ Settings</a>
-    </div>
-
     {% if entries %}
         <!-- History Statistics -->
         <div class="history-stats">
@@ -369,6 +363,10 @@
                     {% endif %}
                 </div>
             {% endif %}
+        </div>
+
+        <div class="actions" style="margin-top: 20px;">
+            <a href="{{ get_weight_url() }}add_entry" class="btn">➕ Add Weight Entry</a>
         </div>
     {% else %}
         <div class="card">

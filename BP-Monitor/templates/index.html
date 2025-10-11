@@ -249,7 +249,7 @@
 
 {% block content %}
 <div class="main-container">
-    <div class="dashboard-header">
+    <div class="dashboard-header" style="padding-top: 20px !important;">
         <h1>🩺 Blood Pressure & Heart Rate Monitor</h1>
         <p>Track your blood pressure and heart rate together for complete cardiovascular monitoring</p>
     </div>
@@ -384,9 +384,6 @@
                         </div>
                     </div>
                 {% endfor %}
-            </div>
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="{{ get_bp_url() }}history" class="btn btn-secondary">📊 View All History</a>
             </div>
         </div>
     {% endif %}

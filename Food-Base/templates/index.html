@@ -4,6 +4,22 @@
 
 {% block additional_css %}
 <style>
+        /* Hero section styling */
+        .hero {
+            text-align: center;
+            padding: 60px 0 40px;
+            color: white;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
         /* Food-Base specific styles */
         .stats-cards {
             display: grid;
@@ -140,15 +156,25 @@
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: 1px solid #e5e5e7;
+            border: 2px solid #e5e5e7;
             overflow: hidden;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             cursor: pointer;
         }
 
         .food-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .food-card.selected {
+            border-color: #007aff;
+            background: #f0f8ff;
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3);
+        }
+
+        .food-card.selected .food-card-header {
+            background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
         }
 
         .food-card-header {
@@ -338,13 +364,15 @@
 {% endblock %}
 
 {% block content %}
+<section class="hero" style="padding-top: 20px !important;">
     <div class="main-container">
-        <!-- Header -->
-        <div style="text-align: center; margin-bottom: 40px; padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px;">
-            <h1 style="font-size: 2.5rem; margin-bottom: 12px; font-weight: 700;">🍎 Food Storage Base</h1>
-            <p style="font-size: 1.2rem; opacity: 0.95;">Manage your personal food database with nutritional information</p>
-        </div>
+        <h1>🍎 Food Storage Base</h1>
+        <p>Manage your personal food database with nutritional information</p>
+    </div>
+</section>
 
+<section style="background: white; padding: 80px 0;">
+    <div class="main-container">
         <!-- Statistics Dashboard -->
         <div class="stats-cards">
             <div class="stat-card">
@@ -400,7 +428,13 @@
                 <button onclick="searchFoods()" class="btn btn-primary">Search</button>
                 <button onclick="loadAllFoods()" class="btn btn-secondary">Show All</button>
                 <button onclick="refreshStats()" class="btn btn-success">Refresh Stats</button>
-                <button onclick="exportFoods()" class="btn btn-secondary">Export Data</button>
+            </div>
+
+            <div class="btn-group" style="margin-top: 10px;">
+                <button onclick="selectAllFoods()" class="btn btn-secondary">Select All</button>
+                <button onclick="deselectAllFoods()" class="btn btn-secondary">Deselect All</button>
+                <button onclick="showExportModal()" class="btn btn-success">📥 Export Selected</button>
+                <span id="selected-count" style="margin-left: 10px; font-weight: 600; color: #007aff;">0 selected</span>
             </div>
         </div>
 
@@ -436,6 +470,7 @@
         let currentPage = 1;
         let totalPages = 1;
         const itemsPerPage = 12;
+        let selectedFoodIds = new Set();
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -541,10 +576,18 @@
         // Create individual food card
         function createFoodCard(food) {
             const dataTypeBadge = getDataTypeBadge(food.data_type);
+            const isSelected = selectedFoodIds.has(food.id);
 
             return `
-                <div class="food-card" onclick="viewFoodDetails(${food.id})">
-                    <div class="food-card-header">
+                <div class="food-card ${isSelected ? 'selected' : ''}" onclick="viewFoodDetails(${food.id})" style="position: relative;">
+                    <div style="position: absolute; top: 10px; left: 10px; z-index: 10;">
+                        <input type="checkbox"
+                               id="checkbox-${food.id}"
+                               ${isSelected ? 'checked' : ''}
+                               onclick="event.stopPropagation(); toggleFoodSelection(${food.id})"
+                               style="width: 20px; height: 20px; cursor: pointer;">
+                    </div>
+                    <div class="food-card-header" style="padding-left: 40px;">
                         <div class="food-name">${food.name || 'Unknown Food'} ${dataTypeBadge}</div>
                         <div class="food-meta">
                             FDC ID: ${food.fdc_id} • Added: ${formatDate(food.date_added)}
@@ -963,9 +1006,195 @@
             }
         }
 
-        // Export foods (placeholder)
-        function exportFoods() {
-            showAlert('Export functionality coming soon!', 'info');
+        // Toggle food selection
+        function toggleFoodSelection(foodId) {
+            if (selectedFoodIds.has(foodId)) {
+                selectedFoodIds.delete(foodId);
+            } else {
+                selectedFoodIds.add(foodId);
+            }
+            updateSelectedCount();
+            displayFoods(currentFoods); // Refresh to show selection state
+        }
+
+        // Select all foods on current page
+        function selectAllFoods() {
+            currentFoods.forEach(food => selectedFoodIds.add(food.id));
+            updateSelectedCount();
+            displayFoods(currentFoods);
+        }
+
+        // Deselect all foods
+        function deselectAllFoods() {
+            selectedFoodIds.clear();
+            updateSelectedCount();
+            displayFoods(currentFoods);
+        }
+
+        // Update selected count display
+        function updateSelectedCount() {
+            const countElement = document.getElementById('selected-count');
+            const count = selectedFoodIds.size;
+            countElement.textContent = `${count} selected`;
+            countElement.style.color = count > 0 ? '#007aff' : '#666';
+        }
+
+        // Show export modal
+        function showExportModal() {
+            if (selectedFoodIds.size === 0) {
+                showAlert('Please select at least one food item to export', 'error');
+                return;
+            }
+
+            const modalHtml = `
+                <div id="export-modal" style="
+                    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                    background: rgba(0,0,0,0.7); z-index: 10000;
+                    display: flex; align-items: center; justify-content: center;
+                " onclick="closeExportModal()">
+                    <div style="
+                        background: white; padding: 30px; border-radius: 12px;
+                        max-width: 500px; width: 90%;
+                        box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+                    " onclick="event.stopPropagation()">
+                        <h2 style="margin: 0 0 20px 0; color: #333;">📥 Export Selected Foods</h2>
+                        <p style="color: #666; margin-bottom: 25px;">
+                            You have selected <strong>${selectedFoodIds.size}</strong> food item(s) for export.
+                        </p>
+
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
+                                Choose Export Format:
+                            </label>
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <button onclick="exportToCSV()" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1rem;">
+                                    📊 Export as CSV
+                                    <div style="font-size: 0.85rem; font-weight: normal; margin-top: 5px; opacity: 0.9;">
+                                        Spreadsheet format (Excel, Google Sheets)
+                                    </div>
+                                </button>
+                                <button onclick="exportToJSON()" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1rem;">
+                                    📄 Export as JSON
+                                    <div style="font-size: 0.85rem; font-weight: normal; margin-top: 5px; opacity: 0.9;">
+                                        Data format (backup, programming)
+                                    </div>
+                                </button>
+                                <button onclick="exportToPDF()" class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 1rem;">
+                                    📑 Export as PDF
+                                    <div style="font-size: 0.85rem; font-weight: normal; margin-top: 5px; opacity: 0.9;">
+                                        Printable document format
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button onclick="closeExportModal()" class="btn btn-secondary" style="width: 100%;">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        // Close export modal
+        function closeExportModal() {
+            const modal = document.getElementById('export-modal');
+            if (modal) modal.remove();
+        }
+
+        // Export to CSV
+        async function exportToCSV() {
+            try {
+                const selectedIds = Array.from(selectedFoodIds);
+                const response = await fetch('./api/export/csv', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_ids: selectedIds })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `food_storage_${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    closeExportModal();
+                    showAlert('CSV export successful!', 'success');
+                } else {
+                    showAlert('Export failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('CSV export error:', error);
+                showAlert('Export failed. Please try again.', 'error');
+            }
+        }
+
+        // Export to JSON
+        async function exportToJSON() {
+            try {
+                const selectedIds = Array.from(selectedFoodIds);
+                const response = await fetch('./api/export/json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_ids: selectedIds })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `food_storage_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    closeExportModal();
+                    showAlert('JSON export successful!', 'success');
+                } else {
+                    showAlert('Export failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('JSON export error:', error);
+                showAlert('Export failed. Please try again.', 'error');
+            }
+        }
+
+        // Export to PDF
+        async function exportToPDF() {
+            try {
+                const selectedIds = Array.from(selectedFoodIds);
+                const response = await fetch('./api/export/pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_ids: selectedIds })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `food_storage_${new Date().toISOString().split('T')[0]}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    closeExportModal();
+                    showAlert('PDF export successful!', 'success');
+                } else {
+                    showAlert('Export failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('PDF export error:', error);
+                showAlert('Export failed. Please try again.', 'error');
+            }
         }
 
         // Check API connections
@@ -1042,4 +1271,6 @@
             }
         });
     </script>
+    </div>
+</section>
 {% endblock %}

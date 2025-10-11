@@ -327,14 +327,14 @@ def admin_delete_user(user_id):
 @app.route('/admin/blog')
 @login_required
 def admin_blog():
-    """Blog post moderation - admin only"""
+    """Blog post moderation - redirect to Blog Manager admin"""
     current_user = get_current_user()
     if not current_user or not current_user.is_admin:
         flash('Admin access required.', 'error')
         return redirect(url_for('landing_page'))
 
-    pending_posts = get_pending_posts()
-    return render_template('admin/blog.html', posts=pending_posts)
+    # Redirect to Blog Manager's admin interface
+    return redirect(f"{get_blog_url()}admin")
 
 @app.route('/admin/blog/approve/<int:post_id>', methods=['POST'])
 @login_required

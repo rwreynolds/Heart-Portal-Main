@@ -10,11 +10,19 @@ from typing import List, Dict, Optional
 
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'blog.db')
 
+def get_db_connection():
+    """Create a database connection with optimized settings"""
+    conn = sqlite3.connect(DATABASE_PATH, timeout=30.0, check_same_thread=False)
+    conn.execute('PRAGMA journal_mode=WAL')  # Write-Ahead Logging for better concurrency
+    conn.execute('PRAGMA busy_timeout=30000')  # Wait up to 30 seconds if database is locked
+    conn.isolation_level = None  # Autocommit mode
+    return conn
+
 def init_blog_database():
     """Initialize the blog database with required tables"""
     os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
 
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Blog posts table
@@ -58,7 +66,7 @@ def create_slug(title: str) -> str:
 
 def get_published_posts(limit: int = 50, offset: int = 0) -> List[Dict]:
     """Get published public posts for public blog view"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -76,7 +84,7 @@ def get_published_posts(limit: int = 50, offset: int = 0) -> List[Dict]:
 
 def get_post_by_slug(slug: str) -> Optional[Dict]:
     """Get a specific published public post by slug"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
@@ -91,12 +99,12 @@ def get_post_by_slug(slug: str) -> Optional[Dict]:
 
 def get_user_posts(author_id: int, limit: int = 50) -> List[Dict]:
     """Get all posts by a specific user (private and public)"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute('''
-        SELECT id, title, status, visibility, excerpt, created_at, updated_at, slug
+        SELECT id, title, status, visibility, excerpt, content, tags, review_notes, created_at, updated_at, slug
         FROM blog_posts
         WHERE author_id = ?
         ORDER BY updated_at DESC
@@ -109,12 +117,12 @@ def get_user_posts(author_id: int, limit: int = 50) -> List[Dict]:
 
 def get_pending_posts() -> List[Dict]:
     """Get posts pending review for admin interface"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
     cursor.execute('''
-        SELECT id, title, author_name, excerpt, created_at, updated_at, slug
+        SELECT id, title, author_name, excerpt, content, tags, created_at, updated_at, slug
         FROM blog_posts
         WHERE status = 'pending_review' AND visibility = 'public'
         ORDER BY updated_at ASC
@@ -127,7 +135,7 @@ def get_pending_posts() -> List[Dict]:
 def create_post(title: str, content: str, author_id: int, author_name: str,
                excerpt: str = '', visibility: str = 'private', tags: str = '') -> int:
     """Create a new blog post"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     slug = create_slug(title)
@@ -159,58 +167,83 @@ def create_post(title: str, content: str, author_id: int, author_name: str,
 def update_post(post_id: int, title: str = None, content: str = None,
                excerpt: str = None, visibility: str = None, tags: str = None) -> bool:
     """Update an existing post"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-    # Build update query dynamically
-    updates = []
-    params = []
+        # Build update query dynamically
+        updates = []
+        params = []
 
-    if title is not None:
-        updates.append('title = ?')
-        params.append(title)
-        # Update slug if title changes
-        updates.append('slug = ?')
-        params.append(create_slug(title))
+        if title is not None:
+            # Check if title actually changed to avoid slug conflict
+            cursor.execute('SELECT title FROM blog_posts WHERE id = ?', (post_id,))
+            current_title = cursor.fetchone()
 
-    if content is not None:
-        updates.append('content = ?')
-        params.append(content)
+            updates.append('title = ?')
+            params.append(title)
 
-    if excerpt is not None:
-        updates.append('excerpt = ?')
-        params.append(excerpt)
+            # Only update slug if title actually changed
+            if current_title and current_title[0] != title:
+                new_slug = create_slug(title)
+                # Ensure unique slug
+                base_slug = new_slug
+                counter = 1
+                while True:
+                    cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = ? AND id != ?', (new_slug, post_id))
+                    if cursor.fetchone()[0] == 0:
+                        break
+                    new_slug = f"{base_slug}-{counter}"
+                    counter += 1
 
-    if visibility is not None:
-        updates.append('visibility = ?')
-        params.append(visibility)
-        # If changing to public, set status to pending_review
-        if visibility == 'public':
-            updates.append('status = ?')
-            params.append('pending_review')
+                updates.append('slug = ?')
+                params.append(new_slug)
 
-    if tags is not None:
-        updates.append('tags = ?')
-        params.append(tags)
+        if content is not None:
+            updates.append('content = ?')
+            params.append(content)
 
-    if updates:
-        updates.append('updated_at = ?')
-        params.append(datetime.now().isoformat())
-        params.append(post_id)
+        if excerpt is not None:
+            updates.append('excerpt = ?')
+            params.append(excerpt)
 
-        query = f"UPDATE blog_posts SET {', '.join(updates)} WHERE id = ?"
-        cursor.execute(query, params)
-        success = cursor.rowcount > 0
-        conn.commit()
-        conn.close()
-        return success
+        if visibility is not None:
+            updates.append('visibility = ?')
+            params.append(visibility)
 
-    conn.close()
-    return False
+            # Update status based on visibility change
+            if visibility == 'public':
+                # Changing to public: set status to pending_review (needs admin approval)
+                updates.append('status = ?')
+                params.append('pending_review')
+            elif visibility == 'private':
+                # Changing to private: reset status to draft (no review needed)
+                updates.append('status = ?')
+                params.append('draft')
+
+        if tags is not None:
+            updates.append('tags = ?')
+            params.append(tags)
+
+        if updates:
+            updates.append('updated_at = ?')
+            params.append(datetime.now().isoformat())
+            params.append(post_id)
+
+            query = f"UPDATE blog_posts SET {', '.join(updates)} WHERE id = ?"
+            cursor.execute(query, params)
+            success = cursor.rowcount > 0
+            return success
+
+        return False
+    finally:
+        if conn:
+            conn.close()
 
 def approve_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
     """Approve a pending post (admin function)"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     now = datetime.now().isoformat()
@@ -227,7 +260,7 @@ def approve_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool
 
 def reject_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
     """Reject a pending post (admin function)"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute('''
@@ -243,7 +276,7 @@ def reject_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
 
 def delete_post(post_id: int, author_id: int = None) -> bool:
     """Delete a post (only by author or admin)"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     if author_id:
@@ -260,7 +293,7 @@ def delete_post(post_id: int, author_id: int = None) -> bool:
 
 def migrate_sample_posts():
     """Migrate existing sample posts to database (one-time migration)"""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Check if we already have posts

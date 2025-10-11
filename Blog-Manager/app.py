@@ -157,7 +157,7 @@ def edit_post(post_id):
 
     if not post:
         flash('Post not found or access denied.', 'error')
-        return redirect('/dashboard')
+        return redirect(f"{get_blog_url()}dashboard")
 
     if request.method == 'POST':
         title = request.form.get('title')
@@ -182,7 +182,7 @@ def edit_post(post_id):
         else:
             flash('Failed to update post.', 'error')
 
-        return redirect('/dashboard')
+        return redirect(f"{get_blog_url()}dashboard")
 
     return render_template('edit_post.html', post=post)
 

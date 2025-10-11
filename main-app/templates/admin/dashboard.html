@@ -239,21 +239,6 @@
         <div class="admin-badge">👑 Site Administrator</div>
     </div>
 
-    <nav class="admin-nav">
-        <a href="{{ url_for('admin_dashboard') }}" class="nav-card active">
-            <span class="nav-icon">📊</span>
-            <h3 class="nav-title">Dashboard</h3>
-        </a>
-        <a href="{{ url_for('admin_users') }}" class="nav-card">
-            <span class="nav-icon">👥</span>
-            <h3 class="nav-title">User Management</h3>
-        </a>
-        <a href="{{ url_for('admin_blog') }}" class="nav-card">
-            <span class="nav-icon">📝</span>
-            <h3 class="nav-title">Blog Moderation</h3>
-        </a>
-    </nav>
-
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-number">{{ stats.total_users }}</div>
@@ -279,18 +264,15 @@
             Quick Actions
         </h2>
 
-        <div class="quick-actions">
+        <div class="quick-actions" style="justify-content: center;">
             <a href="{{ url_for('admin_users') }}" class="action-button">
                 👥 Manage Users
             </a>
-            <a href="{{ url_for('admin_blog') }}" class="action-button">
+            <a href="{{ get_blog_url() }}admin" class="action-button">
                 📝 Review Blog Posts
             </a>
-            <a href="{{ get_blog_url() }}" class="action-button" target="_blank">
+            <a href="{{ get_blog_url() }}" class="action-button">
                 🌐 View Public Blog
-            </a>
-            <a href="{{ url_for('dashboard') }}" class="action-button">
-                👤 User Dashboard
             </a>
         </div>
 
