@@ -5,6 +5,9 @@
 # API configuration (may contain sensitive data)
 api_config.json
 
+# Sensitive installation scripts (contain passwords or should not be in repo)
+scripts/install-postgres-staging.sh
+
 # Database files (local data should not be deployed)
 *.db
 *.sqlite
