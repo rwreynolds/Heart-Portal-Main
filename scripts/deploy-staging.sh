@@ -9,7 +9,7 @@ set -e  # Exit on any error
 SERVER_HOST="129.212.181.161"
 SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
 STAGING_DIR="/opt/heart-portal-staging"
-BRANCH="multiuser-auth"
+BRANCH="${BRANCH:-multiuser-auth}"  # Default to multiuser-auth if not specified
 
 # Colors for output
 RED='\033[0;31m'
@@ -58,6 +58,58 @@ check_environment() {
     success "Environment check passed - you're working locally"
 }
 
+# Select branch for deployment
+select_branch() {
+    # If branch already specified via env var, use it
+    if [ "$BRANCH" != "multiuser-auth" ]; then
+        log "Using specified branch: $BRANCH"
+        return 0
+    fi
+
+    log "Fetching available branches..."
+    git fetch --all --quiet
+
+    # Get list of all branches (local and remote)
+    branches=($(git branch -a | sed 's/remotes\/origin\///' | sed 's/^[* ]*//' | grep -v 'HEAD' | sort -u))
+
+    echo
+    echo "Available branches:"
+    echo "─────────────────────────────────────"
+    for i in "${!branches[@]}"; do
+        current_branch=$(git branch --show-current)
+        if [ "${branches[$i]}" == "$current_branch" ]; then
+            echo "  $((i+1))) ${branches[$i]} ⭐ (current)"
+        else
+            echo "  $((i+1))) ${branches[$i]}"
+        fi
+    done
+    echo "─────────────────────────────────────"
+    echo
+
+    # Prompt for branch selection
+    while true; do
+        read -p "Select branch number to deploy to staging (default: multiuser-auth): " branch_num
+
+        # Default to multiuser-auth if empty
+        if [ -z "$branch_num" ]; then
+            BRANCH="multiuser-auth"
+            success "Using default branch: multiuser-auth"
+            break
+        fi
+
+        # Validate input
+        if ! [[ "$branch_num" =~ ^[0-9]+$ ]] || [ "$branch_num" -lt 1 ] || [ "$branch_num" -gt "${#branches[@]}" ]; then
+            error "Invalid selection. Please enter a number between 1 and ${#branches[@]}"
+            continue
+        fi
+
+        # Set the selected branch
+        BRANCH="${branches[$((branch_num-1))]}"
+        success "Selected branch: $BRANCH"
+        break
+    done
+}
+
 # Commit any uncommitted changes
 commit_changes_if_needed() {
     log "Checking for uncommitted changes..."
@@ -83,16 +135,19 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
     fi
 }
 
-# Push multiuser-auth branch to GitHub if needed
+# Push selected branch to GitHub if needed
 push_branch_to_github() {
-    log "Checking multiuser-auth branch status..."
+    log "Checking $BRANCH branch status..."
 
-    # Ensure we're on the multiuser-auth branch
+    # Get current branch
     current_branch=$(git branch --show-current)
+
+    # If deploying a different branch than current, warn and skip push
     if [ "$current_branch" != "$BRANCH" ]; then
-        error "You're on branch '$current_branch' but need to be on '$BRANCH'"
-        echo "Run: git checkout $BRANCH"
-        return 1
+        warning "Current branch ($current_branch) differs from deploy branch ($BRANCH)"
+        warning "Will deploy $BRANCH as-is from remote"
+        warning "Make sure $BRANCH is pushed to GitHub!"
+        return 0
     fi
 
     # Check if branch is pushed
@@ -408,6 +463,9 @@ main() {
         exit 1
     fi
 
+    # Select branch to deploy
+    select_branch
+
     # Commit any uncommitted changes first
     if ! commit_changes_if_needed; then
         exit 1
@@ -423,6 +481,8 @@ main() {
 
     echo
     success "Staging deployment completed! 🎉"
+    echo
+    echo "📦 Deployed branch: $BRANCH"
     echo
     echo "🔧 Testing URLs:"
     echo "🌐 Staging Site: https://heartfailureportal.com:8081"
@@ -445,10 +505,19 @@ case "${1:-}" in
         echo
         echo "Commands:"
         echo "  help        Show this help message"
-        echo "  (no args)   Deploy multiuser-auth branch to staging"
+        echo "  (no args)   Deploy to staging (will prompt for branch)"
+        echo
+        echo "Environment Variables:"
+        echo "  BRANCH=branchname  Specify branch to deploy (default: multiuser-auth)"
+        echo
+        echo "Examples:"
+        echo "  ./deploy-staging.sh                    # Interactive branch selection"
+        echo "  BRANCH=main ./deploy-staging.sh        # Deploy main branch"
+        echo "  BRANCH=feature-x ./deploy-staging.sh   # Deploy feature-x branch"
         echo
         echo "This script will:"
-        echo "1. Push multiuser-auth branch to GitHub"
+        echo "1. Prompt you to select a branch (or use BRANCH env var)"
+        echo "2. Push selected branch to GitHub"
         echo "2. Create staging environment at /opt/heart-portal-staging"
         echo "3. Set up separate systemd services (heart-portal-staging-*)"
         echo "4. Configure nginx on port 8081"

@@ -9,6 +9,7 @@ SERVER_HOST="129.212.181.161"
 SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
 PROJECT_DIR="/opt/heart-portal"
 DEPLOY_TARGET="${DEPLOY_TARGET:-production}"  # production or staging
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"  # Git branch to deploy
 
 # Colors for output
 RED='\033[0;31m'
@@ -60,6 +61,64 @@ check_environment() {
     success "Environment check passed - you're working locally"
 }
 
+# Select branch for deployment
+select_branch() {
+    # Only prompt for staging deployments
+    if [ "$DEPLOY_TARGET" != "staging" ]; then
+        DEPLOY_BRANCH="main"
+        return 0
+    fi
+
+    # If branch already specified via env var, use it
+    if [ "$DEPLOY_BRANCH" != "main" ]; then
+        log "Using specified branch: $DEPLOY_BRANCH"
+        return 0
+    fi
+
+    log "Fetching available branches..."
+    git fetch --all --quiet
+
+    # Get list of all branches (local and remote)
+    branches=($(git branch -a | sed 's/remotes\/origin\///' | sed 's/^[* ]*//' | grep -v 'HEAD' | sort -u))
+
+    echo
+    echo "Available branches:"
+    echo "─────────────────────────────────────"
+    for i in "${!branches[@]}"; do
+        current_branch=$(git branch --show-current)
+        if [ "${branches[$i]}" == "$current_branch" ]; then
+            echo "  $((i+1))) ${branches[$i]} ⭐ (current)"
+        else
+            echo "  $((i+1))) ${branches[$i]}"
+        fi
+    done
+    echo "─────────────────────────────────────"
+    echo
+
+    # Prompt for branch selection
+    while true; do
+        read -p "Select branch number to deploy to staging (default: main): " branch_num
+
+        # Default to main if empty
+        if [ -z "$branch_num" ]; then
+            DEPLOY_BRANCH="main"
+            success "Using default branch: main"
+            break
+        fi
+
+        # Validate input
+        if ! [[ "$branch_num" =~ ^[0-9]+$ ]] || [ "$branch_num" -lt 1 ] || [ "$branch_num" -gt "${#branches[@]}" ]; then
+            error "Invalid selection. Please enter a number between 1 and ${#branches[@]}"
+            continue
+        fi
+
+        # Set the selected branch
+        DEPLOY_BRANCH="${branches[$((branch_num-1))]}"
+        success "Selected branch: $DEPLOY_BRANCH"
+        break
+    done
+}
+
 # Check if there are uncommitted changes and handle auto-commit
 check_git_status() {
     log "Checking git status..."
@@ -97,7 +156,17 @@ check_git_status() {
 
 # Push to GitHub
 push_to_github() {
-    log "Pushing to GitHub repository..."
+    log "Pushing to GitHub repository (branch: $DEPLOY_BRANCH)..."
+
+    # Get current branch
+    current_branch=$(git branch --show-current)
+
+    # If deploying a different branch than current, warn user
+    if [ "$current_branch" != "$DEPLOY_BRANCH" ]; then
+        warning "Current branch ($current_branch) differs from deploy branch ($DEPLOY_BRANCH)"
+        warning "Will push $DEPLOY_BRANCH as-is from remote"
+        return 0
+    fi
 
     # Check if we're ahead of origin
     LOCAL_COMMITS=$(git rev-list HEAD --not --remotes=origin | wc -l)
@@ -105,7 +174,7 @@ push_to_github() {
         warning "No new commits to push"
     else
         success "Pushing $LOCAL_COMMITS new commit(s) to GitHub"
-        git push origin main
+        git push origin "$DEPLOY_BRANCH"
     fi
 }
 
@@ -121,7 +190,7 @@ deploy_to_server() {
 
     # Execute deployment on server
     ssh -o BatchMode=yes -o ConnectTimeout=10 -i "$SSH_KEY" heartportal@"$SERVER_HOST" \
-        "cd /opt/heart-portal && DEPLOY_TARGET=$DEPLOY_TARGET ./scripts/deploy-venv.sh server"
+        "cd /opt/heart-portal && DEPLOY_TARGET=$DEPLOY_TARGET DEPLOY_BRANCH=$DEPLOY_BRANCH ./scripts/deploy-venv.sh server"
 }
 
 # Server-side deployment process (runs on production server)
@@ -131,9 +200,15 @@ server_deploy() {
     echo "========================================"
     echo
 
-    log "Pulling latest changes from GitHub..."
+    log "Pulling latest changes from GitHub (branch: $DEPLOY_BRANCH)..."
     cd /opt/heart-portal
-    git pull origin main
+
+    # Fetch all branches
+    git fetch --all
+
+    # Checkout and pull the specified branch
+    git checkout "$DEPLOY_BRANCH"
+    git pull origin "$DEPLOY_BRANCH"
 
     # Determine target directory based on actual server structure
     if [ "$DEPLOY_TARGET" == "staging" ]; then
@@ -262,6 +337,9 @@ main() {
     if ! check_environment; then
         exit 1
     fi
+
+    # Select branch (for staging deployments)
+    select_branch
 
     # Check git status
     if ! check_git_status; then
