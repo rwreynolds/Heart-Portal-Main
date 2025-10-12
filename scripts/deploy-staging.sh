@@ -272,6 +272,7 @@ SERVICES[blog]="Blog-Manager:5008"
 SERVICES[sodium]="Sodium-Tracker:5009"
 SERVICES[fluid]="Fluid-Tracker:5010"
 SERVICES[weight]="Weight-Tracker:5011"
+SERVICES[bp]="BP-Monitor:5012"
 
 for service in "${!SERVICES[@]}"; do
     IFS=':' read -r dir port <<< "${SERVICES[$service]}"
@@ -303,7 +304,7 @@ done
 
 # Create virtual environments and install dependencies
 echo "Setting up virtual environments..."
-for app_dir in main-app Nutrition-Database Food-Base Blog-Manager Sodium-Tracker Fluid-Tracker Weight-Tracker; do
+for app_dir in main-app Nutrition-Database Food-Base Blog-Manager Sodium-Tracker Fluid-Tracker Weight-Tracker BP-Monitor; do
     if [ -d "$STAGING_DIR/$app_dir" ]; then
         echo "Setting up $app_dir..."
         cd "$STAGING_DIR/$app_dir"
@@ -330,7 +331,7 @@ sudo systemctl stop heart-portal-staging-* 2>/dev/null || true
 
 # Start staging services
 echo "Starting staging services..."
-for service in main nutrition food blog sodium fluid weight; do
+for service in main nutrition food blog sodium fluid weight bp; do
     sudo systemctl start heart-portal-staging-$service
     sudo systemctl enable heart-portal-staging-$service
     echo "✅ Started heart-portal-staging-$service"
@@ -342,7 +343,7 @@ sleep 5
 # Check service status
 echo "Checking staging service status..."
 failed_services=""
-for service in main nutrition food blog sodium fluid weight; do
+for service in main nutrition food blog sodium fluid weight bp; do
     if ! sudo systemctl is-active --quiet heart-portal-staging-$service; then
         failed_services="$failed_services heart-portal-staging-$service"
     fi
@@ -414,6 +415,14 @@ server {
 
     location /weight/ {
         proxy_pass http://localhost:5011/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /bp-monitor/ {
+        proxy_pass http://localhost:5012/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
