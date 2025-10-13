@@ -6,7 +6,6 @@ Tracks daily sodium intake for heart failure patients
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 import os
 import sys
-import sqlite3
 from datetime import datetime, date
 import json
 from dotenv import load_dotenv
@@ -24,6 +23,9 @@ from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url, is_reverse_proxy_mode
 )
+
+# Import database functions
+import database as db
 
 app = Flask(__name__)
 # Shared secret key for cross-application session compatibility
@@ -43,9 +45,6 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
 
-# Database configuration
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'sodium_tracker.db')
-
 # URL helpers are now imported from shared module
 
 # Make URL functions available in templates
@@ -62,107 +61,35 @@ app.jinja_env.globals.update(
 )
 
 def init_database():
-    """Initialize the SQLite database"""
-    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+    """Initialize the database and set default settings"""
+    db.init_sodium_database()
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    # Create sodium_entries table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS sodium_entries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            food_item TEXT NOT NULL,
-            sodium_mg INTEGER NOT NULL,
-            serving_size TEXT,
-            meal_type TEXT,
-            notes TEXT,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    ''')
-
-    # Create daily_goals table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS daily_goals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL UNIQUE,
-            target_mg INTEGER NOT NULL DEFAULT 2300,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    ''')
-
-    # Create user_settings table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user_settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            setting_name TEXT NOT NULL UNIQUE,
-            setting_value TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    ''')
-
-    # Insert default settings
-    cursor.execute('''
-        INSERT OR IGNORE INTO user_settings (setting_name, setting_value, updated_at)
-        VALUES ('default_daily_goal', '2300', ?)
-    ''', (datetime.now().isoformat(),))
-
-    cursor.execute('''
-        INSERT OR IGNORE INTO user_settings (setting_name, setting_value, updated_at)
-        VALUES ('alert_threshold', '80', ?)
-    ''', (datetime.now().isoformat(),))
-
-    conn.commit()
-    conn.close()
+    # Insert default settings if they don't exist
+    settings = db.get_all_settings()
+    if 'default_daily_goal' not in settings:
+        db.update_setting('default_daily_goal', '2300')
+    if 'alert_threshold' not in settings:
+        db.update_setting('alert_threshold', '80')
 
 def get_daily_intake(target_date=None):
     """Get total sodium intake for a specific date"""
     if target_date is None:
         target_date = date.today().isoformat()
-
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT SUM(sodium_mg) FROM sodium_entries WHERE date = ?
-    ''', (target_date,))
-
-    result = cursor.fetchone()
-    conn.close()
-
-    return result[0] or 0
+    return db.get_daily_total(target_date)
 
 def get_daily_goal(target_date=None):
     """Get daily sodium goal for a specific date"""
     if target_date is None:
         target_date = date.today().isoformat()
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
     # Try to get specific goal for the date
-    cursor.execute('''
-        SELECT target_mg FROM daily_goals WHERE date = ?
-    ''', (target_date,))
-
-    result = cursor.fetchone()
-
-    if result:
-        conn.close()
-        return result[0]
+    goal = db.get_daily_goal(target_date)
+    if goal:
+        return int(goal)
 
     # Fall back to default goal
-    cursor.execute('''
-        SELECT setting_value FROM user_settings WHERE setting_name = 'default_daily_goal'
-    ''', )
-
-    result = cursor.fetchone()
-    conn.close()
-
-    return int(result[0]) if result else 2300
+    default_goal = db.get_default_daily_goal()
+    return int(default_goal)
 
 @app.route('/')
 def index():
@@ -183,30 +110,7 @@ def index():
     percentage = (daily_intake / daily_goal * 100) if daily_goal > 0 else 0
 
     # Get recent entries
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT * FROM sodium_entries
-        WHERE date = ?
-        ORDER BY created_at DESC
-        LIMIT 10
-    ''', (today_str,))
-
-    entries = []
-    for row in cursor.fetchall():
-        entries.append({
-            'id': row[0],
-            'date': row[1],
-            'food_item': row[2],
-            'sodium_mg': row[3],
-            'serving_size': row[4],
-            'meal_type': row[5],
-            'notes': row[6],
-            'created_at': row[7]
-        })
-
-    conn.close()
+    entries = db.get_entries(date=today_str, limit=10)
 
     return render_template('index.html',
                          daily_intake=daily_intake,
@@ -231,27 +135,14 @@ def add_entry():
         data = request.form
         entry_date = data.get('date', date.today().isoformat())
 
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-
-        now = datetime.now().isoformat()
-        cursor.execute('''
-            INSERT INTO sodium_entries
-            (date, food_item, sodium_mg, serving_size, meal_type, notes, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            entry_date,
-            data.get('food_item'),
-            int(data.get('sodium_mg', 0)),
-            data.get('serving_size'),
-            data.get('meal_type'),
-            data.get('notes', ''),
-            now,
-            now
-        ))
-
-        conn.commit()
-        conn.close()
+        db.add_entry(
+            date=entry_date,
+            food_name=data.get('food_item'),
+            sodium_mg=float(data.get('sodium_mg', 0)),
+            serving_size=data.get('serving_size', ''),
+            meal_type=data.get('meal_type', ''),
+            notes=data.get('notes', '')
+        )
 
         return redirect(url_for('index'))
 
@@ -274,22 +165,13 @@ def history():
     per_page = 50
     offset = (page - 1) * per_page
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT date, SUM(sodium_mg) as total_sodium, COUNT(*) as entry_count
-        FROM sodium_entries
-        GROUP BY date
-        ORDER BY date DESC
-        LIMIT ? OFFSET ?
-    ''', (per_page, offset))
+    summaries = db.get_daily_summaries(limit=per_page, offset=offset)
 
     daily_summaries = []
-    for row in cursor.fetchall():
-        entry_date = row[0]
-        total_sodium = row[1]
-        entry_count = row[2]
+    for summary in summaries:
+        entry_date = summary['date']
+        total_sodium = summary['total_sodium']
+        entry_count = summary['entry_count']
         daily_goal = get_daily_goal(entry_date)
         percentage = (total_sodium / daily_goal * 100) if daily_goal > 0 else 0
 
@@ -300,8 +182,6 @@ def history():
             'daily_goal': daily_goal,
             'percentage': round(percentage, 1)
         })
-
-    conn.close()
 
     return render_template('history.html',
                          daily_summaries=daily_summaries,
@@ -323,35 +203,13 @@ def settings():
         default_goal = request.form.get('default_daily_goal', 2300)
         alert_threshold = request.form.get('alert_threshold', 80)
 
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-
-        now = datetime.now().isoformat()
-
-        cursor.execute('''
-            UPDATE user_settings
-            SET setting_value = ?, updated_at = ?
-            WHERE setting_name = 'default_daily_goal'
-        ''', (default_goal, now))
-
-        cursor.execute('''
-            UPDATE user_settings
-            SET setting_value = ?, updated_at = ?
-            WHERE setting_name = 'alert_threshold'
-        ''', (alert_threshold, now))
-
-        conn.commit()
-        conn.close()
+        db.update_setting('default_daily_goal', str(default_goal))
+        db.update_setting('alert_threshold', str(alert_threshold))
 
         return redirect(url_for('index'))
 
     # Get current settings
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('SELECT setting_name, setting_value FROM user_settings')
-    settings_data = dict(cursor.fetchall())
-    conn.close()
+    settings_data = db.get_all_settings()
 
     return render_template('settings.html',
                          settings=settings_data,
@@ -381,13 +239,7 @@ def delete_entry(entry_id):
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('DELETE FROM sodium_entries WHERE id = ?', (entry_id,))
-    conn.commit()
-    conn.close()
-
+    db.delete_entry(entry_id)
     return redirect(url_for('index'))
 
 # Redirect routes for inter-component navigation
