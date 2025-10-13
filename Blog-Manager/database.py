@@ -69,6 +69,25 @@ def dict_cursor(conn):
         return conn.cursor()
 
 
+def normalize_row(row) -> Dict:
+    """
+    Convert database row to dictionary with normalized datetime fields
+    PostgreSQL returns datetime objects, SQLite returns strings
+    """
+    if row is None:
+        return None
+
+    result = dict(row)
+
+    # Convert datetime objects to ISO format strings for PostgreSQL
+    if DATABASE_TYPE == 'postgresql':
+        for key, value in result.items():
+            if isinstance(value, datetime):
+                result[key] = value.isoformat()
+
+    return result
+
+
 def init_blog_database():
     """Initialize the blog database with required tables"""
     if DATABASE_TYPE == 'sqlite':
@@ -165,7 +184,7 @@ def get_published_posts(limit: int = 50, offset: int = 0) -> List[Dict]:
             LIMIT ? OFFSET ?
         ''', ('published', 'public', limit, offset))
 
-    posts = [dict(row) for row in cursor.fetchall()]
+    posts = [normalize_row(row) for row in cursor.fetchall()]
     release_connection(conn)
     return posts
 
@@ -188,7 +207,7 @@ def get_post_by_slug(slug: str) -> Optional[Dict]:
 
     post = cursor.fetchone()
     release_connection(conn)
-    return dict(post) if post else None
+    return normalize_row(post) if post else None
 
 
 def get_user_posts(author_id: int, limit: int = 50) -> List[Dict]:
@@ -213,7 +232,7 @@ def get_user_posts(author_id: int, limit: int = 50) -> List[Dict]:
             LIMIT ?
         ''', (author_id, limit))
 
-    posts = [dict(row) for row in cursor.fetchall()]
+    posts = [normalize_row(row) for row in cursor.fetchall()]
     release_connection(conn)
     return posts
 
@@ -238,7 +257,7 @@ def get_pending_posts() -> List[Dict]:
             ORDER BY updated_at ASC
         ''', ('pending_review', 'public'))
 
-    posts = [dict(row) for row in cursor.fetchall()]
+    posts = [normalize_row(row) for row in cursor.fetchall()]
     release_connection(conn)
     return posts
 
