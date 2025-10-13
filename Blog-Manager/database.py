@@ -1,154 +1,77 @@
 """
 Blog Database Management for Heart Portal
 Handles blog posts, user authoring, and moderation workflow
-Supports both SQLite (local dev) and PostgreSQL (staging/production)
+Uses shared database module for SQLite/PostgreSQL support
 """
 
 import os
+import sys
 from datetime import datetime
 from typing import List, Dict, Optional
 
-# Check which database to use
-DATABASE_TYPE = os.getenv('DATABASE_TYPE', 'sqlite').lower()
+# Add shared module to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from shared.database import create_db_config
 
-if DATABASE_TYPE == 'postgresql':
-    import psycopg2
-    import psycopg2.extras
-    from psycopg2 import pool
+# Initialize database configuration for blog
+_db_config = create_db_config(
+    app_name='blog',
+    db_name='heart_portal_staging_blog',
+    sqlite_path=os.path.join(os.path.dirname(__file__), 'database', 'blog.db')
+)
 
-    # PostgreSQL connection pool
-    DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://heartportal:password@localhost:5432/heart_portal_staging_blog')
-    connection_pool = None
+# Convenience wrappers
+def get_db_connection():
+    """Get database connection"""
+    return _db_config.get_connection()
 
-    def init_connection_pool():
-        """Initialize PostgreSQL connection pool"""
-        global connection_pool
-        if connection_pool is None:
-            connection_pool = psycopg2.pool.SimpleConnectionPool(
-                1, 20,  # min and max connections
-                DATABASE_URL
-            )
-
-    def get_db_connection():
-        """Create a PostgreSQL database connection"""
-        init_connection_pool()
-        conn = connection_pool.getconn()
-        conn.autocommit = True
-        return conn
-
-    def release_connection(conn):
-        """Release connection back to pool"""
-        if connection_pool:
-            connection_pool.putconn(conn)
-
-else:
-    # SQLite
-    import sqlite3
-
-    DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'blog.db')
-
-    def get_db_connection():
-        """Create a SQLite database connection with optimized settings"""
-        conn = sqlite3.connect(DATABASE_PATH, timeout=30.0, check_same_thread=False)
-        conn.execute('PRAGMA journal_mode=WAL')  # Write-Ahead Logging for better concurrency
-        conn.execute('PRAGMA busy_timeout=30000')  # Wait up to 30 seconds if database is locked
-        conn.isolation_level = None  # Autocommit mode
-        return conn
-
-    def release_connection(conn):
-        """Close SQLite connection"""
-        conn.close()
-
+def release_connection(conn):
+    """Release database connection"""
+    _db_config.release_connection(conn)
 
 def dict_cursor(conn):
-    """Get a cursor that returns rows as dictionaries"""
-    if DATABASE_TYPE == 'postgresql':
-        return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    else:
-        conn.row_factory = sqlite3.Row
-        return conn.cursor()
+    """Get dictionary cursor"""
+    return _db_config.dict_cursor(conn)
 
-
-def normalize_row(row) -> Dict:
-    """
-    Convert database row to dictionary with normalized datetime fields
-    PostgreSQL returns datetime objects, SQLite returns strings
-    """
-    if row is None:
-        return None
-
-    result = dict(row)
-
-    # Convert datetime objects to ISO format strings for PostgreSQL
-    if DATABASE_TYPE == 'postgresql':
-        for key, value in result.items():
-            if isinstance(value, datetime):
-                result[key] = value.isoformat()
-
-    return result
+def normalize_row(row):
+    """Normalize row data"""
+    return _db_config.normalize_row(row)
 
 
 def init_blog_database():
     """Initialize the blog database with required tables"""
-    if DATABASE_TYPE == 'sqlite':
-        os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
-
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    if DATABASE_TYPE == 'postgresql':
-        # PostgreSQL table creation
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS blog_posts (
-                id SERIAL PRIMARY KEY,
-                title TEXT NOT NULL,
-                content TEXT NOT NULL,
-                author_id INTEGER NOT NULL,
-                author_name TEXT NOT NULL,
-                status TEXT DEFAULT 'draft',
-                visibility TEXT DEFAULT 'private',
-                slug TEXT UNIQUE,
-                excerpt TEXT,
-                featured_image TEXT,
-                tags TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                published_at TIMESTAMP,
-                reviewer_id INTEGER,
-                review_notes TEXT
-            )
-        ''')
-    else:
-        # SQLite table creation
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS blog_posts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                content TEXT NOT NULL,
-                author_id INTEGER NOT NULL,
-                author_name TEXT NOT NULL,
-                status TEXT DEFAULT 'draft',
-                visibility TEXT DEFAULT 'private',
-                slug TEXT UNIQUE,
-                excerpt TEXT,
-                featured_image TEXT,
-                tags TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                published_at TIMESTAMP,
-                reviewer_id INTEGER,
-                review_notes TEXT
-            )
-        ''')
+    # Table creation with database-appropriate syntax
+    autoincrement = _db_config.get_autoincrement_syntax()
+
+    cursor.execute(f'''
+        CREATE TABLE IF NOT EXISTS blog_posts (
+            id {autoincrement},
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            author_id INTEGER NOT NULL,
+            author_name TEXT NOT NULL,
+            status TEXT DEFAULT 'draft',
+            visibility TEXT DEFAULT 'private',
+            slug TEXT UNIQUE,
+            excerpt TEXT,
+            featured_image TEXT,
+            tags TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            published_at TIMESTAMP,
+            reviewer_id INTEGER,
+            review_notes TEXT
+        )
+    ''')
 
     # Create indexes for better performance
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_posts_status ON blog_posts (status)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_posts_visibility ON blog_posts (visibility)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_posts_author ON blog_posts (author_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_posts_published ON blog_posts (published_at)')
-
-    if DATABASE_TYPE == 'sqlite':
-        conn.commit()
 
     release_connection(conn)
 
@@ -165,25 +88,16 @@ def create_slug(title: str) -> str:
 def get_published_posts(limit: int = 50, offset: int = 0) -> List[Dict]:
     """Get published public posts for public blog view"""
     conn = get_db_connection()
-    cursor = dict_cursor(conn)
 
-    if DATABASE_TYPE == 'postgresql':
-        cursor.execute('''
-            SELECT id, title, excerpt, author_name, published_at, slug, tags
-            FROM blog_posts
-            WHERE status = %s AND visibility = %s
-            ORDER BY published_at DESC
-            LIMIT %s OFFSET %s
-        ''', ('published', 'public', limit, offset))
-    else:
-        cursor.execute('''
-            SELECT id, title, excerpt, author_name, published_at, slug, tags
-            FROM blog_posts
-            WHERE status = ? AND visibility = ?
-            ORDER BY published_at DESC
-            LIMIT ? OFFSET ?
-        ''', ('published', 'public', limit, offset))
+    query = '''
+        SELECT id, title, excerpt, author_name, published_at, slug, tags
+        FROM blog_posts
+        WHERE status = ? AND visibility = ?
+        ORDER BY published_at DESC
+        LIMIT ? OFFSET ?
+    '''
 
+    cursor = _db_config.execute_query(conn, query, ('published', 'public', limit, offset))
     posts = [normalize_row(row) for row in cursor.fetchall()]
     release_connection(conn)
     return posts
@@ -192,19 +106,13 @@ def get_published_posts(limit: int = 50, offset: int = 0) -> List[Dict]:
 def get_post_by_slug(slug: str) -> Optional[Dict]:
     """Get a specific published public post by slug"""
     conn = get_db_connection()
-    cursor = dict_cursor(conn)
 
-    if DATABASE_TYPE == 'postgresql':
-        cursor.execute('''
-            SELECT * FROM blog_posts
-            WHERE slug = %s AND status = %s AND visibility = %s
-        ''', (slug, 'published', 'public'))
-    else:
-        cursor.execute('''
-            SELECT * FROM blog_posts
-            WHERE slug = ? AND status = ? AND visibility = ?
-        ''', (slug, 'published', 'public'))
+    query = '''
+        SELECT * FROM blog_posts
+        WHERE slug = ? AND status = ? AND visibility = ?
+    '''
 
+    cursor = _db_config.execute_query(conn, query, (slug, 'published', 'public'))
     post = cursor.fetchone()
     release_connection(conn)
     return normalize_row(post) if post else None
@@ -213,25 +121,16 @@ def get_post_by_slug(slug: str) -> Optional[Dict]:
 def get_user_posts(author_id: int, limit: int = 50) -> List[Dict]:
     """Get all posts by a specific user (private and public)"""
     conn = get_db_connection()
-    cursor = dict_cursor(conn)
 
-    if DATABASE_TYPE == 'postgresql':
-        cursor.execute('''
-            SELECT id, title, status, visibility, excerpt, content, tags, review_notes, created_at, updated_at, slug
-            FROM blog_posts
-            WHERE author_id = %s
-            ORDER BY updated_at DESC
-            LIMIT %s
-        ''', (author_id, limit))
-    else:
-        cursor.execute('''
-            SELECT id, title, status, visibility, excerpt, content, tags, review_notes, created_at, updated_at, slug
-            FROM blog_posts
-            WHERE author_id = ?
-            ORDER BY updated_at DESC
-            LIMIT ?
-        ''', (author_id, limit))
+    query = '''
+        SELECT id, title, status, visibility, excerpt, content, tags, review_notes, created_at, updated_at, slug
+        FROM blog_posts
+        WHERE author_id = ?
+        ORDER BY updated_at DESC
+        LIMIT ?
+    '''
 
+    cursor = _db_config.execute_query(conn, query, (author_id, limit))
     posts = [normalize_row(row) for row in cursor.fetchall()]
     release_connection(conn)
     return posts
@@ -240,23 +139,15 @@ def get_user_posts(author_id: int, limit: int = 50) -> List[Dict]:
 def get_pending_posts() -> List[Dict]:
     """Get posts pending review for admin interface"""
     conn = get_db_connection()
-    cursor = dict_cursor(conn)
 
-    if DATABASE_TYPE == 'postgresql':
-        cursor.execute('''
-            SELECT id, title, author_name, excerpt, content, tags, created_at, updated_at, slug
-            FROM blog_posts
-            WHERE status = %s AND visibility = %s
-            ORDER BY updated_at ASC
-        ''', ('pending_review', 'public'))
-    else:
-        cursor.execute('''
-            SELECT id, title, author_name, excerpt, content, tags, created_at, updated_at, slug
-            FROM blog_posts
-            WHERE status = ? AND visibility = ?
-            ORDER BY updated_at ASC
-        ''', ('pending_review', 'public'))
+    query = '''
+        SELECT id, title, author_name, excerpt, content, tags, created_at, updated_at, slug
+        FROM blog_posts
+        WHERE status = ? AND visibility = ?
+        ORDER BY updated_at ASC
+    '''
 
+    cursor = _db_config.execute_query(conn, query, ('pending_review', 'public'))
     posts = [normalize_row(row) for row in cursor.fetchall()]
     release_connection(conn)
     return posts
@@ -266,43 +157,24 @@ def create_post(title: str, content: str, author_id: int, author_name: str,
                excerpt: str = '', visibility: str = 'private', tags: str = '') -> int:
     """Create a new blog post"""
     conn = get_db_connection()
-    cursor = conn.cursor()
-
     slug = create_slug(title)
-    now = datetime.now().isoformat()
 
-    # Ensure unique slug
-    base_slug = slug
-    counter = 1
-    while True:
-        if DATABASE_TYPE == 'postgresql':
-            cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = %s', (slug,))
-        else:
-            cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = ?', (slug,))
+    query = '''
+        INSERT INTO blog_posts (title, content, author_id, author_name, excerpt, visibility, tags, slug, status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    '''
 
-        if cursor.fetchone()[0] == 0:
-            break
-        slug = f"{base_slug}-{counter}"
-        counter += 1
+    cursor = _db_config.execute_query(
+        conn, query,
+        (title, content, author_id, author_name, excerpt, visibility, tags, slug),
+        use_dict_cursor=False
+    )
 
-    status = 'pending_review' if visibility == 'public' else 'draft'
-
-    if DATABASE_TYPE == 'postgresql':
-        cursor.execute('''
-            INSERT INTO blog_posts
-            (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
-        ''', (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, now, now))
+    if _db_config.is_postgresql():
+        cursor.execute('SELECT lastval()')
         post_id = cursor.fetchone()[0]
     else:
-        cursor.execute('''
-            INSERT INTO blog_posts
-            (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, now, now))
         post_id = cursor.lastrowid
-        conn.commit()
 
     release_connection(conn)
     return post_id
@@ -310,116 +182,60 @@ def create_post(title: str, content: str, author_id: int, author_name: str,
 
 def update_post(post_id: int, title: str = None, content: str = None,
                excerpt: str = None, visibility: str = None, tags: str = None) -> bool:
-    """Update an existing post"""
-    conn = None
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    """Update an existing blog post"""
+    conn = get_db_connection()
 
-        # Build update query dynamically
-        updates = []
-        params = []
-        param_placeholder = '%s' if DATABASE_TYPE == 'postgresql' else '?'
+    updates = []
+    params = []
 
-        if title is not None:
-            # Check if title actually changed to avoid slug conflict
-            if DATABASE_TYPE == 'postgresql':
-                cursor.execute('SELECT title FROM blog_posts WHERE id = %s', (post_id,))
-            else:
-                cursor.execute('SELECT title FROM blog_posts WHERE id = ?', (post_id,))
-            current_title = cursor.fetchone()
+    if title is not None:
+        updates.append('title = ?')
+        params.append(title)
+        updates.append('slug = ?')
+        params.append(create_slug(title))
+    if content is not None:
+        updates.append('content = ?')
+        params.append(content)
+    if excerpt is not None:
+        updates.append('excerpt = ?')
+        params.append(excerpt)
+    if visibility is not None:
+        updates.append('visibility = ?')
+        params.append(visibility)
+    if tags is not None:
+        updates.append('tags = ?')
+        params.append(tags)
 
-            updates.append(f'title = {param_placeholder}')
-            params.append(title)
-
-            # Only update slug if title actually changed
-            if current_title and current_title[0] != title:
-                new_slug = create_slug(title)
-                # Ensure unique slug
-                base_slug = new_slug
-                counter = 1
-                while True:
-                    if DATABASE_TYPE == 'postgresql':
-                        cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = %s AND id != %s', (new_slug, post_id))
-                    else:
-                        cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = ? AND id != ?', (new_slug, post_id))
-
-                    if cursor.fetchone()[0] == 0:
-                        break
-                    new_slug = f"{base_slug}-{counter}"
-                    counter += 1
-
-                updates.append(f'slug = {param_placeholder}')
-                params.append(new_slug)
-
-        if content is not None:
-            updates.append(f'content = {param_placeholder}')
-            params.append(content)
-
-        if excerpt is not None:
-            updates.append(f'excerpt = {param_placeholder}')
-            params.append(excerpt)
-
-        if visibility is not None:
-            updates.append(f'visibility = {param_placeholder}')
-            params.append(visibility)
-
-            # Update status based on visibility change
-            if visibility == 'public':
-                # Changing to public: set status to pending_review (needs admin approval)
-                updates.append(f'status = {param_placeholder}')
-                params.append('pending_review')
-            elif visibility == 'private':
-                # Changing to private: reset status to draft (no review needed)
-                updates.append(f'status = {param_placeholder}')
-                params.append('draft')
-
-        if tags is not None:
-            updates.append(f'tags = {param_placeholder}')
-            params.append(tags)
-
-        if updates:
-            updates.append(f'updated_at = {param_placeholder}')
-            params.append(datetime.now().isoformat())
-            params.append(post_id)
-
-            query = f"UPDATE blog_posts SET {', '.join(updates)} WHERE id = {param_placeholder}"
-            cursor.execute(query, params)
-
-            if DATABASE_TYPE == 'sqlite':
-                success = cursor.rowcount > 0
-                conn.commit()
-            else:
-                success = cursor.rowcount > 0
-
-            return success
-
+    if not updates:
+        release_connection(conn)
         return False
-    finally:
-        if conn:
-            release_connection(conn)
+
+    updates.append('updated_at = CURRENT_TIMESTAMP')
+    params.append(post_id)
+
+    query = f"UPDATE blog_posts SET {', '.join(updates)} WHERE id = ?"
+    cursor = _db_config.execute_query(conn, query, tuple(params), use_dict_cursor=False)
+
+    success = cursor.rowcount > 0
+    release_connection(conn)
+    return success
 
 
 def approve_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
-    """Approve a pending post (admin function)"""
+    """Approve a post for publication"""
     conn = get_db_connection()
-    cursor = conn.cursor()
 
-    now = datetime.now().isoformat()
+    query = '''
+        UPDATE blog_posts
+        SET status = ?, reviewer_id = ?, review_notes = ?, published_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status = ?
+    '''
 
-    if DATABASE_TYPE == 'postgresql':
-        cursor.execute('''
-            UPDATE blog_posts
-            SET status = %s, published_at = %s, reviewer_id = %s, review_notes = %s
-            WHERE id = %s AND status = %s
-        ''', ('published', now, reviewer_id, review_notes, post_id, 'pending_review'))
-    else:
-        cursor.execute('''
-            UPDATE blog_posts
-            SET status = ?, published_at = ?, reviewer_id = ?, review_notes = ?
-            WHERE id = ? AND status = ?
-        ''', ('published', now, reviewer_id, review_notes, post_id, 'pending_review'))
-        conn.commit()
+    cursor = _db_config.execute_query(
+        conn, query,
+        ('published', reviewer_id, review_notes, post_id, 'pending_review'),
+        use_dict_cursor=False
+    )
 
     success = cursor.rowcount > 0
     release_connection(conn)
@@ -427,23 +243,20 @@ def approve_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool
 
 
 def reject_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
-    """Reject a pending post (admin function)"""
+    """Reject a post"""
     conn = get_db_connection()
-    cursor = conn.cursor()
 
-    if DATABASE_TYPE == 'postgresql':
-        cursor.execute('''
-            UPDATE blog_posts
-            SET status = %s, reviewer_id = %s, review_notes = %s
-            WHERE id = %s AND status = %s
-        ''', ('rejected', reviewer_id, review_notes, post_id, 'pending_review'))
-    else:
-        cursor.execute('''
-            UPDATE blog_posts
-            SET status = ?, reviewer_id = ?, review_notes = ?
-            WHERE id = ? AND status = ?
-        ''', ('rejected', reviewer_id, review_notes, post_id, 'pending_review'))
-        conn.commit()
+    query = '''
+        UPDATE blog_posts
+        SET status = ?, reviewer_id = ?, review_notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status = ?
+    '''
+
+    cursor = _db_config.execute_query(
+        conn, query,
+        ('rejected', reviewer_id, review_notes, post_id, 'pending_review'),
+        use_dict_cursor=False
+    )
 
     success = cursor.rowcount > 0
     release_connection(conn)
@@ -451,177 +264,89 @@ def reject_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
 
 
 def delete_post(post_id: int, author_id: int = None) -> bool:
-    """Delete a post (only by author or admin)"""
+    """Delete a post (author can delete their own, admin can delete any)"""
     conn = get_db_connection()
-    cursor = conn.cursor()
 
     if author_id:
-        # Only allow author to delete their own posts
-        if DATABASE_TYPE == 'postgresql':
-            cursor.execute('DELETE FROM blog_posts WHERE id = %s AND author_id = %s', (post_id, author_id))
-        else:
-            cursor.execute('DELETE FROM blog_posts WHERE id = ? AND author_id = ?', (post_id, author_id))
+        query = 'DELETE FROM blog_posts WHERE id = ? AND author_id = ?'
+        params = (post_id, author_id)
     else:
-        # Admin can delete any post
-        if DATABASE_TYPE == 'postgresql':
-            cursor.execute('DELETE FROM blog_posts WHERE id = %s', (post_id,))
-        else:
-            cursor.execute('DELETE FROM blog_posts WHERE id = ?', (post_id,))
+        query = 'DELETE FROM blog_posts WHERE id = ?'
+        params = (post_id,)
 
-    if DATABASE_TYPE == 'sqlite':
-        conn.commit()
-
+    cursor = _db_config.execute_query(conn, query, params, use_dict_cursor=False)
     success = cursor.rowcount > 0
     release_connection(conn)
     return success
 
 
 def migrate_sample_posts():
-    """Migrate existing sample posts to database (one-time migration)"""
+    """Add sample blog posts for testing"""
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = dict_cursor(conn)
 
-    # Check if we already have posts
-    cursor.execute('SELECT COUNT(*) FROM blog_posts')
-    if cursor.fetchone()[0] > 0:
+    # Check if posts already exist
+    cursor.execute('SELECT COUNT(*) as count FROM blog_posts')
+    result = cursor.fetchone()
+    count = result['count'] if isinstance(result, dict) else result[0]
+
+    if count > 0:
         release_connection(conn)
-        return
+        return  # Posts already exist
 
-    # Sample posts from the original app.py
     sample_posts = [
         {
             'title': 'Understanding Heart Failure and Nutrition: Your Complete Guide',
-            'content': '''<h2>What is Heart Failure?</h2>
-<p>Heart failure affects over 6 million Americans and occurs when your heart muscle doesn't pump blood as well as it should. This doesn't mean your heart has stopped working, but rather that it's working less efficiently than normal.</p>
+            'excerpt': 'Learn how proper nutrition plays a crucial role in managing heart failure and improving quality of life.',
+            'content': '''Heart failure is a chronic condition that requires careful management, and nutrition plays a vital role in this process. Understanding how different foods affect your heart can empower you to make better dietary choices.
 
-<h2>The Critical Role of Nutrition</h2>
-<p>Proper nutrition plays a crucial role in managing heart failure symptoms and improving your quality of life. The foods you eat directly impact:</p>
-<ul>
-    <li><strong>Fluid retention:</strong> High sodium foods can cause your body to retain water, making your heart work harder</li>
-    <li><strong>Energy levels:</strong> Balanced nutrition helps maintain steady energy throughout the day</li>
-    <li><strong>Weight management:</strong> Maintaining a healthy weight reduces strain on your heart</li>
-    <li><strong>Overall cardiovascular health:</strong> Heart-healthy foods support better circulation and heart function</li>
-</ul>
+**Key Nutritional Considerations:**
 
-<h2>Key Dietary Guidelines for Heart Failure</h2>
-<h3>1. Sodium Restriction</h3>
-<p>Most cardiologists recommend limiting sodium to 2,000-3,000mg per day. This helps prevent fluid buildup and reduces the workload on your heart.</p>
+1. **Sodium Management**: Limiting sodium intake is crucial for managing fluid retention and blood pressure.
+2. **Fluid Balance**: Monitoring fluid intake helps prevent fluid overload.
+3. **Nutrient-Dense Foods**: Focus on foods rich in potassium, magnesium, and heart-healthy fats.
 
-<h3>2. Fluid Management</h3>
-<p>Your healthcare provider may recommend limiting fluids to 1.5-2 liters per day, depending on your condition severity.</p>
-
-<h3>3. Heart-Healthy Foods</h3>
-<p>Focus on foods rich in:</p>
-<ul>
-    <li>Potassium (bananas, oranges, spinach)</li>
-    <li>Magnesium (nuts, seeds, whole grains)</li>
-    <li>Omega-3 fatty acids (fish, flaxseeds)</li>
-    <li>Fiber (vegetables, fruits, beans)</li>
-</ul>
-
-<blockquote>Remember: Always consult with your healthcare provider before making significant dietary changes. Every person's heart failure journey is unique.</blockquote>
-
-<h2>Using Technology to Support Your Journey</h2>
-<p>Our Heart Portal tools can help you track nutrition and make informed food choices. The USDA Nutrition Database provides detailed nutritional information, while the Food Storage feature helps you organize heart-healthy meal planning.</p>''',
-            'author_name': 'Heart Portal Team',
-            'excerpt': 'Learn how nutrition impacts heart failure management and discover practical strategies for heart-healthy eating.',
-            'published_at': '2025-01-15T00:00:00'
+This portal provides tools to help you track and manage these important nutritional factors.''',
+            'author_id': 1,
+            'author_name': 'Dr. Heart Health',
+            'status': 'published',
+            'visibility': 'public',
+            'tags': 'heart failure, nutrition, health',
+            'slug': 'understanding-heart-failure-and-nutrition-your-complete-guide'
         },
         {
             'title': 'The USDA Database: A Powerful Tool for Heart-Healthy Living',
-            'content': '''<h2>Introduction to USDA Food Data Central</h2>
-<p>The USDA Food Data Central is a comprehensive database containing nutritional information for thousands of foods. For heart failure patients, this resource is invaluable for making informed dietary choices.</p>
+            'excerpt': 'Discover how to use the USDA Food Data Central database to make informed nutritional choices.',
+            'content': '''The USDA Food Data Central database is an invaluable resource for anyone managing their heart health through nutrition. This comprehensive database contains detailed nutritional information for thousands of foods.
 
-<h2>Why Nutritional Data Matters</h2>
-<p>When managing heart failure, every milligram of sodium counts. The USDA database provides precise nutritional information that helps you:</p>
-<ul>
-    <li>Track daily sodium intake accurately</li>
-    <li>Compare similar foods to make better choices</li>
-    <li>Plan balanced meals that support heart health</li>
-    <li>Understand portion sizes and their nutritional impact</li>
-</ul>
+**How to Use This Tool:**
 
-<h2>How to Use Our Nutrition Database Tool</h2>
-<h3>Step 1: Search for Foods</h3>
-<p>Use our search feature to find specific foods or browse categories. The database includes everything from fresh produce to packaged foods.</p>
+1. **Search by Food Name**: Find nutritional information for any food item
+2. **Compare Foods**: See how different foods compare in sodium, potassium, and other nutrients
+3. **Plan Meals**: Use the data to create heart-healthy meal plans
 
-<h3>Step 2: Analyze Nutritional Content</h3>
-<p>Pay special attention to:</p>
-<ul>
-    <li><strong>Sodium content:</strong> Keep daily intake under your recommended limit</li>
-    <li><strong>Potassium levels:</strong> Important for heart rhythm and muscle function</li>
-    <li><strong>Saturated fat:</strong> Limit to support overall cardiovascular health</li>
-    <li><strong>Fiber content:</strong> Helps with cholesterol management</li>
-</ul>
-
-<h3>Step 3: Save Your Favorites</h3>
-<p>Use our Food Storage feature to save heart-healthy foods you discover. This makes meal planning easier and helps you stick to your nutritional goals.</p>
-
-<h2>Real-World Application</h2>
-<p>For example, when comparing bread options:</p>
-<ul>
-    <li>Regular white bread: ~230mg sodium per slice</li>
-    <li>Low-sodium whole grain: ~80mg sodium per slice</li>
-    <li>Homemade bread (no salt): ~5mg sodium per slice</li>
-</ul>
-<p>This data helps you make choices that support your heart health goals while still enjoying the foods you love.</p>
-
-<blockquote>Pro tip: Look for the "per 100g" nutritional data to easily compare different foods on an equal basis.</blockquote>
-
-<h2>Getting Started</h2>
-<p>Ready to explore? Access our Nutrition Database through the Tools menu above. Start by searching for foods you commonly eat, and discover healthier alternatives that fit your dietary needs.</p>''',
-            'author_name': 'Heart Portal Team',
-            'excerpt': 'Discover how to use nutritional data to support heart-healthy eating and make informed food choices.',
-            'published_at': '2025-01-10T00:00:00'
+The Nutrition Database tool on this portal makes it easy to access and use this information in your daily life.''',
+            'author_id': 1,
+            'author_name': 'Dr. Heart Health',
+            'status': 'published',
+            'visibility': 'public',
+            'tags': 'usda, database, nutrition, tools',
+            'slug': 'the-usda-database-a-powerful-tool-for-heart-healthy-living'
         }
     ]
 
-    # Insert sample posts as published public content
     for post in sample_posts:
-        slug = create_slug(post['title'])
+        query = '''
+            INSERT INTO blog_posts
+            (title, content, author_id, author_name, excerpt, visibility, tags, slug, status, published_at, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        '''
 
-        if DATABASE_TYPE == 'postgresql':
-            cursor.execute('''
-                INSERT INTO blog_posts
-                (title, content, author_id, author_name, status, visibility, slug, excerpt, tags,
-                 created_at, updated_at, published_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (
-                post['title'],
-                post['content'],
-                1,  # Admin user ID
-                post['author_name'],
-                'published',
-                'public',
-                slug,
-                post['excerpt'],
-                'nutrition,heart-health',
-                post['published_at'],
-                post['published_at'],
-                post['published_at']
-            ))
-        else:
-            cursor.execute('''
-                INSERT INTO blog_posts
-                (title, content, author_id, author_name, status, visibility, slug, excerpt, tags,
-                 created_at, updated_at, published_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                post['title'],
-                post['content'],
-                1,  # Admin user ID
-                post['author_name'],
-                'published',
-                'public',
-                slug,
-                post['excerpt'],
-                'nutrition,heart-health',
-                post['published_at'],
-                post['published_at'],
-                post['published_at']
-            ))
-
-    if DATABASE_TYPE == 'sqlite':
-        conn.commit()
+        _db_config.execute_query(
+            conn, query,
+            (post['title'], post['content'], post['author_id'], post['author_name'],
+             post['excerpt'], post['visibility'], post['tags'], post['slug'], post['status']),
+            use_dict_cursor=False
+        )
 
     release_connection(conn)
