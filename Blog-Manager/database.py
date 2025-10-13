@@ -1,51 +1,126 @@
 """
 Blog Database Management for Heart Portal
 Handles blog posts, user authoring, and moderation workflow
+Supports both SQLite (local dev) and PostgreSQL (staging/production)
 """
 
-import sqlite3
 import os
 from datetime import datetime
 from typing import List, Dict, Optional
 
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'blog.db')
+# Check which database to use
+DATABASE_TYPE = os.getenv('DATABASE_TYPE', 'sqlite').lower()
 
-def get_db_connection():
-    """Create a database connection with optimized settings"""
-    conn = sqlite3.connect(DATABASE_PATH, timeout=30.0, check_same_thread=False)
-    conn.execute('PRAGMA journal_mode=WAL')  # Write-Ahead Logging for better concurrency
-    conn.execute('PRAGMA busy_timeout=30000')  # Wait up to 30 seconds if database is locked
-    conn.isolation_level = None  # Autocommit mode
-    return conn
+if DATABASE_TYPE == 'postgresql':
+    import psycopg2
+    import psycopg2.extras
+    from psycopg2 import pool
+
+    # PostgreSQL connection pool
+    DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://heartportal:password@localhost:5432/heart_portal_staging_blog')
+    connection_pool = None
+
+    def init_connection_pool():
+        """Initialize PostgreSQL connection pool"""
+        global connection_pool
+        if connection_pool is None:
+            connection_pool = psycopg2.pool.SimpleConnectionPool(
+                1, 20,  # min and max connections
+                DATABASE_URL
+            )
+
+    def get_db_connection():
+        """Create a PostgreSQL database connection"""
+        init_connection_pool()
+        conn = connection_pool.getconn()
+        conn.autocommit = True
+        return conn
+
+    def release_connection(conn):
+        """Release connection back to pool"""
+        if connection_pool:
+            connection_pool.putconn(conn)
+
+else:
+    # SQLite
+    import sqlite3
+
+    DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'blog.db')
+
+    def get_db_connection():
+        """Create a SQLite database connection with optimized settings"""
+        conn = sqlite3.connect(DATABASE_PATH, timeout=30.0, check_same_thread=False)
+        conn.execute('PRAGMA journal_mode=WAL')  # Write-Ahead Logging for better concurrency
+        conn.execute('PRAGMA busy_timeout=30000')  # Wait up to 30 seconds if database is locked
+        conn.isolation_level = None  # Autocommit mode
+        return conn
+
+    def release_connection(conn):
+        """Close SQLite connection"""
+        conn.close()
+
+
+def dict_cursor(conn):
+    """Get a cursor that returns rows as dictionaries"""
+    if DATABASE_TYPE == 'postgresql':
+        return conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    else:
+        conn.row_factory = sqlite3.Row
+        return conn.cursor()
+
 
 def init_blog_database():
     """Initialize the blog database with required tables"""
-    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+    if DATABASE_TYPE == 'sqlite':
+        os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Blog posts table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS blog_posts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            content TEXT NOT NULL,
-            author_id INTEGER NOT NULL,
-            author_name TEXT NOT NULL,
-            status TEXT DEFAULT 'draft',
-            visibility TEXT DEFAULT 'private',
-            slug TEXT UNIQUE,
-            excerpt TEXT,
-            featured_image TEXT,
-            tags TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            published_at TIMESTAMP,
-            reviewer_id INTEGER,
-            review_notes TEXT
-        )
-    ''')
+    if DATABASE_TYPE == 'postgresql':
+        # PostgreSQL table creation
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS blog_posts (
+                id SERIAL PRIMARY KEY,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                author_id INTEGER NOT NULL,
+                author_name TEXT NOT NULL,
+                status TEXT DEFAULT 'draft',
+                visibility TEXT DEFAULT 'private',
+                slug TEXT UNIQUE,
+                excerpt TEXT,
+                featured_image TEXT,
+                tags TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                published_at TIMESTAMP,
+                reviewer_id INTEGER,
+                review_notes TEXT
+            )
+        ''')
+    else:
+        # SQLite table creation
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS blog_posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                author_id INTEGER NOT NULL,
+                author_name TEXT NOT NULL,
+                status TEXT DEFAULT 'draft',
+                visibility TEXT DEFAULT 'private',
+                slug TEXT UNIQUE,
+                excerpt TEXT,
+                featured_image TEXT,
+                tags TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                published_at TIMESTAMP,
+                reviewer_id INTEGER,
+                review_notes TEXT
+            )
+        ''')
 
     # Create indexes for better performance
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_posts_status ON blog_posts (status)')
@@ -53,8 +128,11 @@ def init_blog_database():
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_posts_author ON blog_posts (author_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_posts_published ON blog_posts (published_at)')
 
-    conn.commit()
-    conn.close()
+    if DATABASE_TYPE == 'sqlite':
+        conn.commit()
+
+    release_connection(conn)
+
 
 def create_slug(title: str) -> str:
     """Create URL-friendly slug from title"""
@@ -64,73 +142,106 @@ def create_slug(title: str) -> str:
     slug = slug.strip('-')
     return slug[:100]  # Limit length
 
+
 def get_published_posts(limit: int = 50, offset: int = 0) -> List[Dict]:
     """Get published public posts for public blog view"""
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = dict_cursor(conn)
 
-    cursor.execute('''
-        SELECT id, title, excerpt, author_name, published_at, slug, tags
-        FROM blog_posts
-        WHERE status = 'published' AND visibility = 'public'
-        ORDER BY published_at DESC
-        LIMIT ? OFFSET ?
-    ''', (limit, offset))
+    if DATABASE_TYPE == 'postgresql':
+        cursor.execute('''
+            SELECT id, title, excerpt, author_name, published_at, slug, tags
+            FROM blog_posts
+            WHERE status = %s AND visibility = %s
+            ORDER BY published_at DESC
+            LIMIT %s OFFSET %s
+        ''', ('published', 'public', limit, offset))
+    else:
+        cursor.execute('''
+            SELECT id, title, excerpt, author_name, published_at, slug, tags
+            FROM blog_posts
+            WHERE status = ? AND visibility = ?
+            ORDER BY published_at DESC
+            LIMIT ? OFFSET ?
+        ''', ('published', 'public', limit, offset))
 
     posts = [dict(row) for row in cursor.fetchall()]
-    conn.close()
+    release_connection(conn)
     return posts
+
 
 def get_post_by_slug(slug: str) -> Optional[Dict]:
     """Get a specific published public post by slug"""
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = dict_cursor(conn)
 
-    cursor.execute('''
-        SELECT * FROM blog_posts
-        WHERE slug = ? AND status = 'published' AND visibility = 'public'
-    ''', (slug,))
+    if DATABASE_TYPE == 'postgresql':
+        cursor.execute('''
+            SELECT * FROM blog_posts
+            WHERE slug = %s AND status = %s AND visibility = %s
+        ''', (slug, 'published', 'public'))
+    else:
+        cursor.execute('''
+            SELECT * FROM blog_posts
+            WHERE slug = ? AND status = ? AND visibility = ?
+        ''', (slug, 'published', 'public'))
 
     post = cursor.fetchone()
-    conn.close()
+    release_connection(conn)
     return dict(post) if post else None
+
 
 def get_user_posts(author_id: int, limit: int = 50) -> List[Dict]:
     """Get all posts by a specific user (private and public)"""
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = dict_cursor(conn)
 
-    cursor.execute('''
-        SELECT id, title, status, visibility, excerpt, content, tags, review_notes, created_at, updated_at, slug
-        FROM blog_posts
-        WHERE author_id = ?
-        ORDER BY updated_at DESC
-        LIMIT ?
-    ''', (author_id, limit))
+    if DATABASE_TYPE == 'postgresql':
+        cursor.execute('''
+            SELECT id, title, status, visibility, excerpt, content, tags, review_notes, created_at, updated_at, slug
+            FROM blog_posts
+            WHERE author_id = %s
+            ORDER BY updated_at DESC
+            LIMIT %s
+        ''', (author_id, limit))
+    else:
+        cursor.execute('''
+            SELECT id, title, status, visibility, excerpt, content, tags, review_notes, created_at, updated_at, slug
+            FROM blog_posts
+            WHERE author_id = ?
+            ORDER BY updated_at DESC
+            LIMIT ?
+        ''', (author_id, limit))
 
     posts = [dict(row) for row in cursor.fetchall()]
-    conn.close()
+    release_connection(conn)
     return posts
+
 
 def get_pending_posts() -> List[Dict]:
     """Get posts pending review for admin interface"""
     conn = get_db_connection()
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
+    cursor = dict_cursor(conn)
 
-    cursor.execute('''
-        SELECT id, title, author_name, excerpt, content, tags, created_at, updated_at, slug
-        FROM blog_posts
-        WHERE status = 'pending_review' AND visibility = 'public'
-        ORDER BY updated_at ASC
-    ''')
+    if DATABASE_TYPE == 'postgresql':
+        cursor.execute('''
+            SELECT id, title, author_name, excerpt, content, tags, created_at, updated_at, slug
+            FROM blog_posts
+            WHERE status = %s AND visibility = %s
+            ORDER BY updated_at ASC
+        ''', ('pending_review', 'public'))
+    else:
+        cursor.execute('''
+            SELECT id, title, author_name, excerpt, content, tags, created_at, updated_at, slug
+            FROM blog_posts
+            WHERE status = ? AND visibility = ?
+            ORDER BY updated_at ASC
+        ''', ('pending_review', 'public'))
 
     posts = [dict(row) for row in cursor.fetchall()]
-    conn.close()
+    release_connection(conn)
     return posts
+
 
 def create_post(title: str, content: str, author_id: int, author_name: str,
                excerpt: str = '', visibility: str = 'private', tags: str = '') -> int:
@@ -145,7 +256,11 @@ def create_post(title: str, content: str, author_id: int, author_name: str,
     base_slug = slug
     counter = 1
     while True:
-        cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = ?', (slug,))
+        if DATABASE_TYPE == 'postgresql':
+            cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = %s', (slug,))
+        else:
+            cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = ?', (slug,))
+
         if cursor.fetchone()[0] == 0:
             break
         slug = f"{base_slug}-{counter}"
@@ -153,16 +268,26 @@ def create_post(title: str, content: str, author_id: int, author_name: str,
 
     status = 'pending_review' if visibility == 'public' else 'draft'
 
-    cursor.execute('''
-        INSERT INTO blog_posts
-        (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, now, now))
+    if DATABASE_TYPE == 'postgresql':
+        cursor.execute('''
+            INSERT INTO blog_posts
+            (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        ''', (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, now, now))
+        post_id = cursor.fetchone()[0]
+    else:
+        cursor.execute('''
+            INSERT INTO blog_posts
+            (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (title, content, author_id, author_name, status, visibility, slug, excerpt, tags, now, now))
+        post_id = cursor.lastrowid
+        conn.commit()
 
-    post_id = cursor.lastrowid
-    conn.commit()
-    conn.close()
+    release_connection(conn)
     return post_id
+
 
 def update_post(post_id: int, title: str = None, content: str = None,
                excerpt: str = None, visibility: str = None, tags: str = None) -> bool:
@@ -175,13 +300,17 @@ def update_post(post_id: int, title: str = None, content: str = None,
         # Build update query dynamically
         updates = []
         params = []
+        param_placeholder = '%s' if DATABASE_TYPE == 'postgresql' else '?'
 
         if title is not None:
             # Check if title actually changed to avoid slug conflict
-            cursor.execute('SELECT title FROM blog_posts WHERE id = ?', (post_id,))
+            if DATABASE_TYPE == 'postgresql':
+                cursor.execute('SELECT title FROM blog_posts WHERE id = %s', (post_id,))
+            else:
+                cursor.execute('SELECT title FROM blog_posts WHERE id = ?', (post_id,))
             current_title = cursor.fetchone()
 
-            updates.append('title = ?')
+            updates.append(f'title = {param_placeholder}')
             params.append(title)
 
             # Only update slug if title actually changed
@@ -191,55 +320,66 @@ def update_post(post_id: int, title: str = None, content: str = None,
                 base_slug = new_slug
                 counter = 1
                 while True:
-                    cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = ? AND id != ?', (new_slug, post_id))
+                    if DATABASE_TYPE == 'postgresql':
+                        cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = %s AND id != %s', (new_slug, post_id))
+                    else:
+                        cursor.execute('SELECT COUNT(*) FROM blog_posts WHERE slug = ? AND id != ?', (new_slug, post_id))
+
                     if cursor.fetchone()[0] == 0:
                         break
                     new_slug = f"{base_slug}-{counter}"
                     counter += 1
 
-                updates.append('slug = ?')
+                updates.append(f'slug = {param_placeholder}')
                 params.append(new_slug)
 
         if content is not None:
-            updates.append('content = ?')
+            updates.append(f'content = {param_placeholder}')
             params.append(content)
 
         if excerpt is not None:
-            updates.append('excerpt = ?')
+            updates.append(f'excerpt = {param_placeholder}')
             params.append(excerpt)
 
         if visibility is not None:
-            updates.append('visibility = ?')
+            updates.append(f'visibility = {param_placeholder}')
             params.append(visibility)
 
             # Update status based on visibility change
             if visibility == 'public':
                 # Changing to public: set status to pending_review (needs admin approval)
-                updates.append('status = ?')
+                updates.append(f'status = {param_placeholder}')
                 params.append('pending_review')
             elif visibility == 'private':
                 # Changing to private: reset status to draft (no review needed)
-                updates.append('status = ?')
+                updates.append(f'status = {param_placeholder}')
                 params.append('draft')
 
         if tags is not None:
-            updates.append('tags = ?')
+            updates.append(f'tags = {param_placeholder}')
             params.append(tags)
 
         if updates:
-            updates.append('updated_at = ?')
+            updates.append(f'updated_at = {param_placeholder}')
             params.append(datetime.now().isoformat())
             params.append(post_id)
 
-            query = f"UPDATE blog_posts SET {', '.join(updates)} WHERE id = ?"
+            query = f"UPDATE blog_posts SET {', '.join(updates)} WHERE id = {param_placeholder}"
             cursor.execute(query, params)
-            success = cursor.rowcount > 0
+
+            if DATABASE_TYPE == 'sqlite':
+                success = cursor.rowcount > 0
+                conn.commit()
+            else:
+                success = cursor.rowcount > 0
+
             return success
 
         return False
     finally:
         if conn:
-            conn.close()
+            release_connection(conn)
+
 
 def approve_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
     """Approve a pending post (admin function)"""
@@ -247,32 +387,49 @@ def approve_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool
     cursor = conn.cursor()
 
     now = datetime.now().isoformat()
-    cursor.execute('''
-        UPDATE blog_posts
-        SET status = 'published', published_at = ?, reviewer_id = ?, review_notes = ?
-        WHERE id = ? AND status = 'pending_review'
-    ''', (now, reviewer_id, review_notes, post_id))
+
+    if DATABASE_TYPE == 'postgresql':
+        cursor.execute('''
+            UPDATE blog_posts
+            SET status = %s, published_at = %s, reviewer_id = %s, review_notes = %s
+            WHERE id = %s AND status = %s
+        ''', ('published', now, reviewer_id, review_notes, post_id, 'pending_review'))
+    else:
+        cursor.execute('''
+            UPDATE blog_posts
+            SET status = ?, published_at = ?, reviewer_id = ?, review_notes = ?
+            WHERE id = ? AND status = ?
+        ''', ('published', now, reviewer_id, review_notes, post_id, 'pending_review'))
+        conn.commit()
 
     success = cursor.rowcount > 0
-    conn.commit()
-    conn.close()
+    release_connection(conn)
     return success
+
 
 def reject_post(post_id: int, reviewer_id: int, review_notes: str = '') -> bool:
     """Reject a pending post (admin function)"""
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute('''
-        UPDATE blog_posts
-        SET status = 'rejected', reviewer_id = ?, review_notes = ?
-        WHERE id = ? AND status = 'pending_review'
-    ''', (reviewer_id, review_notes, post_id))
+    if DATABASE_TYPE == 'postgresql':
+        cursor.execute('''
+            UPDATE blog_posts
+            SET status = %s, reviewer_id = %s, review_notes = %s
+            WHERE id = %s AND status = %s
+        ''', ('rejected', reviewer_id, review_notes, post_id, 'pending_review'))
+    else:
+        cursor.execute('''
+            UPDATE blog_posts
+            SET status = ?, reviewer_id = ?, review_notes = ?
+            WHERE id = ? AND status = ?
+        ''', ('rejected', reviewer_id, review_notes, post_id, 'pending_review'))
+        conn.commit()
 
     success = cursor.rowcount > 0
-    conn.commit()
-    conn.close()
+    release_connection(conn)
     return success
+
 
 def delete_post(post_id: int, author_id: int = None) -> bool:
     """Delete a post (only by author or admin)"""
@@ -281,15 +438,24 @@ def delete_post(post_id: int, author_id: int = None) -> bool:
 
     if author_id:
         # Only allow author to delete their own posts
-        cursor.execute('DELETE FROM blog_posts WHERE id = ? AND author_id = ?', (post_id, author_id))
+        if DATABASE_TYPE == 'postgresql':
+            cursor.execute('DELETE FROM blog_posts WHERE id = %s AND author_id = %s', (post_id, author_id))
+        else:
+            cursor.execute('DELETE FROM blog_posts WHERE id = ? AND author_id = ?', (post_id, author_id))
     else:
         # Admin can delete any post
-        cursor.execute('DELETE FROM blog_posts WHERE id = ?', (post_id,))
+        if DATABASE_TYPE == 'postgresql':
+            cursor.execute('DELETE FROM blog_posts WHERE id = %s', (post_id,))
+        else:
+            cursor.execute('DELETE FROM blog_posts WHERE id = ?', (post_id,))
+
+    if DATABASE_TYPE == 'sqlite':
+        conn.commit()
 
     success = cursor.rowcount > 0
-    conn.commit()
-    conn.close()
+    release_connection(conn)
     return success
+
 
 def migrate_sample_posts():
     """Migrate existing sample posts to database (one-time migration)"""
@@ -299,7 +465,7 @@ def migrate_sample_posts():
     # Check if we already have posts
     cursor.execute('SELECT COUNT(*) FROM blog_posts')
     if cursor.fetchone()[0] > 0:
-        conn.close()
+        release_connection(conn)
         return
 
     # Sample posts from the original app.py
@@ -394,25 +560,49 @@ def migrate_sample_posts():
     # Insert sample posts as published public content
     for post in sample_posts:
         slug = create_slug(post['title'])
-        cursor.execute('''
-            INSERT INTO blog_posts
-            (title, content, author_id, author_name, status, visibility, slug, excerpt, tags,
-             created_at, updated_at, published_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            post['title'],
-            post['content'],
-            1,  # Admin user ID
-            post['author_name'],
-            'published',
-            'public',
-            slug,
-            post['excerpt'],
-            'nutrition,heart-health',
-            post['published_at'],
-            post['published_at'],
-            post['published_at']
-        ))
 
-    conn.commit()
-    conn.close()
+        if DATABASE_TYPE == 'postgresql':
+            cursor.execute('''
+                INSERT INTO blog_posts
+                (title, content, author_id, author_name, status, visibility, slug, excerpt, tags,
+                 created_at, updated_at, published_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (
+                post['title'],
+                post['content'],
+                1,  # Admin user ID
+                post['author_name'],
+                'published',
+                'public',
+                slug,
+                post['excerpt'],
+                'nutrition,heart-health',
+                post['published_at'],
+                post['published_at'],
+                post['published_at']
+            ))
+        else:
+            cursor.execute('''
+                INSERT INTO blog_posts
+                (title, content, author_id, author_name, status, visibility, slug, excerpt, tags,
+                 created_at, updated_at, published_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                post['title'],
+                post['content'],
+                1,  # Admin user ID
+                post['author_name'],
+                'published',
+                'public',
+                slug,
+                post['excerpt'],
+                'nutrition,heart-health',
+                post['published_at'],
+                post['published_at'],
+                post['published_at']
+            ))
+
+    if DATABASE_TYPE == 'sqlite':
+        conn.commit()
+
+    release_connection(conn)
