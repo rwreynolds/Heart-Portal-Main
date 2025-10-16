@@ -1,6 +1,5 @@
 import os
 import sys
-import sqlite3
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, g
 import math
@@ -9,6 +8,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from session_config import configure_session
 from auth import get_current_user
 from url_helpers import get_base_url, get_bp_url, get_nutrition_url, get_foodbase_url, get_sodium_url, get_fluid_url, get_weight_url, get_main_app_url, get_blog_url
+
+# Import database module
+from database import (
+    init_bp_database, get_db_connection, release_connection,
+    get_settings, get_today_entries, get_recent_entries,
+    add_bp_entry, get_bp_history, get_total_entries_count,
+    get_entries_since, update_settings
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
@@ -22,61 +29,23 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
 
-DATABASE = 'bp_monitor.db'
-
+# Database connection management using Flask g object
 def get_db():
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
+    """Get database connection from Flask g object"""
+    if 'db' not in g:
+        g.db = get_db_connection()
+    return g.db
 
-def init_database():
-    with get_db() as db:
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS bp_entries (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                date TEXT NOT NULL,
-                time TEXT,
-                systolic INTEGER NOT NULL,
-                diastolic INTEGER NOT NULL,
-                heart_rate INTEGER,
-                time_of_day TEXT DEFAULT 'morning',
-                position TEXT DEFAULT 'sitting',
-                arm TEXT DEFAULT 'left',
-                notes TEXT,
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        # Check if time_of_day column exists, add it if not (for existing databases)
-        cursor = db.execute("PRAGMA table_info(bp_entries)")
-        columns = [column[1] for column in cursor.fetchall()]
-        if 'time_of_day' not in columns:
-            db.execute("ALTER TABLE bp_entries ADD COLUMN time_of_day TEXT DEFAULT 'morning'")
-
-        db.execute('''
-            CREATE TABLE IF NOT EXISTS settings (
-                id INTEGER PRIMARY KEY,
-                bp_target_systolic INTEGER DEFAULT 120,
-                bp_target_diastolic INTEGER DEFAULT 80,
-                hr_target_min INTEGER DEFAULT 60,
-                hr_target_max INTEGER DEFAULT 100,
-                reminder_enabled BOOLEAN DEFAULT 1,
-                reminder_time TEXT DEFAULT '08:00',
-                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        db.commit()
-
-with app.app_context():
-    init_database()
+def close_db(e=None):
+    """Close database connection"""
+    db = g.pop('db', None)
+    if db is not None:
+        release_connection(db)
 
 @app.teardown_appcontext
-def close_database(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+def close_db_teardown(error):
+    """Teardown function to close database"""
+    close_db()
 
 @app.context_processor
 def inject_url_helpers():
@@ -99,28 +68,22 @@ def index():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    db = get_db()
+    conn = get_db()
 
     # Get today's entries
     today = datetime.now().strftime('%Y-%m-%d')
-    today_entries = db.execute(
-        'SELECT * FROM bp_entries WHERE date = ? ORDER BY time DESC',
-        (today,)
-    ).fetchall()
+    today_entries = get_today_entries(conn, today)
 
     # Get recent entries (last 7 days)
     week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-    recent_entries = db.execute(
-        'SELECT * FROM bp_entries WHERE date >= ? ORDER BY date DESC, time DESC LIMIT 10',
-        (week_ago,)
-    ).fetchall()
+    recent_entries = get_recent_entries(conn, week_ago, limit=10)
 
     # Get settings
-    settings = db.execute('SELECT * FROM settings ORDER BY id DESC LIMIT 1').fetchone()
+    settings = get_settings(conn)
 
     # Calculate averages and trends
-    stats = calculate_stats(db)
-    trends = calculate_trends(db)
+    stats = calculate_stats(conn)
+    trends = calculate_trends(conn)
 
     return render_template('index.html',
                          today_entries=today_entries,
@@ -166,14 +129,13 @@ def add_entry():
             flash('Heart rate must be between 30-250 bpm', 'error')
             return redirect(url_for('add_entry'))
 
-        db = get_db()
-        db.execute('''
-            INSERT INTO bp_entries (date, time, systolic, diastolic, heart_rate, time_of_day, position, arm, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (date, time, systolic, diastolic, heart_rate or None, time_of_day, position, arm, notes))
-        db.commit()
+        conn = get_db()
+        success = add_bp_entry(conn, date, time, systolic, diastolic,
+                               int(heart_rate) if heart_rate else None,
+                               time_of_day, position, arm, notes)
 
-        flash('Blood pressure entry recorded successfully!', 'success')
+        if success:
+            flash('Blood pressure entry recorded successfully!', 'success')
         return redirect(get_bp_url())
 
     # GET request - show form
@@ -193,20 +155,16 @@ def history():
     per_page = 20
     offset = (page - 1) * per_page
 
-    db = get_db()
+    conn = get_db()
 
     # Get total count
-    total_entries = db.execute('SELECT COUNT(*) FROM bp_entries').fetchone()[0]
+    total_entries = get_total_entries_count(conn)
 
     # Get entries for current page
-    entries = db.execute('''
-        SELECT * FROM bp_entries
-        ORDER BY date DESC, time DESC
-        LIMIT ? OFFSET ?
-    ''', (per_page, offset)).fetchall()
+    entries = get_bp_history(conn, limit=per_page, offset=offset)
 
     # Calculate statistics
-    stats = calculate_stats(db)
+    stats = calculate_stats(conn)
 
     return render_template('history.html',
                          entries=entries,
@@ -222,7 +180,7 @@ def settings():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    db = get_db()
+    conn = get_db()
 
     if request.method == 'POST':
         bp_target_systolic = int(request.form['bp_target_systolic'])
@@ -233,30 +191,19 @@ def settings():
         reminder_time = request.form['reminder_time']
 
         # Check if settings exist
-        existing = db.execute('SELECT id FROM settings LIMIT 1').fetchone()
+        existing = get_settings(conn)
+        settings_id = existing['id'] if existing else None
 
-        if existing:
-            db.execute('''
-                UPDATE settings SET
-                bp_target_systolic = ?, bp_target_diastolic = ?,
-                hr_target_min = ?, hr_target_max = ?,
-                reminder_enabled = ?, reminder_time = ?,
-                updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ''', (bp_target_systolic, bp_target_diastolic, hr_target_min, hr_target_max,
-                  reminder_enabled, reminder_time, existing['id']))
-        else:
-            db.execute('''
-                INSERT INTO settings (bp_target_systolic, bp_target_diastolic, hr_target_min, hr_target_max, reminder_enabled, reminder_time)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (bp_target_systolic, bp_target_diastolic, hr_target_min, hr_target_max, reminder_enabled, reminder_time))
+        success = update_settings(conn, bp_target_systolic, bp_target_diastolic,
+                                 hr_target_min, hr_target_max,
+                                 reminder_enabled, reminder_time, settings_id)
 
-        db.commit()
-        flash('Settings saved successfully!', 'success')
+        if success:
+            flash('Settings saved successfully!', 'success')
         return redirect(get_bp_url())
 
     # GET request
-    settings = db.execute('SELECT * FROM settings ORDER BY id DESC LIMIT 1').fetchone()
+    settings = get_settings(conn)
     return render_template('settings.html', settings=settings)
 
 @app.route('/analytics')
@@ -266,19 +213,15 @@ def analytics():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    db = get_db()
+    conn = get_db()
 
     # Get data for last 30 days
     thirty_days_ago = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-    entries = db.execute('''
-        SELECT * FROM bp_entries
-        WHERE date >= ?
-        ORDER BY date ASC, time ASC
-    ''', (thirty_days_ago,)).fetchall()
+    entries = get_entries_since(conn, thirty_days_ago)
 
     # Prepare data for charts
     chart_data = prepare_chart_data(entries)
-    stats = calculate_stats(db)
+    stats = calculate_stats(conn)
     categories = categorize_readings(entries)
 
     return render_template('analytics.html',
@@ -308,16 +251,13 @@ def redirect_fluid():
 def redirect_weight():
     return redirect(get_weight_url())
 
-def calculate_stats(db):
+def calculate_stats(conn):
     """Calculate various statistics from blood pressure data"""
     stats = {}
 
     # Last 7 days averages
     week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-    week_entries = db.execute(
-        'SELECT * FROM bp_entries WHERE date >= ?',
-        (week_ago,)
-    ).fetchall()
+    week_entries = get_entries_since(conn, week_ago)
 
     if week_entries:
         stats['avg_systolic_week'] = sum(e['systolic'] for e in week_entries) / len(week_entries)
@@ -328,10 +268,7 @@ def calculate_stats(db):
 
     # Last 30 days averages
     month_ago = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-    month_entries = db.execute(
-        'SELECT * FROM bp_entries WHERE date >= ?',
-        (month_ago,)
-    ).fetchall()
+    month_entries = get_entries_since(conn, month_ago)
 
     if month_entries:
         stats['avg_systolic_month'] = sum(e['systolic'] for e in month_entries) / len(month_entries)
@@ -342,16 +279,13 @@ def calculate_stats(db):
 
     return stats
 
-def calculate_trends(db):
+def calculate_trends(conn):
     """Calculate trends in blood pressure readings"""
     trends = {}
 
     # Get last 14 days of data
     fourteen_days_ago = (datetime.now() - timedelta(days=14)).strftime('%Y-%m-%d')
-    entries = db.execute(
-        'SELECT * FROM bp_entries WHERE date >= ? ORDER BY date ASC, time ASC',
-        (fourteen_days_ago,)
-    ).fetchall()
+    entries = get_entries_since(conn, fourteen_days_ago)
 
     if len(entries) >= 4:  # Need at least 4 readings for trend
         # Split into first and second half

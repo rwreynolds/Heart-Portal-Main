@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import sqlite3
 from datetime import datetime, timedelta, date
 from flask import Flask, render_template, request, redirect, url_for, jsonify, g
 import logging
@@ -22,6 +21,15 @@ from auth import get_current_user
 from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
+)
+
+# Import database module
+from database import (
+    init_weight_database, get_db_connection, release_connection,
+    get_user_settings, get_today_entry, get_recent_entries, get_current_goal,
+    add_weight_entry, get_weight_history, get_total_entries_count,
+    update_user_settings, set_weight_goal, get_weight_entry_by_date,
+    lbs_to_kg, kg_to_lbs
 )
 
 app = Flask(__name__)
@@ -46,78 +54,23 @@ app.jinja_loader = ChoiceLoader([
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Database configuration
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE = os.path.join(BASE_DIR, 'database', 'weight_tracker.db')
-
+# Database connection management using Flask g object
 def get_db():
+    """Get database connection from Flask g object"""
     if 'db' not in g:
-        g.db = sqlite3.connect(DATABASE)
-        g.db.row_factory = sqlite3.Row
+        g.db = get_db_connection()
     return g.db
 
 def close_db(e=None):
+    """Close database connection"""
     db = g.pop('db', None)
     if db is not None:
-        db.close()
+        release_connection(db)
 
 @app.teardown_appcontext
 def close_db_teardown(error):
+    """Teardown function to close database"""
     close_db()
-
-def init_database():
-    """Initialize the database with required tables"""
-    os.makedirs(os.path.dirname(DATABASE), exist_ok=True)
-
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-
-        # Weight entries table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS weight_entries (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                date TEXT NOT NULL,
-                weight_lbs REAL NOT NULL,
-                weight_kg REAL NOT NULL,
-                time_of_day TEXT DEFAULT 'morning',
-                notes TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        # Weight goals table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS weight_goals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                target_weight_lbs REAL NOT NULL,
-                target_weight_kg REAL NOT NULL,
-                goal_type TEXT DEFAULT 'maintain',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_active INTEGER DEFAULT 1
-            )
-        ''')
-
-        # User settings table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS user_settings (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                preferred_unit TEXT DEFAULT 'lbs',
-                reminder_time TEXT DEFAULT '08:00',
-                reminder_enabled INTEGER DEFAULT 1,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-
-        # Insert default settings if none exist
-        cursor.execute('SELECT COUNT(*) FROM user_settings')
-        if cursor.fetchone()[0] == 0:
-            cursor.execute('''
-                INSERT INTO user_settings (preferred_unit, reminder_time, reminder_enabled)
-                VALUES ('lbs', '08:00', 1)
-            ''')
-
-        conn.commit()
-        logger.info("Database initialized successfully")
 
 def get_base_url():
     """Get the appropriate base URL based on environment"""
@@ -141,14 +94,6 @@ app.jinja_env.globals.update(
     get_current_user=get_current_user
 )
 
-def lbs_to_kg(lbs):
-    """Convert pounds to kilograms"""
-    return round(lbs * 0.453592, 2)
-
-def kg_to_lbs(kg):
-    """Convert kilograms to pounds"""
-    return round(kg * 2.20462, 2)
-
 @app.route('/')
 def index():
     """Weight tracking dashboard - requires login"""
@@ -157,30 +102,22 @@ def index():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    db = get_db()
+    conn = get_db()
     today = datetime.now().strftime('%Y-%m-%d')
 
     # Get user settings
-    settings = db.execute('SELECT * FROM user_settings ORDER BY id DESC LIMIT 1').fetchone()
+    settings = get_user_settings(conn)
     preferred_unit = settings['preferred_unit'] if settings else 'lbs'
 
     # Get today's weight entry
-    today_entry = db.execute(
-        'SELECT * FROM weight_entries WHERE date = ? ORDER BY created_at DESC LIMIT 1',
-        (today,)
-    ).fetchone()
+    today_entry = get_today_entry(conn, today)
 
     # Get recent entries (last 7 days)
     week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-    recent_entries = db.execute(
-        'SELECT * FROM weight_entries WHERE date >= ? ORDER BY date DESC, created_at DESC LIMIT 10',
-        (week_ago,)
-    ).fetchall()
+    recent_entries = get_recent_entries(conn, week_ago, limit=10)
 
     # Get current goal
-    current_goal = db.execute(
-        'SELECT * FROM weight_goals WHERE is_active = 1 ORDER BY created_at DESC LIMIT 1'
-    ).fetchone()
+    current_goal = get_current_goal(conn)
 
     # Calculate trend (last 7 days)
     weight_trend = None
@@ -227,19 +164,16 @@ def add_entry():
             weight_kg = weight_input
             weight_lbs = kg_to_lbs(weight_input)
 
-        db = get_db()
-        db.execute('''
-            INSERT INTO weight_entries (date, weight_lbs, weight_kg, time_of_day, notes)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (entry_date, weight_lbs, weight_kg, time_of_day, notes))
-        db.commit()
+        conn = get_db()
+        success = add_weight_entry(conn, entry_date, weight_lbs, weight_kg, time_of_day, notes)
 
-        logger.info(f"Weight entry added: {weight_lbs}lbs/{weight_kg}kg on {entry_date}")
+        if success:
+            logger.info(f"Weight entry added: {weight_lbs}lbs/{weight_kg}kg on {entry_date}")
         return redirect(url_for('index'))
 
     # Get user settings for default unit
-    db = get_db()
-    settings = db.execute('SELECT * FROM user_settings ORDER BY id DESC LIMIT 1').fetchone()
+    conn = get_db()
+    settings = get_user_settings(conn)
     preferred_unit = settings['preferred_unit'] if settings else 'lbs'
 
     return render_template('add_entry.html',
@@ -255,23 +189,20 @@ def history():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    db = get_db()
+    conn = get_db()
 
     # Get all entries, paginated
     page = request.args.get('page', 1, type=int)
     per_page = 20
     offset = (page - 1) * per_page
 
-    entries = db.execute(
-        'SELECT * FROM weight_entries ORDER BY date DESC, created_at DESC LIMIT ? OFFSET ?',
-        (per_page, offset)
-    ).fetchall()
+    entries = get_weight_history(conn, limit=per_page, offset=offset)
 
     # Get total count for pagination
-    total_entries = db.execute('SELECT COUNT(*) FROM weight_entries').fetchone()[0]
+    total_entries = get_total_entries_count(conn)
 
     # Get user settings
-    settings = db.execute('SELECT * FROM user_settings ORDER BY id DESC LIMIT 1').fetchone()
+    settings = get_user_settings(conn)
     preferred_unit = settings['preferred_unit'] if settings else 'lbs'
 
     return render_template('history.html',
@@ -290,7 +221,7 @@ def settings():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    db = get_db()
+    conn = get_db()
 
     if request.method == 'POST':
         preferred_unit = request.form['preferred_unit']
@@ -298,26 +229,18 @@ def settings():
         reminder_enabled = 1 if 'reminder_enabled' in request.form else 0
 
         # Check if settings exist
-        existing_settings = db.execute('SELECT id FROM user_settings LIMIT 1').fetchone()
+        existing_settings = get_user_settings(conn)
+        settings_id = existing_settings['id'] if existing_settings else None
 
-        if existing_settings:
-            db.execute('''
-                UPDATE user_settings
-                SET preferred_unit = ?, reminder_time = ?, reminder_enabled = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            ''', (preferred_unit, reminder_time, reminder_enabled, existing_settings['id']))
-        else:
-            db.execute('''
-                INSERT INTO user_settings (preferred_unit, reminder_time, reminder_enabled)
-                VALUES (?, ?, ?)
-            ''', (preferred_unit, reminder_time, reminder_enabled))
+        success = update_user_settings(conn, preferred_unit, reminder_time,
+                                       reminder_enabled, settings_id)
 
-        db.commit()
-        logger.info("Settings updated successfully")
+        if success:
+            logger.info("Settings updated successfully")
         return redirect(url_for('index'))
 
     # Get current settings
-    current_settings = db.execute('SELECT * FROM user_settings ORDER BY id DESC LIMIT 1').fetchone()
+    current_settings = get_user_settings(conn)
 
     return render_template('settings.html',
                          settings=current_settings,
@@ -326,7 +249,7 @@ def settings():
 @app.route('/set_goal', methods=['GET', 'POST'])
 def set_goal():
     """Set weight goal"""
-    db = get_db()
+    conn = get_db()
 
     if request.method == 'POST':
         target_weight = float(request.form['target_weight'])
@@ -341,27 +264,18 @@ def set_goal():
             target_weight_kg = target_weight
             target_weight_lbs = kg_to_lbs(target_weight)
 
-        # Deactivate existing goals
-        db.execute('UPDATE weight_goals SET is_active = 0')
+        success = set_weight_goal(conn, target_weight_lbs, target_weight_kg, goal_type)
 
-        # Insert new goal
-        db.execute('''
-            INSERT INTO weight_goals (target_weight_lbs, target_weight_kg, goal_type, is_active)
-            VALUES (?, ?, ?, 1)
-        ''', (target_weight_lbs, target_weight_kg, goal_type))
-
-        db.commit()
-        logger.info(f"Weight goal set: {target_weight_lbs}lbs ({goal_type})")
+        if success:
+            logger.info(f"Weight goal set: {target_weight_lbs}lbs ({goal_type})")
         return redirect(url_for('index'))
 
     # Get user settings
-    settings = db.execute('SELECT * FROM user_settings ORDER BY id DESC LIMIT 1').fetchone()
+    settings = get_user_settings(conn)
     preferred_unit = settings['preferred_unit'] if settings else 'lbs'
 
     # Get current goal
-    current_goal = db.execute(
-        'SELECT * FROM weight_goals WHERE is_active = 1 ORDER BY created_at DESC LIMIT 1'
-    ).fetchone()
+    current_goal = get_current_goal(conn)
 
     return render_template('set_goal.html',
                          preferred_unit=preferred_unit,
@@ -371,11 +285,8 @@ def set_goal():
 @app.route('/api/weight_data/<date>')
 def api_weight_data(date):
     """API endpoint for weight data"""
-    db = get_db()
-    entry = db.execute(
-        'SELECT * FROM weight_entries WHERE date = ? ORDER BY created_at DESC LIMIT 1',
-        (date,)
-    ).fetchone()
+    conn = get_db()
+    entry = get_weight_entry_by_date(conn, date)
 
     if entry:
         return jsonify({
@@ -423,6 +334,6 @@ def internal_error(error):
     return render_template('500.html', base_url=get_base_url()), 500
 
 if __name__ == '__main__':
-    init_database()
+    init_weight_database()
     port = int(os.environ.get('PORT', 5005))
     app.run(host='0.0.0.0', port=port, debug=True)
