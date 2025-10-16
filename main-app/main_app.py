@@ -20,8 +20,8 @@ from url_helpers import (
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
-# Add Blog-Manager directory to path for blog database functions
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'Blog-Manager'))
+# Add Blog-Manager directory to path for blog database functions (insert at beginning to prioritize)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Blog-Manager'))
 from database import init_blog_database, get_published_posts, get_pending_posts, approve_post, reject_post, delete_post
 
 app = Flask(__name__)
