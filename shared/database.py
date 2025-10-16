@@ -7,6 +7,7 @@ Each application configures its database path/URL via environment variables
 import os
 from datetime import datetime
 from typing import Dict, Optional, Any
+from urllib.parse import urlparse, unquote
 
 # Check which database to use
 DATABASE_TYPE = os.getenv('DATABASE_TYPE', 'sqlite').lower()
@@ -57,9 +58,19 @@ class DatabaseConfig:
     def init_connection_pool(self):
         """Initialize PostgreSQL connection pool"""
         if DATABASE_TYPE == 'postgresql' and self.connection_pool is None:
+            # Parse and decode the DATABASE_URL to handle URL-encoded passwords
+            parsed_url = urlparse(self.database_url)
+            decoded_password = unquote(parsed_url.password) if parsed_url.password else None
+
+            # Reconstruct the URL with decoded password
+            if decoded_password and decoded_password != parsed_url.password:
+                decoded_url = f"{parsed_url.scheme}://{parsed_url.username}:{decoded_password}@{parsed_url.hostname}:{parsed_url.port or 5432}{parsed_url.path}"
+            else:
+                decoded_url = self.database_url
+
             self.connection_pool = psycopg2.pool.SimpleConnectionPool(
                 1, 20,  # min and max connections
-                self.database_url
+                decoded_url
             )
 
     def get_connection(self):
