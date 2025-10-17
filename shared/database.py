@@ -62,11 +62,19 @@ class DatabaseConfig:
             parsed_url = urlparse(self.database_url)
             decoded_password = unquote(parsed_url.password) if parsed_url.password else None
 
+            # DEBUG: Log URL information
+            import sys
+            print(f"DEBUG [{self.app_name}]: Original database_url: {self.database_url}", file=sys.stderr, flush=True)
+            print(f"DEBUG [{self.app_name}]: Parsed password: {parsed_url.password}", file=sys.stderr, flush=True)
+            print(f"DEBUG [{self.app_name}]: Decoded password: {decoded_password}", file=sys.stderr, flush=True)
+
             # Reconstruct the URL with decoded password
             if decoded_password and decoded_password != parsed_url.password:
                 decoded_url = f"{parsed_url.scheme}://{parsed_url.username}:{decoded_password}@{parsed_url.hostname}:{parsed_url.port or 5432}{parsed_url.path}"
             else:
                 decoded_url = self.database_url
+
+            print(f"DEBUG [{self.app_name}]: Final decoded_url: {decoded_url}", file=sys.stderr, flush=True)
 
             self.connection_pool = psycopg2.pool.SimpleConnectionPool(
                 1, 20,  # min and max connections
