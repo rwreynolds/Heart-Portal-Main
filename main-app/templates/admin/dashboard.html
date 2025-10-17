@@ -4,36 +4,27 @@
 
 {% block additional_css %}
 <style>
+        .hero {
+            text-align: center;
+            padding: 60px 0 20px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
         .admin-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-        }
-
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            margin-top: 60px;
-            padding-bottom: 20px;
-        }
-
-        .admin-title {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .admin-badge {
-            background: linear-gradient(135deg, #dc2626, #ef4444);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            box-shadow: 0 3px 10px rgba(220, 38, 38, 0.3);
         }
 
         .admin-nav {
@@ -221,7 +212,14 @@
 {% endblock %}
 
 {% block content %}
-<div class="admin-container" style="padding-top: 20px !important;">
+<section class="hero" style="padding-top: 20px !important;">
+    <div class="main-container">
+        <h1>System Administration</h1>
+        <p>👑 Site Administrator</p>
+    </div>
+</section>
+
+<div class="admin-container">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">
@@ -233,11 +231,6 @@
             </div>
         {% endif %}
     {% endwith %}
-
-    <div class="admin-header">
-        <h1 class="admin-title">System Administration</h1>
-        <div class="admin-badge">👑 Site Administrator</div>
-    </div>
 
     <div class="stats-grid">
         <div class="stat-card">
