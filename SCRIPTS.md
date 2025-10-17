@@ -349,6 +349,81 @@ Enter commit message: Enhanced tabbed interface styling
 
 ---
 
+### `deploy-staging-simple.sh` - Staging Deployment (PostgreSQL + Gunicorn)
+
+#### **All Commands:**
+```bash
+./scripts/deploy-staging-simple.sh                    # Interactive deployment (default: postgres-migration)
+BRANCH=main ./scripts/deploy-staging-simple.sh        # Deploy specific branch
+./scripts/deploy-staging-simple.sh --help             # Show help and usage
+```
+
+#### **What It Does:**
+1. **Environment Check** - Verifies you're working locally (not on server)
+2. **Branch Selection** - Interactive branch selection or via BRANCH env var
+3. **Uncommitted Changes** - Checks and optionally commits local changes
+4. **GitHub Push** - Pushes selected branch to GitHub
+5. **Server Deployment** - Pulls code on staging server via git
+6. **Service Restart** - Restarts all 8 Gunicorn services
+7. **Health Verification** - Confirms all services are active
+8. **Database Preservation** - Keeps PostgreSQL databases and .env files intact
+
+#### **What It PRESERVES:**
+- ✅ **PostgreSQL databases** (no data loss)
+- ✅ **`.env` files** (DATABASE_URL, STAGING_MODE, passwords)
+- ✅ **`gunicorn_config.py` files** (worker configuration)
+- ✅ **Server-specific configuration** (all preserved)
+
+#### **Examples:**
+```bash
+# Interactive deployment (will prompt for branch)
+./scripts/deploy-staging-simple.sh
+
+# Deploy postgres-migration branch
+BRANCH=postgres-migration ./scripts/deploy-staging-simple.sh
+
+# Deploy main branch to staging
+BRANCH=main ./scripts/deploy-staging-simple.sh
+
+# View help
+./scripts/deploy-staging-simple.sh --help
+```
+
+#### **Staging Environment:**
+- **URL:** http://heartfailureportal.com:8081
+- **Services:** 8 applications running with Gunicorn
+- **Databases:** PostgreSQL (8 staging databases)
+- **Nginx:** Port 8081 reverse proxy
+
+#### **Staging Services:**
+| Service | Port | Database | Systemd Service |
+|---------|------|----------|-----------------|
+| Main App | 3001 | blog | `heart-portal-staging-main` |
+| Blog Manager | 5002 | blog | `heart-portal-staging-blog` |
+| Nutrition Database | 5000 | nutrition | `heart-portal-staging-nutrition` |
+| Food-Base | 5001 | food | `heart-portal-staging-food` |
+| Sodium Tracker | 5003 | sodium | `heart-portal-staging-sodium` |
+| Fluid Tracker | 5004 | fluid | `heart-portal-staging-fluid` |
+| Weight Tracker | 5005 | weight | `heart-portal-staging-weight` |
+| BP Monitor | 5006 | bp | `heart-portal-staging-bp` |
+
+#### **Features:**
+- ✅ Safe code updates (preserves data and configuration)
+- ✅ Interactive branch selection
+- ✅ Uncommitted change detection
+- ✅ Automatic service restart
+- ✅ Health verification after deployment
+- ✅ PostgreSQL database preservation
+- ✅ .env file preservation
+- ✅ Detailed deployment feedback
+
+#### **Important Notes:**
+- 🚨 **DO NOT USE** `./scripts/deploy-staging.sh` (outdated, uses Flask dev server)
+- 🚨 **DO NOT USE** `./scripts/cleanup-staging.sh` (will delete PostgreSQL data)
+- ✅ **USE** `./scripts/deploy-staging-simple.sh` for current PostgreSQL + Gunicorn setup
+
+---
+
 ## 🔒 SSL Management Scripts
 
 ### `setup-ssl.sh` - SSL Certificate Setup (One-time)
@@ -549,7 +624,10 @@ sudo ./scripts/setup-ssl.sh --domain example.com # Setup for specific domain
 # 2. Make your code changes
 # ... edit files ...
 
-# 3. Deploy changes (handles commit & push automatically)
+# 3a. Deploy to staging for testing (PostgreSQL + Gunicorn)
+./scripts/deploy-staging-simple.sh
+
+# 3b. OR deploy directly to production (after staging tests pass)
 ./scripts/deploy.sh
 
 # 4. Monitor deployment success
