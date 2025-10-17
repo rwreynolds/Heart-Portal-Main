@@ -767,5 +767,8 @@ def format_food_comparison(results):
 
 if __name__ == '__main__':
     import os
-port = int(os.environ.get('PORT', 5000))
-app.run(debug=True, port=port)
+    port = int(os.environ.get('PORT', 5000))
+    # Only run Flask dev server if not using Gunicorn (local development)
+    # Gunicorn sets its own environment variables and doesn't execute this block
+    if not os.environ.get('GUNICORN_CMD_ARGS') and not os.environ.get('STAGING_MODE') and not os.environ.get('PRODUCTION_MODE'):
+        app.run(debug=True, port=port)
