@@ -38,29 +38,52 @@ def migrate_blog_manager():
     pg_conn.autocommit = True
     pg_cur = pg_conn.cursor()
 
-    # Create tables
+    # Create tables - match the exact schema from Blog-Manager/database.py
     pg_cur.execute("""
         CREATE TABLE IF NOT EXISTS blog_posts (
             id SERIAL PRIMARY KEY,
             title TEXT NOT NULL,
             content TEXT NOT NULL,
-            author TEXT NOT NULL,
+            author_id INTEGER NOT NULL,
+            author_name TEXT NOT NULL,
+            status TEXT DEFAULT 'draft',
+            visibility TEXT DEFAULT 'private',
+            slug TEXT UNIQUE,
+            excerpt TEXT,
+            featured_image TEXT,
+            tags TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            status TEXT DEFAULT 'pending',
-            rejection_reason TEXT
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            published_at TIMESTAMP,
+            reviewer_id INTEGER,
+            review_notes TEXT
         )
     """)
 
-    # Copy data
+    # Create indexes
+    pg_cur.execute('CREATE INDEX IF NOT EXISTS idx_posts_status ON blog_posts (status)')
+    pg_cur.execute('CREATE INDEX IF NOT EXISTS idx_posts_visibility ON blog_posts (visibility)')
+    pg_cur.execute('CREATE INDEX IF NOT EXISTS idx_posts_author ON blog_posts (author_id)')
+    pg_cur.execute('CREATE INDEX IF NOT EXISTS idx_posts_published ON blog_posts (published_at)')
+
+    # Copy data - use actual column names from SQLite schema
     sqlite_cur = sqlite_conn.cursor()
-    sqlite_cur.execute("SELECT title, content, author, created_at, status, rejection_reason FROM blog_posts")
+    sqlite_cur.execute("""
+        SELECT title, content, author_id, author_name, status, visibility, slug,
+               excerpt, featured_image, tags, created_at, updated_at, published_at,
+               reviewer_id, review_notes
+        FROM blog_posts
+    """)
     rows = sqlite_cur.fetchall()
 
     for row in rows:
-        pg_cur.execute(
-            "INSERT INTO blog_posts (title, content, author, created_at, status, rejection_reason) VALUES (%s, %s, %s, %s, %s, %s)",
-            (row[0], row[1], row[2], row[3], row[4], row[5])
-        )
+        pg_cur.execute("""
+            INSERT INTO blog_posts
+            (title, content, author_id, author_name, status, visibility, slug,
+             excerpt, featured_image, tags, created_at, updated_at, published_at,
+             reviewer_id, review_notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, row)
 
     print(f"✅ Migrated {len(rows)} blog posts")
 
