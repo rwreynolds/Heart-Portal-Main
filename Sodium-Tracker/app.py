@@ -144,7 +144,7 @@ def add_entry():
             notes=data.get('notes', '')
         )
 
-        return redirect(url_for('index'))
+        return redirect('./')
 
     return render_template('add_entry.html',
                          today=date.today().isoformat(),
