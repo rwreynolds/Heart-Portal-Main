@@ -662,7 +662,15 @@
                 populateDataTypeCheckboxes();
 
             } catch (error) {
-                showAlert('Failed to load data types: ' + error.message, 'error');
+                console.error('Failed to load data types from API, using fallback:', error);
+                // Use fallback data types if API fails
+                currentDataTypes = [
+                    { value: 'Foundation', label: 'Foundation Foods' },
+                    { value: 'SR Legacy', label: 'SR Legacy Foods' },
+                    { value: 'Survey (FNDDS)', label: 'Survey Foods' },
+                    { value: 'Branded', label: 'Branded Foods' }
+                ];
+                populateDataTypeCheckboxes();
             }
         }
 
