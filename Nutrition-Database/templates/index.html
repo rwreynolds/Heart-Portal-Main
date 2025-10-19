@@ -366,18 +366,6 @@
                         <label for="adv-search-query">Search Query</label>
                         <input type="text" id="adv-search-query" class="form-control" placeholder="e.g., chicken breast, organic milk">
                     </div>
-                </div>
-
-                <div class="filter-group">
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Data Types to Include</label>
-                        <div id="data-types-checkboxes" class="checkbox-group" style="display: flex; flex-wrap: wrap; gap: 16px;">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="filter-group">
                     <div class="form-group">
                         <label for="brand-owner">Brand Owner (Optional)</label>
                         <input type="text" id="brand-owner" class="form-control" placeholder="e.g., General Mills">
@@ -398,6 +386,15 @@
                             <option value="asc">Ascending</option>
                             <option value="desc">Descending</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Data Types to Include</label>
+                        <div id="data-types-checkboxes" class="checkbox-group" style="display: flex; flex-wrap: wrap; gap: 16px;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
                     </div>
                 </div>
 
