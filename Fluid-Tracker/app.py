@@ -249,7 +249,7 @@ def add_entry():
         conn.close()
 
         flash('Fluid entry added successfully!', 'success')
-        return redirect(url_for('index'))
+        return redirect('./')
 
     return render_template('add_entry.html',
                          today=date.today().isoformat(),
