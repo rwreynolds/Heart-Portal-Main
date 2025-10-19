@@ -1258,7 +1258,7 @@
         async function showFoodDetails(provider, foodId) {
             try {
                 // Fetch detailed food information
-                const response = await fetch(`/api/food-details/${foodId}`, {
+                const response = await fetch(`./api/food-details/${foodId}`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
