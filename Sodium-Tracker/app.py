@@ -137,7 +137,7 @@ def add_entry():
 
         db.add_entry(
             date=entry_date,
-            food_name=data.get('food_item'),
+            food_item=data.get('food_item'),
             sodium_mg=float(data.get('sodium_mg', 0)),
             serving_size=data.get('serving_size', ''),
             meal_type=data.get('meal_type', ''),
