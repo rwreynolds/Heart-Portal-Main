@@ -809,19 +809,21 @@
                 return;
             }
 
-            const resultsHtml = data.results.map((food, index) => `
+            const resultsHtml = data.results.map((food, index) => {
+                const escapedName = food.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                return `
                 <div class="food-item" onclick="showFoodDetails('usda_enhanced', '${food.food_id}')">
                     <div class="click-hint">Click for details</div>
                     <div class="food-name">
                         ${food.name}
                         ${getDataTypeBadge(food.data_type)}
                         <div style="float: right; display: flex; gap: 4px;">
-                            <button onclick="event.stopPropagation(); saveToFoodBase(${food.food_id}, '${food.name.replace(/'/g, "\\'")}', this)"
+                            <button onclick="event.stopPropagation(); saveToFoodBase(${food.food_id}, '${escapedName}', this)"
                                     class="btn btn-primary save-btn" style="padding: 4px 8px; font-size: 12px;"
                                     data-food-id="${food.food_id}" title="Save to Food-Base">
                                 💾 Save
                             </button>
-                            <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${food.name}')"
+                            <button onclick="event.stopPropagation(); addToComparison(${food.food_id}, '${escapedName}')"
                                     class="btn btn-success" style="padding: 4px 8px; font-size: 12px;">
                                 + Compare
                             </button>
@@ -840,7 +842,8 @@
                     </div>
                 </div>
                 ${index < data.results.length - 1 ? '<div class="food-separator"></div>' : ''}
-            `).join('');
+            `;
+            }).join('');
 
             resultsDiv.innerHTML = resultsHtml;
         }
