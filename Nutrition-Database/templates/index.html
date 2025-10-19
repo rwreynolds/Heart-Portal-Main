@@ -741,7 +741,7 @@
         async function performAdvancedSearch(pageNumber = 1) {
             // Check if API key is configured before making request
             if (!apiKeyConfigured) {
-                displayResults([], 'Advanced Search', 'API key is not configured. Please check your .env file.');
+                showAlert('API key is not configured. Please check your .env file.', 'error');
                 return;
             }
 
