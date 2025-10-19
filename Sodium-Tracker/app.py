@@ -175,12 +175,16 @@ def history():
         daily_goal = get_daily_goal(entry_date)
         percentage = (total_sodium / daily_goal * 100) if daily_goal > 0 else 0
 
+        # Get all entries for this date
+        entries = db.get_entries(date=entry_date)
+
         daily_summaries.append({
             'date': entry_date,
             'total_sodium': total_sodium,
             'entry_count': entry_count,
             'daily_goal': daily_goal,
-            'percentage': round(percentage, 1)
+            'percentage': round(percentage, 1),
+            'entries': entries
         })
 
     return render_template('history.html',

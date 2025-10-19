@@ -187,7 +187,7 @@
                 <tbody>
                     {% for summary in daily_summaries %}
                     <tr>
-                        <td>{{ summary.date }}</td>
+                        <td><strong>{{ summary.date }}</strong></td>
                         <td><strong>{{ summary.total_sodium }}mg</strong></td>
                         <td>{{ summary.daily_goal }}mg</td>
                         <td>
@@ -202,6 +202,26 @@
                         </td>
                         <td>{{ summary.entry_count }}</td>
                     </tr>
+                    {% if summary.entries %}
+                        {% for entry in summary.entries %}
+                        <tr style="background: #f9fafb;">
+                            <td style="padding-left: 40px; font-size: 0.9rem;">
+                                <i class="fas fa-arrow-right" style="color: #9ca3af; font-size: 0.7rem;"></i>
+                                {{ entry.food_item }}
+                            </td>
+                            <td style="font-size: 0.9rem;">{{ entry.sodium_mg }}mg</td>
+                            <td style="font-size: 0.9rem; color: #6b7280;">
+                                {% if entry.serving_size %}{{ entry.serving_size }}{% endif %}
+                            </td>
+                            <td style="font-size: 0.9rem; color: #6b7280;">
+                                {% if entry.meal_type %}{{ entry.meal_type }}{% endif %}
+                            </td>
+                            <td style="font-size: 0.9rem; color: #6b7280;">
+                                {% if entry.notes %}{{ entry.notes }}{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
