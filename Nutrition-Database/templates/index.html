@@ -26,12 +26,12 @@
 
         /* Keep your existing styles and add these new ones */
 
-        .form-group {
+        .filter-group .form-group {
             display: flex;
             flex-direction: column;
         }
 
-        .form-group label {
+        .filter-group .form-group label {
             display: block;
             margin-bottom: 6px;
             font-weight: 600;
@@ -39,12 +39,37 @@
             font-size: 14px;
         }
 
-        .form-control {
+        .filter-group .form-control {
             width: 100%;
             padding: 8px 12px;
             border: 1px solid #d2d2d7;
             border-radius: 6px;
             font-size: 14px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #007aff;
+            color: white;
+        }
+
+        .btn:hover {
+            background: #0051d5;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
         }
 
         .tabs {
