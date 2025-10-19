@@ -51,7 +51,8 @@ def init_sodium_database():
             serving_size TEXT,
             meal_type TEXT,
             notes TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
@@ -154,8 +155,8 @@ def add_entry(date: str, food_item: str, sodium_mg: float, serving_size: str = '
     conn = get_db_connection()
 
     query = '''
-        INSERT INTO sodium_entries (date, food_item, sodium_mg, serving_size, meal_type, notes, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        INSERT INTO sodium_entries (date, food_item, sodium_mg, serving_size, meal_type, notes, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     '''
 
     cursor = _db_config.execute_query(
@@ -201,6 +202,9 @@ def update_entry(entry_id: int, food_item: str = None, sodium_mg: float = None,
     if not updates:
         release_connection(conn)
         return False
+
+    # Always update the updated_at timestamp
+    updates.append('updated_at = CURRENT_TIMESTAMP')
 
     params.append(entry_id)
     query = f"UPDATE sodium_entries SET {', '.join(updates)} WHERE id = ?"
