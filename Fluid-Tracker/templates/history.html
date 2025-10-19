@@ -187,7 +187,7 @@
                 <tbody>
                     {% for summary in daily_summaries %}
                     <tr>
-                        <td>{{ summary.date }}</td>
+                        <td><strong>{{ summary.date }}</strong></td>
                         <td><strong>{{ summary.total_volume }}ml</strong></td>
                         <td>{{ summary.daily_goal }}ml</td>
                         <td>
@@ -202,6 +202,26 @@
                         </td>
                         <td>{{ summary.entry_count }}</td>
                     </tr>
+                    {% if summary.entries %}
+                        {% for entry in summary.entries %}
+                        <tr style="background: #f9fafb;">
+                            <td style="padding-left: 40px; font-size: 0.9rem;">
+                                <i class="fas fa-arrow-right" style="color: #9ca3af; font-size: 0.7rem;"></i>
+                                {{ entry.fluid_type }}
+                            </td>
+                            <td style="font-size: 0.9rem;">{{ entry.volume_ml }}ml</td>
+                            <td style="font-size: 0.9rem; color: #6b7280;">
+                                {% if entry.container_size %}{{ entry.container_size }}{% endif %}
+                            </td>
+                            <td style="font-size: 0.9rem; color: #6b7280;">
+                                {% if entry.time_consumed %}{{ entry.time_consumed }}{% endif %}
+                            </td>
+                            <td style="font-size: 0.9rem; color: #6b7280;">
+                                {% if entry.notes %}{{ entry.notes }}{% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>

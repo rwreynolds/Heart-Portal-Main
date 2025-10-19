@@ -282,20 +282,44 @@ def history():
         LIMIT ? OFFSET ?
     ''', (per_page, offset))
 
+    summaries = cursor.fetchall()
+
     daily_summaries = []
-    for row in cursor.fetchall():
+    for row in summaries:
         entry_date = row[0]
         total_volume = row[1]
         entry_count = row[2]
         daily_goal = get_daily_goal(entry_date)
         percentage = (total_volume / daily_goal * 100) if daily_goal > 0 else 0
 
+        # Get all entries for this date
+        cursor.execute('''
+            SELECT id, date, fluid_type, volume_ml, container_size, time_consumed, notes, created_at
+            FROM fluid_entries
+            WHERE date = ?
+            ORDER BY created_at DESC
+        ''', (entry_date,))
+
+        entries = []
+        for entry_row in cursor.fetchall():
+            entries.append({
+                'id': entry_row[0],
+                'date': entry_row[1],
+                'fluid_type': entry_row[2],
+                'volume_ml': entry_row[3],
+                'container_size': entry_row[4],
+                'time_consumed': entry_row[5],
+                'notes': entry_row[6],
+                'created_at': entry_row[7]
+            })
+
         daily_summaries.append({
             'date': entry_date,
             'total_volume': total_volume,
             'entry_count': entry_count,
             'daily_goal': daily_goal,
-            'percentage': round(percentage, 1)
+            'percentage': round(percentage, 1),
+            'entries': entries
         })
 
     conn.close()
