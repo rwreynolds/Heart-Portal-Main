@@ -46,7 +46,7 @@ def init_sodium_database():
         CREATE TABLE IF NOT EXISTS sodium_entries (
             id {autoincrement},
             date TEXT NOT NULL,
-            food_name TEXT NOT NULL,
+            food_item TEXT NOT NULL,
             sodium_mg REAL NOT NULL,
             serving_size TEXT,
             meal_type TEXT,
@@ -148,19 +148,19 @@ def get_entries(date: str = None, limit: int = 100) -> List[Dict]:
     return entries
 
 
-def add_entry(date: str, food_name: str, sodium_mg: float, serving_size: str = '',
+def add_entry(date: str, food_item: str, sodium_mg: float, serving_size: str = '',
               meal_type: str = '', notes: str = '') -> int:
     """Add a new sodium entry"""
     conn = get_db_connection()
 
     query = '''
-        INSERT INTO sodium_entries (date, food_name, sodium_mg, serving_size, meal_type, notes, created_at)
+        INSERT INTO sodium_entries (date, food_item, sodium_mg, serving_size, meal_type, notes, created_at)
         VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     '''
 
     cursor = _db_config.execute_query(
         conn, query,
-        (date, food_name, sodium_mg, serving_size, meal_type, notes),
+        (date, food_item, sodium_mg, serving_size, meal_type, notes),
         use_dict_cursor=False
     )
 
@@ -174,7 +174,7 @@ def add_entry(date: str, food_name: str, sodium_mg: float, serving_size: str = '
     return entry_id
 
 
-def update_entry(entry_id: int, food_name: str = None, sodium_mg: float = None,
+def update_entry(entry_id: int, food_item: str = None, sodium_mg: float = None,
                 serving_size: str = None, meal_type: str = None, notes: str = None) -> bool:
     """Update an existing sodium entry"""
     conn = get_db_connection()
@@ -182,9 +182,9 @@ def update_entry(entry_id: int, food_name: str = None, sodium_mg: float = None,
     updates = []
     params = []
 
-    if food_name is not None:
-        updates.append('food_name = ?')
-        params.append(food_name)
+    if food_item is not None:
+        updates.append('food_item = ?')
+        params.append(food_item)
     if sodium_mg is not None:
         updates.append('sodium_mg = ?')
         params.append(sodium_mg)
