@@ -1,62 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Error - Heart Failure Portal</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            padding-top: 80px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #333;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        .header {
-            background: #dc2626;
-            padding: 20px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            width: 100%;
-            z-index: 1000;
-            box-sizing: border-box;
-        }
-        .nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: white;
-        }
-        .nav-links {
-            display: flex;
-            gap: 30px;
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: #fecaca;
-        }
+{% extends "base.html" %}
+
+{% block title %}Server Error - Heart Failure Portal{% endblock %}
+
+{% block additional_css %}
+<style>
         .error-content {
             text-align: center;
             padding: 100px 0;
@@ -91,32 +38,11 @@
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-        .footer {
-            background: #333;
-            color: white;
-            text-align: center;
-            padding: 40px 0;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-        }
-    </style>
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <nav class="nav">
-                <div class="logo">❤️ Heart Portal</div>
-                <ul class="nav-links">
-                    <li><a href="{{ get_main_app_url() }}">Home</a></li>
-                    <li><a href="{{ get_blog_url() }}">Blog</a></li>
-                    <li><a href="{{ get_main_app_url() }}/about">About</a></li>
-                    <li><a href="{{ get_main_app_url() }}/contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+</style>
+{% endblock %}
 
+{% block content %}
+<div style="padding-top: 80px;">
     <section class="error-content">
         <div class="container">
             <h1>500</h1>
@@ -125,11 +51,5 @@
             <a href="{{ get_blog_url() }}" class="btn">Return to Blog</a>
         </div>
     </section>
-
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 Heart Failure Portal. Created to support heart health through better nutrition.</p>
-        </div>
-    </footer>
-</body>
-</html>
+</div>
+{% endblock %}
