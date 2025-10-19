@@ -169,7 +169,7 @@ def add_entry():
 
         if success:
             logger.info(f"Weight entry added: {weight_lbs}lbs/{weight_kg}kg on {entry_date}")
-        return redirect(url_for('index'))
+        return redirect('./')
 
     # Get user settings for default unit
     conn = get_db()
