@@ -16,32 +16,42 @@ This document provides comprehensive documentation for the Heart Portal consolid
 #### **All Available Commands:**
 
 ```bash
-# === BULK SERVICE OPERATIONS ===
-./scripts/manage-services.sh start               # Start all Heart Portal services (remote)
-./scripts/manage-services.sh stop                # Stop all Heart Portal services (remote)
-./scripts/manage-services.sh restart             # Restart all Heart Portal services (remote)
-./scripts/manage-services.sh status              # Show status of all services (remote)
+# === PRODUCTION SERVICE OPERATIONS (DEFAULT) ===
+./scripts/manage-services.sh start               # Start all production services (remote)
+./scripts/manage-services.sh stop                # Stop all production services (remote)
+./scripts/manage-services.sh restart             # Restart all production services (remote)
+./scripts/manage-services.sh status              # Show status of all production services (remote)
+
+# === STAGING SERVICE OPERATIONS ===
+./scripts/manage-services.sh start --staging     # Start all staging services (remote)
+./scripts/manage-services.sh stop --staging      # Stop all staging services (remote)
+./scripts/manage-services.sh restart --staging   # Restart all staging services (remote)
+./scripts/manage-services.sh status --staging    # Show status of all staging services (remote)
 
 # === INDIVIDUAL SERVICE CONTROL ===
-./scripts/manage-services.sh start [service]     # Start specific service (remote)
-./scripts/manage-services.sh stop [service]      # Stop specific service (remote)
-./scripts/manage-services.sh restart [service]   # Restart specific service (remote)
-./scripts/manage-services.sh status [service]    # Check specific service status (remote)
+./scripts/manage-services.sh start [service]     # Start specific production service
+./scripts/manage-services.sh stop [service]      # Stop specific production service
+./scripts/manage-services.sh restart [service]   # Restart specific production service
+./scripts/manage-services.sh status [service]    # Check specific production service status
+
+# === STAGING INDIVIDUAL SERVICE CONTROL ===
+./scripts/manage-services.sh start [service] --staging     # Start specific staging service
+./scripts/manage-services.sh stop [service] --staging      # Stop specific staging service
+./scripts/manage-services.sh restart [service] --staging   # Restart specific staging service
+./scripts/manage-services.sh status [service] --staging    # Check specific staging service status
 
 # === LOCAL DEVELOPMENT MODE ===
 ./scripts/manage-services.sh start --local       # Start all services locally (Flask processes)
 ./scripts/manage-services.sh stop --local        # Stop all local Flask processes
 ./scripts/manage-services.sh restart --local     # Restart all local Flask processes
 ./scripts/manage-services.sh status --local      # Show local Flask process status
-
-# === MIXED LOCAL/REMOTE OPERATIONS ===
 ./scripts/manage-services.sh start [service] --local    # Start specific service locally
 ./scripts/manage-services.sh stop [service] --local     # Stop specific local service
 ./scripts/manage-services.sh restart [service] --local  # Restart specific local service
 ./scripts/manage-services.sh status [service] --local   # Check specific local service
 
 # === SERVICE UPDATES (REMOTE ONLY) ===
-./scripts/manage-services.sh update              # Update main service (fix port conflicts)
+./scripts/manage-services.sh update              # Update main production service (fix port conflicts)
 ```
 
 #### **Service Names:**
@@ -56,22 +66,39 @@ This document provides comprehensive documentation for the Heart Portal consolid
 
 #### **Examples:**
 
-**Remote Server Operations (Default):**
+**Production Service Operations (Default):**
 ```bash
-# Start only the main app and nutrition database on remote server
+# Start only the main app and nutrition database on production server
 ./scripts/manage-services.sh start main
 ./scripts/manage-services.sh start nutrition
 
-# Check status of tracker services on remote server
+# Check status of tracker services on production server
 ./scripts/manage-services.sh status sodium
 ./scripts/manage-services.sh status fluid
 ./scripts/manage-services.sh status weight
 
-# Restart problematic service on remote server
+# Restart problematic service on production server
 ./scripts/manage-services.sh restart main
 
-# Fix main app port conflicts on remote server
+# Fix main app port conflicts on production server
 ./scripts/manage-services.sh update
+```
+
+**Staging Service Operations:**
+```bash
+# Restart all staging services (e.g., after deployment)
+./scripts/manage-services.sh restart --staging
+
+# Check status of all staging services
+./scripts/manage-services.sh status --staging
+
+# Restart specific staging service
+./scripts/manage-services.sh restart sodium --staging
+./scripts/manage-services.sh restart blog --staging
+
+# Start/stop staging environment
+./scripts/manage-services.sh start --staging
+./scripts/manage-services.sh stop --staging
 ```
 
 **Local Development Operations:**
@@ -97,25 +124,33 @@ This document provides comprehensive documentation for the Heart Portal consolid
 
 **Mixed Operations:**
 ```bash
-# Check remote server status, then start local development
+# Check production server status
 ./scripts/manage-services.sh status
-./scripts/manage-services.sh start --local
 
-# Test locally, then deploy and restart remote
+# Check staging status
+./scripts/manage-services.sh status --staging
+
+# Deploy to staging and restart
+./scripts/deploy-staging-simple.sh
+./scripts/manage-services.sh restart --staging
+
+# Test locally, then deploy to production
 ./scripts/manage-services.sh stop --local
-./scripts/deploy-staging.sh
+./scripts/deploy.sh
 ./scripts/manage-services.sh restart
 ```
 
 #### **Features:**
-- ✅ **Dual Environment Support**: Remote server (systemd) and local development (Flask processes)
+- ✅ **Triple Environment Support**: Production, staging, and local development
+- ✅ **Staging Environment**: `--staging` flag manages `heart-portal-staging-*` services
+- ✅ **Production Environment**: Default mode manages `heart-portal-*` services
+- ✅ **Local Development Mode**: `--local` flag for Flask process management
 - ✅ **Unified service lifecycle management**: start, stop, restart, status operations
 - ✅ **Individual or bulk service operations**: Target specific services or manage all at once
-- ✅ **Local Development Mode**: `--local` flag for Flask process management
 - ✅ **Automatic port conflict resolution**: Built-in port 3000 conflict detection and resolution
 - ✅ **Environment detection**: Automatically detects local vs remote execution context
 - ✅ **Health verification**: Post-operation service health checks and port connectivity tests
-- ✅ **Systemd integration**: Full systemd service management for production deployment
+- ✅ **Systemd integration**: Full systemd service management for production/staging deployment
 - ✅ **Error handling and recovery**: Comprehensive error reporting and auto-recovery features
 
 ---
@@ -670,13 +705,19 @@ pkill nginx
 
 ### 🔧 **Service Management Workflow**
 ```bash
-# Check overall status
+# Check production status
 ./scripts/manage-services.sh status
 
-# Restart problematic service
+# Check staging status
+./scripts/manage-services.sh status --staging
+
+# Restart problematic production service
 ./scripts/manage-services.sh restart main
 
-# Fix main app port conflicts
+# Restart all staging services after deployment
+./scripts/manage-services.sh restart --staging
+
+# Fix main app port conflicts (production)
 ./scripts/manage-services.sh update
 
 # Start continuous monitoring
