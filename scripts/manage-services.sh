@@ -33,13 +33,14 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Detect if we're running locally or on the server
-if [ "$(whoami)" = "$SERVER_USER" ] && [ "$(hostname -I 2>/dev/null | grep -q "$SERVER_HOST" && echo "server" || echo "local")" = "server" ]; then
+# Default to remote mode (managing systemd services via SSH)
+RUN_MODE="remote"
+SSH_CMD="ssh -i $SSH_KEY -o BatchMode=yes -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST"
+
+# Check if we're running on the server itself
+if [ "$(whoami)" = "$SERVER_USER" ]; then
     RUN_MODE="server"
     SSH_CMD=""
-else
-    RUN_MODE="local"
-    SSH_CMD="ssh -i $SSH_KEY -o BatchMode=yes -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST"
 fi
 
 # Override run mode and service prefix if specified
@@ -47,7 +48,6 @@ for arg in "$@"; do
     case "$arg" in
         --local)
             RUN_MODE="local"
-            SSH_CMD="ssh -i $SSH_KEY -o BatchMode=yes -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST"
             ;;
         --staging)
             SERVICE_PREFIX="heart-portal-staging"
@@ -74,8 +74,13 @@ warning() {
 execute_command() {
     local cmd="$1"
     if [ "$RUN_MODE" = "local" ]; then
+        # Local mode: manage local Flask processes
+        eval "$cmd"
+    elif [ "$RUN_MODE" = "remote" ]; then
+        # Remote mode: manage remote systemd services via SSH
         $SSH_CMD "$cmd"
     else
+        # Server mode: running on the server itself
         eval "$cmd"
     fi
 }
