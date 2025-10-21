@@ -2,7 +2,7 @@
 
 # Heart Portal Service Management Script
 # Consolidates start-system.sh, stop-system.sh, status-system.sh, update-main-service.sh
-# Usage: ./manage-services.sh {start|stop|status|restart|update} [service-name] [--local]
+# Usage: ./manage-services.sh {start|stop|status|restart|update} [service-name] [--local|--staging]
 
 set -euo pipefail
 
@@ -11,16 +11,19 @@ SERVER_HOST="129.212.181.161"
 SERVER_USER="heartportal"
 SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
 
-# Service definitions
+# Default to production services
+SERVICE_PREFIX="heart-portal"
+
+# Service definitions (will be prefixed with staging if --staging is used)
 SERVICES=(
-    "heart-portal-main:3000"
-    "heart-portal-nutrition:5000"
-    "heart-portal-food:5001"
-    "heart-portal-blog:5002"
-    "heart-portal-sodium:5003"
-    "heart-portal-fluid:5004"
-    "heart-portal-weight:5005"
-    "heart-portal-bp:5006"
+    "main:3000"
+    "nutrition:5000"
+    "food:5001"
+    "blog:5002"
+    "sodium:5003"
+    "fluid:5004"
+    "weight:5005"
+    "bp:5006"
 )
 
 # Colors for output
@@ -39,12 +42,15 @@ else
     SSH_CMD="ssh -i $SSH_KEY -o BatchMode=yes -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST"
 fi
 
-# Override run mode if specified
+# Override run mode and service prefix if specified
 for arg in "$@"; do
     case "$arg" in
         --local)
             RUN_MODE="local"
             SSH_CMD="ssh -i $SSH_KEY -o BatchMode=yes -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST"
+            ;;
+        --staging)
+            SERVICE_PREFIX="heart-portal-staging"
             ;;
     esac
 done
@@ -75,7 +81,7 @@ execute_command() {
 }
 
 show_usage() {
-    echo "Usage: $0 {start|stop|status|restart|update} [service-name] [--local]"
+    echo "Usage: $0 {start|stop|status|restart|update} [service-name] [--local|--staging]"
     echo
     echo "Commands:"
     echo "  start    - Start all services or specified service"
@@ -85,21 +91,24 @@ show_usage() {
     echo "  update   - Update and restart main service"
     echo
     echo "Options:"
-    echo "  --local  - Force local mode (manage Flask processes instead of systemd services)"
+    echo "  --local    - Force local mode (manage Flask processes instead of systemd services)"
+    echo "  --staging  - Manage staging services (heart-portal-staging-*)"
     echo
     echo "Services:"
     for service_def in "${SERVICES[@]}"; do
         service_name="${service_def%%:*}"
         port="${service_def##*:}"
-        echo "  ${service_name##*-} (${service_name}:${port})"
+        echo "  $service_name (port $port)"
     done
     echo
     echo "Examples:"
-    echo "  $0 status                    # Show all service status (remote)"
-    echo "  $0 status --local            # Show local Flask process status"
-    echo "  $0 restart blog --local      # Restart blog service locally"
-    echo "  $0 start heart-portal-blog   # Start blog service (remote)"
-    echo "  $0 update                    # Update main service (remote)"
+    echo "  $0 status                      # Show all production service status"
+    echo "  $0 status --staging            # Show all staging service status"
+    echo "  $0 restart --staging           # Restart all staging services"
+    echo "  $0 restart blog --staging      # Restart blog staging service"
+    echo "  $0 status --local              # Show local Flask process status"
+    echo "  $0 restart blog --local        # Restart blog service locally"
+    echo "  $0 update                      # Update main production service"
 }
 
 get_service_status() {
@@ -327,7 +336,7 @@ restart_local_service() {
 FILTERED_ARGS=()
 for arg in "$@"; do
     case "$arg" in
-        --local) ;; # Skip this flag
+        --local|--staging) ;; # Skip these flags
         *) FILTERED_ARGS+=("$arg") ;;
     esac
 done
@@ -345,10 +354,8 @@ fi
 case "$ACTION" in
     start)
         if [ -n "$SERVICE_FILTER" ]; then
-            # Handle service name variations
-            if [[ "$SERVICE_FILTER" != heart-portal-* ]]; then
-                SERVICE_FILTER="heart-portal-$SERVICE_FILTER"
-            fi
+            # Build full service name with prefix
+            FULL_SERVICE_NAME="${SERVICE_PREFIX}-${SERVICE_FILTER}"
 
             if [ "$RUN_MODE" = "local" ]; then
                 # Find the port for this service
@@ -356,12 +363,12 @@ case "$ACTION" in
                     service_name="${service_def%%:*}"
                     port="${service_def##*:}"
                     if [ "$service_name" = "$SERVICE_FILTER" ]; then
-                        start_local_service "$service_name" "$port"
+                        start_local_service "${SERVICE_PREFIX}-${service_name}" "$port"
                         break
                     fi
                 done
             else
-                start_service "$SERVICE_FILTER"
+                start_service "$FULL_SERVICE_NAME"
             fi
         else
             if [ "$RUN_MODE" = "local" ]; then
@@ -369,17 +376,13 @@ case "$ACTION" in
                 for service_def in "${SERVICES[@]}"; do
                     service_name="${service_def%%:*}"
                     port="${service_def##*:}"
-                    # Skip nginx for local mode
-                    if [[ "$service_name" == "nginx" ]]; then
-                        continue
-                    fi
-                    start_local_service "$service_name" "$port"
+                    start_local_service "${SERVICE_PREFIX}-${service_name}" "$port"
                 done
             else
-                log "Starting all Heart Portal services..."
+                log "Starting all $SERVICE_PREFIX services..."
                 for service_def in "${SERVICES[@]}"; do
                     service_name="${service_def%%:*}"
-                    start_service "$service_name"
+                    start_service "${SERVICE_PREFIX}-${service_name}"
                 done
             fi
         fi
@@ -387,9 +390,7 @@ case "$ACTION" in
 
     stop)
         if [ -n "$SERVICE_FILTER" ]; then
-            if [[ "$SERVICE_FILTER" != heart-portal-* ]]; then
-                SERVICE_FILTER="heart-portal-$SERVICE_FILTER"
-            fi
+            FULL_SERVICE_NAME="${SERVICE_PREFIX}-${SERVICE_FILTER}"
 
             if [ "$RUN_MODE" = "local" ]; then
                 # Find the port for this service
@@ -397,12 +398,12 @@ case "$ACTION" in
                     service_name="${service_def%%:*}"
                     port="${service_def##*:}"
                     if [ "$service_name" = "$SERVICE_FILTER" ]; then
-                        stop_local_service "$service_name" "$port"
+                        stop_local_service "${SERVICE_PREFIX}-${service_name}" "$port"
                         break
                     fi
                 done
             else
-                stop_service "$SERVICE_FILTER"
+                stop_service "$FULL_SERVICE_NAME"
             fi
         else
             if [ "$RUN_MODE" = "local" ]; then
@@ -410,17 +411,13 @@ case "$ACTION" in
                 for service_def in "${SERVICES[@]}"; do
                     service_name="${service_def%%:*}"
                     port="${service_def##*:}"
-                    # Skip nginx for local mode
-                    if [[ "$service_name" == "nginx" ]]; then
-                        continue
-                    fi
-                    stop_local_service "$service_name" "$port"
+                    stop_local_service "${SERVICE_PREFIX}-${service_name}" "$port"
                 done
             else
-                log "Stopping all Heart Portal services..."
+                log "Stopping all $SERVICE_PREFIX services..."
                 for service_def in "${SERVICES[@]}"; do
                     service_name="${service_def%%:*}"
-                    stop_service "$service_name"
+                    stop_service "${SERVICE_PREFIX}-${service_name}"
                 done
             fi
         fi
@@ -428,18 +425,16 @@ case "$ACTION" in
 
     status)
         if [ -n "$SERVICE_FILTER" ]; then
-            if [[ "$SERVICE_FILTER" != heart-portal-* ]]; then
-                SERVICE_FILTER="heart-portal-$SERVICE_FILTER"
-            fi
+            FULL_SERVICE_NAME="${SERVICE_PREFIX}-${SERVICE_FILTER}"
             # Find the port for this service
             for service_def in "${SERVICES[@]}"; do
                 service_name="${service_def%%:*}"
                 port="${service_def##*:}"
                 if [ "$service_name" = "$SERVICE_FILTER" ]; then
                     if [ "$RUN_MODE" = "local" ]; then
-                        show_local_service_status "$service_name" "$port"
+                        show_local_service_status "${SERVICE_PREFIX}-${service_name}" "$port"
                     else
-                        show_service_status "$service_name" "$port"
+                        show_service_status "$FULL_SERVICE_NAME" "$port"
                     fi
                     break
                 fi
@@ -448,21 +443,17 @@ case "$ACTION" in
             if [ "$RUN_MODE" = "local" ]; then
                 log "Heart Portal Local Service Status:"
             else
-                log "Heart Portal Service Status:"
+                log "$SERVICE_PREFIX Service Status:"
             fi
             echo
             for service_def in "${SERVICES[@]}"; do
                 service_name="${service_def%%:*}"
                 port="${service_def##*:}"
-                # Skip nginx for local mode
-                if [ "$RUN_MODE" = "local" ] && [[ "$service_name" == "nginx" ]]; then
-                    continue
-                fi
 
                 if [ "$RUN_MODE" = "local" ]; then
-                    show_local_service_status "$service_name" "$port"
+                    show_local_service_status "${SERVICE_PREFIX}-${service_name}" "$port"
                 else
-                    show_service_status "$service_name" "$port"
+                    show_service_status "${SERVICE_PREFIX}-${service_name}" "$port"
                 fi
             done
         fi
@@ -470,9 +461,7 @@ case "$ACTION" in
 
     restart)
         if [ -n "$SERVICE_FILTER" ]; then
-            if [[ "$SERVICE_FILTER" != heart-portal-* ]]; then
-                SERVICE_FILTER="heart-portal-$SERVICE_FILTER"
-            fi
+            FULL_SERVICE_NAME="${SERVICE_PREFIX}-${SERVICE_FILTER}"
 
             if [ "$RUN_MODE" = "local" ]; then
                 # Find the port for this service
@@ -480,12 +469,12 @@ case "$ACTION" in
                     service_name="${service_def%%:*}"
                     port="${service_def##*:}"
                     if [ "$service_name" = "$SERVICE_FILTER" ]; then
-                        restart_local_service "$service_name" "$port"
+                        restart_local_service "${SERVICE_PREFIX}-${service_name}" "$port"
                         break
                     fi
                 done
             else
-                restart_service "$SERVICE_FILTER"
+                restart_service "$FULL_SERVICE_NAME"
             fi
         else
             if [ "$RUN_MODE" = "local" ]; then
@@ -493,17 +482,13 @@ case "$ACTION" in
                 for service_def in "${SERVICES[@]}"; do
                     service_name="${service_def%%:*}"
                     port="${service_def##*:}"
-                    # Skip nginx for local mode
-                    if [[ "$service_name" == "nginx" ]]; then
-                        continue
-                    fi
-                    restart_local_service "$service_name" "$port"
+                    restart_local_service "${SERVICE_PREFIX}-${service_name}" "$port"
                 done
             else
-                log "Restarting all Heart Portal services..."
+                log "Restarting all $SERVICE_PREFIX services..."
                 for service_def in "${SERVICES[@]}"; do
                     service_name="${service_def%%:*}"
-                    restart_service "$service_name"
+                    restart_service "${SERVICE_PREFIX}-${service_name}"
                 done
             fi
         fi
