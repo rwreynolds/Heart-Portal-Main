@@ -210,7 +210,7 @@ def settings():
         db.update_setting('default_daily_goal', str(default_goal))
         db.update_setting('alert_threshold', str(alert_threshold))
 
-        return redirect(url_for('index'))
+        return redirect('./')
 
     # Get current settings
     settings_data = db.get_all_settings()
@@ -244,7 +244,7 @@ def delete_entry(entry_id):
         return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
     db.delete_entry(entry_id)
-    return redirect(url_for('index'))
+    return redirect('./')
 
 # Redirect routes for inter-component navigation
 @app.route('/redirect/nutrition')

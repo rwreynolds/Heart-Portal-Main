@@ -365,7 +365,7 @@ def settings():
         conn.commit()
         conn.close()
 
-        return redirect(url_for('index'))
+        return redirect('./')
 
     # Get current settings
     conn = sqlite3.connect(DATABASE_PATH)
@@ -407,7 +407,7 @@ def delete_entry(entry_id):
     conn.close()
 
     flash('Entry deleted successfully!', 'success')
-    return redirect(url_for('index'))
+    return redirect('./')
 
 # Redirect routes for inter-component navigation
 @app.route('/redirect/nutrition')

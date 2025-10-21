@@ -237,7 +237,7 @@ def settings():
 
         if success:
             logger.info("Settings updated successfully")
-        return redirect(url_for('index'))
+        return redirect('./')
 
     # Get current settings
     current_settings = get_user_settings(conn)
@@ -268,7 +268,7 @@ def set_goal():
 
         if success:
             logger.info(f"Weight goal set: {target_weight_lbs}lbs ({goal_type})")
-        return redirect(url_for('index'))
+        return redirect('./')
 
     # Get user settings
     settings = get_user_settings(conn)
