@@ -260,15 +260,20 @@ class FoodStorageService:
             food = Food.query.get(food_id)
             if not food:
                 return {'error': 'Food not found'}
-            
-            # Log the deletion
-            self._log_search_history(action='delete', food_id=food_id)
-            
+
+            # Delete related search history records first (to avoid foreign key violation)
+            SearchHistory.query.filter_by(food_id=food_id).delete()
+
+            # Delete related nutrients and portions (cascade should handle these, but be explicit)
+            FoodNutrient.query.filter_by(food_id=food_id).delete()
+            FoodPortion.query.filter_by(food_id=food_id).delete()
+
+            # Now delete the food
             db.session.delete(food)
             db.session.commit()
-            
+
             return {'message': 'Food deleted successfully'}
-            
+
         except Exception as e:
             db.session.rollback()
             return {'error': f'Failed to delete food: {str(e)}'}
