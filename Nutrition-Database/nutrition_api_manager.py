@@ -148,13 +148,13 @@ class EnhancedUSDAFoodDataAPI:
         
         try:
             if method.upper() == "POST":
-                response = self.session.post(url, json=data, params=params)
+                response = self.session.post(url, json=data, params=params, timeout=30)
             else:
-                response = self.session.get(url, params=params)
-            
+                response = self.session.get(url, params=params, timeout=30)
+
             response.raise_for_status()
             return response.json()
-            
+
         except requests.exceptions.RequestException as e:
             raise APIError(f"API request failed: {e}")
     
