@@ -6,8 +6,9 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify, g
 import logging
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+# Load environment variables from both shared .env and app-specific .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))  # Shared .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))  # App-specific .env (overrides shared)
 
 # Configure Flask app with shared templates
 import sys

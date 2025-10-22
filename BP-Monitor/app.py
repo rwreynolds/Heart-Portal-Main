@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, g
 from urllib.parse import quote
 import math
+from dotenv import load_dotenv
+
+# Load environment variables from both shared .env and app-specific .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))  # Shared .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))  # App-specific .env (overrides shared)
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from session_config import configure_session

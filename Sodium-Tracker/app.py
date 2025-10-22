@@ -11,8 +11,9 @@ import json
 from dotenv import load_dotenv
 from urllib.parse import quote
 
-# Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+# Load environment variables from both shared .env and app-specific .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))  # Shared .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))  # App-specific .env (overrides shared)
 
 # Add shared directory to path for authentication module
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))

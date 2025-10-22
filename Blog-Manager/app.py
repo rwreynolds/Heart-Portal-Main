@@ -11,7 +11,9 @@ from jinja2 import ChoiceLoader, FileSystemLoader
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
-load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+# Load environment variables from both shared .env and app-specific .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))  # Shared .env
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))  # App-specific .env (overrides shared)
 
 # Add shared directory to path for authentication module and URL helpers
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
