@@ -148,9 +148,9 @@ class EnhancedUSDAFoodDataAPI:
         
         try:
             if method.upper() == "POST":
-                response = self.session.post(url, json=data, params=params, timeout=30)
+                response = self.session.post(url, json=data, params=params, timeout=60)
             else:
-                response = self.session.get(url, params=params, timeout=30)
+                response = self.session.get(url, params=params, timeout=60)
 
             response.raise_for_status()
             return response.json()
