@@ -496,6 +496,17 @@ def redirect_to_weight():
     """Redirect to Weight Tracker - environment-aware"""
     return redirect(get_weight_url())
 
+# Error handlers
+@app.errorhandler(404)
+def page_not_found(e):
+    """Handle 404 errors"""
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    """Handle 500 errors"""
+    return render_template('500.html'), 500
+
 if __name__ == '__main__':
     print("🍎 Starting Food-Base Component on port 5001")
     print("📊 Food storage and management system with SQLite database")
