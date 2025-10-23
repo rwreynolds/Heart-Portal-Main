@@ -193,8 +193,6 @@ exit
 - `Food-Base/app.py`: Food storage Flask app
 - `Blog-Manager/app.py`: Blog system Flask app
 - `README.md`: GitHub repository documentation (excluded from server)
-- `requirements.txt`: Python dependencies for virtual environment
-- `venv/`: Local virtual environment (not synced to server)
 
 ### Scripts
 - `scripts/deploy-venv.sh`: Deployment script with venv support (recommended)
@@ -253,7 +251,7 @@ exit
 - ✅ **All error templates created** (404.html, 500.html) for all applications
 - ✅ **README.md Documentation** - Comprehensive project documentation created for GitHub repository
 - ✅ **Server Analysis Complete** - Full production server architecture documented
-- ✅ **Local Development Setup** - Main app can run locally on port 3000
+- ✅ **Staging Server Setup** - Separate staging environment on dedicated server (134.199.202.67)
 - ✅ **Navbar Consistency Fixed** - All applications now have unified Tools → Trackers submenu structure
 - ✅ **About Page CSS Fixed** - Removed overflow:hidden that prevented submenu display
 - ✅ **Weight-Tracker Fixed** - Resolved close_db() TypeError and blank page issues
@@ -272,9 +270,8 @@ exit
 - README.md excluded from server deployments via .gitignore but available for GitHub display
 
 ## Current Issues
-- ⚠️ **Server Main App Service** - heart-portal-main service experiencing restart loop (port conflict resolved locally)
-- Contact form exists but may need testing
-- Consider upgrading to production WSGI server (currently using Flask dev server)
+- ⚠️ **Blog Service on Staging** - PostgreSQL authentication issue (returns 500 error)
+- Contact form exists but may need testing on staging
 
 ## Issues Recently Resolved
 - ✅ **Navbar Inconsistency** - Fixed Tools dropdown structure across all applications
@@ -290,21 +287,29 @@ exit
 - ✅ **Tab Button Visibility** - Inactive tabs now clearly visible instead of appearing disabled
 - ✅ **Inconsistent Page Layouts** - Standardized hero sections (20px top padding) and content sections (80px padding) across all Main App pages
 
-## Known Server Status (Last Checked)
+## Server Status
+
+### Production Server (Last Checked)
+- ✅ **heart-portal-main** (port 3000): Running normally
 - ✅ **heart-portal-nutrition** (port 5000): Running normally
 - ✅ **heart-portal-food** (port 5001): Running normally
 - ✅ **heart-portal-blog** (port 5002): Running normally
-- ❌ **heart-portal-main** (port 3000): Service failing due to port conflict with existing process
 - ✅ **heart-portal-sodium** (port 5003): Running normally
 - ✅ **heart-portal-fluid** (port 5004): Running normally
-- ✅ **heart-portal-weight** (port 5005): Running normally (recently fixed)
+- ✅ **heart-portal-weight** (port 5005): Running normally
+- ✅ **heart-portal-bp** (port 5006): Running normally
 - ✅ **Nginx & SSL**: Operating correctly with proper HTTPS redirects
 
-## Local Development Status (Current Session)
-- ✅ **Main App** (port 3000): Running successfully
-- ✅ **Weight-Tracker** (port 5005): Fixed and running (close_db issue resolved)
-- ✅ **All Applications**: Consistent navbar with unified Tools → Trackers submenu
-- ✅ **About Page**: CSS submenu display issue resolved
+### Staging Server (Last Checked)
+- ✅ **heart-portal-staging-main** (port 3000): Running normally
+- ✅ **heart-portal-staging-nutrition** (port 5000): Running normally
+- ✅ **heart-portal-staging-food** (port 5001): Running normally
+- ⚠️ **heart-portal-staging-blog** (port 5002): PostgreSQL auth issue (500 error)
+- ✅ **heart-portal-staging-sodium** (port 5003): Running normally
+- ✅ **heart-portal-staging-fluid** (port 5004): Running normally
+- ✅ **heart-portal-staging-weight** (port 5005): Running normally
+- ✅ **heart-portal-staging-bp** (port 5006): Running normally
+- ✅ **Nginx**: Operating correctly (HTTP only, no SSL yet)
 
 ## Templates Status
 ### Main App Templates (main-app/templates/)
@@ -393,15 +398,23 @@ sudo ./scripts/setup-ssl.sh
 ```
 
 ## Troubleshooting
-- Use `./scripts/dev-check.sh` to verify environment
-- Check service status on server: `systemctl status heart-portal-*`
-- Database issues: Use `./scripts/download-database.sh` to sync from production
-- Deployment hanging: SSH connection uses BatchMode and ConnectTimeout
-- Template errors: Check template files exist in correct directories
+
+### Staging Server Issues
+- Check service status: `ssh heart-staging "sudo systemctl status heart-portal-staging-*"`
+- View logs: `ssh heart-staging "sudo journalctl -u heart-portal-staging-main -n 50"`
+- Restart services: `ssh heart-staging "sudo systemctl restart heart-portal-staging-*"`
+- Test services: `ssh heart-staging "curl -I http://localhost:3000"`
+
+### Production Server Issues
+- Check service status: `ssh heart-prod "sudo systemctl status heart-portal-*"`
+- View logs: `ssh heart-prod "sudo journalctl -u heart-portal-main -n 50"`
 - SSL issues: Use `./scripts/test-ssl.sh` to diagnose problems
 - Certificate problems: Check `/var/log/heart-portal-ssl-renewal.log`
-- **Local Port Conflicts**: If port 3000 is in use locally, kill processes with `lsof -ti :3000` then `kill -9 <PID>`
-- **Server Main App Issues**: Check for existing processes holding port 3000 on server
+
+### General Troubleshooting
+- Template errors: Check template files exist in correct directories
+- Database issues: PostgreSQL connection problems in .env file
+- Port conflicts on server: Check for existing processes with `sudo lsof -i :3000`
 
 ### Recently Fixed Issues (Reference)
 - **Navbar Inconsistency**: Fixed by updating all component templates with unified Tools → Trackers structure
@@ -514,44 +527,40 @@ All standard back buttons follow:
 - **Container Padding**: 40px top padding
 - **Text**: "Back to [Destination]"
 
-## Virtual Environment Migration
+## Server Environment
 
-### Overview
-The project now supports isolated Python virtual environments for both local development and server deployment (production + staging).
+### Python Dependencies
+Both servers use system-wide Python packages (no virtual environments currently):
+- Flask 3.1.2
+- PostgreSQL adapter (psycopg2-binary 2.9.11)
+- Gunicorn 23.0.0
+- python-dotenv
+- bcrypt
+- flask-sqlalchemy (for Food-Base)
+- werkzeug, jinja2, blinker, itsdangerous
 
-### Local Development (Already Setup)
+### Production Server
+- Python 3.10 (Ubuntu 22.04)
+- PostgreSQL 14
+- 2 vCPU / 2GB RAM
+
+### Staging Server
+- Python 3.12 (Ubuntu 24.04)
+- PostgreSQL 16
+- 1 vCPU / 1GB RAM
+
+### Adding New Dependencies
+To add a new Python package to staging:
 ```bash
-source venv/bin/activate        # Activate local venv
-# ... work ...
-deactivate                      # Deactivate when done
+ssh heart-staging "sudo pip3 install --break-system-packages package-name"
+sudo systemctl restart heart-portal-staging-*
 ```
 
-### Server Migration (Not Yet Implemented)
-To migrate server to venv structure:
-
-1. **Read the guide:** `VENV_MIGRATION_QUICKSTART.md`
-2. **Run migration:** `./scripts/setup-venv-server.sh` (on server)
-3. **Switchover:** Replace systemd services (5 min downtime)
-4. **Use new deployment:** `./scripts/deploy-venv.sh`
-
-### Benefits of Virtual Environments:
-- ✅ **Dependency Isolation** - Production and staging have separate packages
-- ✅ **PostgreSQL Ready** - psycopg2 installed in venv without system pollution
-- ✅ **Easy Rollbacks** - Keep old venv for instant fallback
-- ✅ **Clean System** - Server Python remains untouched
-- ✅ **Staging Testing** - Test new packages before production
-
-### Server Structure After Migration:
+To add to production (after testing on staging):
+```bash
+ssh heart-prod "sudo pip3 install --break-system-packages package-name"
+sudo systemctl restart heart-portal-*
 ```
-/opt/
-├── heart-portal/          # Production with venv
-│   └── venv/             # Isolated Python packages
-│
-└── heart-portal-staging/  # Staging with separate venv
-    └── venv/             # Separate Python packages
-```
-
-See `SERVER_VENV_SETUP.md` for detailed migration guide.
 
 ## Documentation
 - **README.md**: Comprehensive project documentation for GitHub display
