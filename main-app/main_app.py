@@ -20,9 +20,8 @@ from url_helpers import (
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
-# Add Blog-Manager directory to path for blog database functions (insert at beginning to prioritize)
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'Blog-Manager'))
-from database import init_blog_database, get_published_posts, get_pending_posts, approve_post, reject_post, delete_post
+# Import blog queries from local module (uses direct PostgreSQL connection to blog DB)
+import blog_queries
 
 app = Flask(__name__)
 # Shared secret key for cross-application session compatibility
@@ -221,12 +220,12 @@ def admin_dashboard():
 
     # Get overview statistics
     all_users = get_all_users()
-    pending_posts = get_pending_posts()
+    pending_posts_count = blog_queries.get_pending_posts_count()
 
     stats = {
         'total_users': len(all_users),
         'admin_users': len([u for u in all_users if u['is_admin']]),
-        'pending_posts': len(pending_posts),
+        'pending_posts': pending_posts_count,
         'active_users': len([u for u in all_users if u['is_active']])
     }
 
