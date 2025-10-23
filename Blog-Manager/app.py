@@ -249,7 +249,7 @@ def approve_user_post(post_id):
     else:
         flash('Failed to approve post.', 'error')
 
-    return redirect('/admin')
+    return redirect(f"{get_blog_url()}admin")
 
 @app.route('/admin/reject/<int:post_id>', methods=['POST'])
 def reject_user_post(post_id):
@@ -267,7 +267,7 @@ def reject_user_post(post_id):
     else:
         flash('Failed to reject post.', 'error')
 
-    return redirect(url_for('admin_dashboard'))
+    return redirect(f"{get_blog_url()}admin")
 
 @app.route('/admin/delete/<int:post_id>', methods=['POST'])
 def delete_admin_post(post_id):
@@ -288,9 +288,9 @@ def delete_admin_post(post_id):
     # Redirect back to the referring page (either admin review or admin published)
     referer = request.referrer
     if referer and 'admin/published' in referer:
-        return redirect(url_for('admin_published'))
+        return redirect(f"{get_blog_url()}admin/published")
     else:
-        return redirect(url_for('admin_dashboard'))
+        return redirect(f"{get_blog_url()}admin")
 
 # Environment-aware redirect functions for Tools menu
 @app.route('/redirect/nutrition')
