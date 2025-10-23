@@ -125,6 +125,15 @@ def create_post():
         tags = request.form.get('tags', '')
 
         if title and content:
+            # Determine post status based on visibility and user role
+            if visibility == 'public':
+                # Public posts by admins are published immediately
+                # Public posts by regular users need review
+                status = 'published' if current_user.is_admin else 'pending_review'
+            else:
+                # Private posts are always drafts
+                status = 'draft'
+
             post_id = database.create_post(
                 title,
                 content,
@@ -132,11 +141,12 @@ def create_post():
                 current_user.username,
                 excerpt=excerpt,
                 visibility=visibility,
-                tags=tags
+                tags=tags,
+                status=status
             )
 
             flash('Post created successfully!', 'success')
-            if visibility == 'public':
+            if visibility == 'public' and not current_user.is_admin:
                 flash('Your public post has been submitted for review.', 'info')
 
             return redirect(f"{get_blog_url()}dashboard")

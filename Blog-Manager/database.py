@@ -154,19 +154,19 @@ def get_pending_posts() -> List[Dict]:
 
 
 def create_post(title: str, content: str, author_id: int, author_name: str,
-               excerpt: str = '', visibility: str = 'private', tags: str = '') -> int:
+               excerpt: str = '', visibility: str = 'private', tags: str = '', status: str = 'draft') -> int:
     """Create a new blog post"""
     conn = get_db_connection()
     slug = create_slug(title)
 
     query = '''
         INSERT INTO blog_posts (title, content, author_id, author_name, excerpt, visibility, tags, slug, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     '''
 
     cursor = _db_config.execute_query(
         conn, query,
-        (title, content, author_id, author_name, excerpt, visibility, tags, slug),
+        (title, content, author_id, author_name, excerpt, visibility, tags, slug, status),
         use_dict_cursor=False
     )
 
