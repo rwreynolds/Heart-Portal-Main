@@ -29,10 +29,10 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'heart-portal-shared-secret-key-2025')
 
 # Configure session cookies for reverse proxy setup
-# Use localhost for development, production domain for deployment
-app.config['SESSION_COOKIE_DOMAIN'] = None  # Works for localhost
+# Production configuration for cross-app session sharing
+app.config['SESSION_COOKIE_DOMAIN'] = '.heartfailureportal.com'
 app.config['SESSION_COOKIE_PATH'] = '/'
-app.config['SESSION_COOKIE_SECURE'] = False  # HTTP for local dev
+app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS required
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cross-site requests
 
