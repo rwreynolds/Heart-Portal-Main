@@ -4,12 +4,22 @@
 Multi-component Flask application for heart failure nutrition management with USDA API integration.
 
 ## New Claude Session Quick Start
-**For Claude to help with server tasks, just tell Claude:**
-1. "Check the server status" → I'll use `./scripts/monitor.sh all --local`
-2. "Deploy changes" → I'll use `./scripts/deploy.sh`
-3. "Fix service issues" → I'll use `./scripts/troubleshoot.sh full --fix`
-4. "Manage services" → I'll use `./scripts/manage-services.sh` commands
-5. Server connection: `ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161`
+
+**Local Machine Role:**
+- VSCode for editing code only
+- Git for version control
+- Local repo stays on **staging** branch
+- **No local server, no PostgreSQL, no Gunicorn needed**
+
+**Quick SSH Access:**
+- Staging: `ssh heart-staging` (134.199.202.67)
+- Production: `ssh heart-prod` (129.212.181.161)
+
+**Common Commands:**
+1. Edit code locally → `git add . && git commit -m "message" && git push origin staging`
+2. Deploy to staging → `ssh heart-staging "cd /opt/heart-portal && git pull && sudo systemctl restart heart-portal-staging-*"`
+3. Test staging → Open http://134.199.202.67 in browser
+4. Deploy to production → Merge staging→production, then deploy
 
 ## Architecture
 - **Main App** (port 3000): Landing page, about pages, navigation hub
@@ -29,14 +39,15 @@ Multi-component Flask application for heart failure nutrition management with US
 - Fluid-Tracker: https://heartfailureportal.com/fluid-tracker/
 - Weight-Tracker: https://heartfailureportal.com/weight-tracker/
 
-## Local Development URLs
-- Main App: http://localhost:3000
-- Nutrition-Database: http://localhost:5000
-- Food-Base: http://localhost:5001
-- Blog-Manager: http://localhost:5002
-- Sodium-Tracker: http://localhost:5003
-- Fluid-Tracker: http://localhost:5004
-- Weight-Tracker: http://localhost:5005
+## Staging URLs (Development & Testing)
+- Main App: http://134.199.202.67/
+- Nutrition-Database: http://134.199.202.67/nutrition/
+- Food-Base: http://134.199.202.67/food/
+- Blog-Manager: http://134.199.202.67/blog/
+- Sodium-Tracker: http://134.199.202.67/sodium/
+- Fluid-Tracker: http://134.199.202.67/fluid/
+- Weight-Tracker: http://134.199.202.67/weight/
+- BP-Monitor: http://134.199.202.67/bp/
 
 ## Server Details
 
@@ -87,21 +98,66 @@ main                    # Main development branch
 - Staging server: Tracks **staging** branch
 
 ## Development Workflow
-**CRITICAL: All changes must be made locally, never on the server**
 
-### Before Making Changes
+**New Workflow (2025-10-23):**
+- **Local machine**: Code editor only (VSCode) - No PostgreSQL, no Gunicorn, no local server
+- **Staging server**: All development, testing, and debugging happens here
+- **Production server**: Stable releases only
+
+### Step-by-Step Development Process
+
+**1. Edit code locally in VSCode**
 ```bash
-./scripts/dev-check.sh  # Verify you're in local environment
+# Your local repo should always be on staging branch
+git checkout staging
+git pull origin staging
+
+# Edit files in VSCode
+# When done, commit locally
+git add .
+git commit -m "Description of changes"
 ```
 
-### Deployment Process
+**2. Push to GitHub and deploy to staging**
 ```bash
-# After venv migration (recommended):
-./scripts/deploy-venv.sh              # Deploy to production (with venv)
-./scripts/deploy-venv.sh staging      # Deploy to staging environment
+# Push changes to GitHub
+git push origin staging
 
-# Legacy deployment (before venv migration):
-./scripts/deploy.sh                   # Push to GitHub and deploy to server
+# SSH to staging server and pull changes
+ssh heart-staging
+cd /opt/heart-portal
+git pull origin staging
+
+# Restart services to apply changes
+sudo systemctl restart heart-portal-staging-{main,nutrition,food,blog,sodium,fluid,weight,bp}
+
+# Or restart specific service
+sudo systemctl restart heart-portal-staging-main
+exit
+```
+
+**3. Test on staging server**
+```bash
+# Access via browser: http://134.199.202.67
+# Check logs if needed:
+ssh heart-staging "sudo journalctl -u heart-portal-staging-main -n 50"
+```
+
+**4. When ready, deploy to production**
+```bash
+# Merge staging to production branch
+git checkout production
+git merge staging
+git push origin production
+
+# Deploy to production server
+ssh heart-prod
+cd /opt/heart-portal
+git pull origin production
+sudo systemctl restart heart-portal-{main,nutrition,food,blog,sodium,fluid,weight,bp}
+exit
+
+# Verify: https://heartfailureportal.com
 ```
 
 ### Production Rollback
