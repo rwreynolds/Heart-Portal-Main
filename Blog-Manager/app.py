@@ -220,6 +220,19 @@ def admin_dashboard():
 
     return render_template('admin_dashboard.html', posts=pending_posts)
 
+@app.route('/admin/published')
+def admin_published():
+    """Admin view of published posts - requires admin privileges"""
+    current_user = get_current_user()
+    if not current_user or not current_user.is_admin:
+        flash('Admin access required.', 'error')
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login")
+
+    published_posts = get_published_posts(limit=100)
+
+    return render_template('admin_published.html', posts=published_posts)
+
 @app.route('/admin/approve/<int:post_id>', methods=['POST'])
 def approve_user_post(post_id):
     """Approve pending post - admin only"""
@@ -254,7 +267,7 @@ def reject_user_post(post_id):
     else:
         flash('Failed to reject post.', 'error')
 
-    return redirect('/admin')
+    return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/delete/<int:post_id>', methods=['POST'])
 def delete_admin_post(post_id):
@@ -272,7 +285,12 @@ def delete_admin_post(post_id):
     else:
         flash('Failed to delete post.', 'error')
 
-    return redirect('/admin')
+    # Redirect back to the referring page (either admin review or admin published)
+    referer = request.referrer
+    if referer and 'admin/published' in referer:
+        return redirect(url_for('admin_published'))
+    else:
+        return redirect(url_for('admin_dashboard'))
 
 # Environment-aware redirect functions for Tools menu
 @app.route('/redirect/nutrition')

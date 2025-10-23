@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Dashboard - Blog Review - Heart Portal{% endblock %}
+{% block title %}Manage Published Posts - Heart Portal{% endblock %}
 
 {% block additional_css %}
 <style>
@@ -64,13 +64,13 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
+            background: linear-gradient(135deg, #28a745, #20c997);
         }
 
         .stat-number {
             font-size: 3rem;
             font-weight: 700;
-            color: #dc2626;
+            color: #28a745;
             margin-bottom: 10px;
             line-height: 1;
         }
@@ -102,7 +102,7 @@
         .review-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            border-color: #dc2626;
+            border-color: #28a745;
         }
 
         .review-title {
@@ -139,37 +139,6 @@
             gap: 8px;
         }
 
-        .review-content-preview {
-            max-height: 200px;
-            overflow-y: auto;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            line-height: 1.7;
-            border-left: 4px solid #dc2626;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .review-content-preview::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .review-content-preview::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .review-content-preview::-webkit-scrollbar-thumb {
-            background: #dc2626;
-            border-radius: 4px;
-        }
-
-        .review-content-preview::-webkit-scrollbar-thumb:hover {
-            background: #b91c1c;
-        }
-
         .review-actions {
             display: flex;
             gap: 10px;
@@ -190,80 +159,30 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        .btn-approve {
-            background: linear-gradient(135deg, #28a745, #20c997);
+        .btn-view {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
 
-        .btn-approve:hover {
-            background: linear-gradient(135deg, #1e7e34, #17a2b8);
+        .btn-view:hover {
+            background: linear-gradient(135deg, #5568d3, #63408a);
             color: white;
             text-decoration: none;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
-        .btn-reject {
+        .btn-delete {
             background: linear-gradient(135deg, #dc3545, #e63946);
             color: white;
         }
 
-        .btn-reject:hover {
+        .btn-delete:hover {
             background: linear-gradient(135deg, #c82333, #d62828);
             color: white;
             text-decoration: none;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        }
-
-        .btn-delete {
-            background: linear-gradient(135deg, #6c757d, #495057);
-            color: white;
-        }
-
-        .btn-delete:hover {
-            background: linear-gradient(135deg, #5a6268, #343a40);
-            color: white;
-            text-decoration: none;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
-        }
-
-        .btn-preview {
-            background-color: #6c757d;
-            color: white;
-        }
-
-        .btn-preview:hover {
-            background-color: #545b62;
-            color: white;
-            text-decoration: none;
-        }
-
-        .review-form {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e5e5e5;
-        }
-
-        .review-form textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e5e5e5;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            resize: vertical;
-            box-sizing: border-box;
-            font-family: inherit;
-            line-height: 1.5;
-            transition: all 0.3s;
-        }
-
-        .review-form textarea:focus {
-            border-color: #dc2626;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         }
 
         .empty-state {
@@ -358,13 +277,23 @@
         }
 
         .tag {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #28a745, #20c997);
             color: white;
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
-            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+        }
+
+        .published-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
         }
 
         .time-ago {
@@ -414,17 +343,14 @@
     {% endwith %}
 
     <div class="back-button-container">
-        <a href="{{ get_main_app_url() }}/admin" class="btn-back">
-            <i class="fas fa-arrow-left"></i> Back to Admin Dashboard
-        </a>
-        <a href="{{ get_blog_url() }}admin/published" class="btn-back" style="margin-left: 10px; background-color: #28a745;">
-            <i class="fas fa-check-circle"></i> Manage Published Posts
+        <a href="{{ get_blog_url() }}admin" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to Pending Posts
         </a>
     </div>
 
     <div class="admin-header">
         <div style="flex: 1;"></div>
-        <h1 class="admin-title">Blog Administration - Pending Review</h1>
+        <h1 class="admin-title">Manage Published Posts</h1>
         <div style="flex: 1; display: flex; justify-content: flex-end;">
             <span class="admin-badge">👑 Site Owner</span>
         </div>
@@ -433,15 +359,11 @@
     <div class="stats-bar">
         <div class="stat-card">
             <div class="stat-number">{{ posts|length }}</div>
-            <div class="stat-label">Pending Review</div>
+            <div class="stat-label">Published Posts</div>
         </div>
         <div class="stat-card">
-            <div class="stat-number">⏰</div>
-            <div class="stat-label">Review Queue</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-number">🔍</div>
-            <div class="stat-label">Content Moderation</div>
+            <div class="stat-number">✅</div>
+            <div class="stat-label">Live on Blog</div>
         </div>
     </div>
 
@@ -449,7 +371,10 @@
         <div class="review-grid">
             {% for post in posts %}
                 <div class="review-card">
-                    <h3 class="review-title">{{ post.title }}</h3>
+                    <h3 class="review-title">
+                        {{ post.title }}
+                        <span class="published-badge">Published</span>
+                    </h3>
 
                     {% if post.excerpt %}
                         <p class="review-excerpt">{{ post.excerpt }}</p>
@@ -460,7 +385,7 @@
                             <strong>👤 {{ post.author_name }}</strong>
                         </div>
                         <div class="time-ago">
-                            {{ post.updated_at[:10] }}
+                            {{ post.published_at[:10] if post.published_at else post.updated_at[:10] }}
                         </div>
                     </div>
 
@@ -472,34 +397,16 @@
                         </div>
                     {% endif %}
 
-                    <div class="review-content-preview">
-                        {{ post.content[:300] }}...
-                    </div>
-
                     <div class="review-actions">
-                        <form method="POST" action="{{ get_blog_url() }}admin/approve/{{ post.id }}" style="flex: 1;">
-                            <textarea name="review_notes" placeholder="Approval notes (optional)" rows="2"></textarea>
-                            <button type="submit" class="btn-small btn-approve"
-                                    onclick="return confirm('Approve this post for publication?')">
-                                ✅ Approve & Publish
-                            </button>
-                        </form>
-                    </div>
-
-                    <div class="review-actions" style="margin-top: 10px;">
-                        <form method="POST" action="{{ get_blog_url() }}admin/reject/{{ post.id }}" style="flex: 1;">
-                            <textarea name="review_notes" placeholder="Rejection reason (required)" rows="2" required></textarea>
-                            <button type="submit" class="btn-small btn-reject"
-                                    onclick="return confirm('Reject this post? The author will be notified.')">
-                                ❌ Reject Post
-                            </button>
-                        </form>
+                        <a href="{{ get_blog_url() }}post/{{ post.slug }}" class="btn-small btn-view" target="_blank">
+                            👁️ View Live Post
+                        </a>
                     </div>
 
                     <div class="review-actions" style="margin-top: 10px;">
                         <form method="POST" action="{{ get_blog_url() }}admin/delete/{{ post.id }}" style="flex: 1;">
                             <button type="submit" class="btn-small btn-delete"
-                                    onclick="return confirm('Permanently delete this post? This action cannot be undone.')">
+                                    onclick="return confirm('Permanently delete this published post? This action cannot be undone and will remove it from the public blog.')">
                                 🗑️ Delete Post
                             </button>
                         </form>
@@ -509,51 +416,10 @@
         </div>
     {% else %}
         <div class="empty-state">
-            <div class="icon">📝</div>
-            <h3>No posts pending review</h3>
-            <p>Great job! All submitted posts have been reviewed.</p>
-            <p>Public posts will appear here when users submit them for approval.</p>
+            <div class="icon">📰</div>
+            <h3>No published posts yet</h3>
+            <p>Approved posts will appear here once they are published.</p>
         </div>
     {% endif %}
 </div>
-
-<script>
-// Auto-resize textareas
-document.addEventListener('DOMContentLoaded', function() {
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(function(textarea) {
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-    });
-});
-
-// Form confirmation
-document.querySelectorAll('form').forEach(function(form) {
-    form.addEventListener('submit', function(e) {
-        const isReject = form.action.includes('reject');
-        const isApprove = form.action.includes('approve');
-
-        if (isReject) {
-            const textarea = form.querySelector('textarea');
-            if (!textarea.value.trim()) {
-                e.preventDefault();
-                alert('Please provide a reason for rejection.');
-                textarea.focus();
-                return false;
-            }
-        }
-
-        const confirmMessage = isApprove ?
-            'Approve this post for publication?' :
-            'Reject this post? The author will be notified with your feedback.';
-
-        if (!confirm(confirmMessage)) {
-            e.preventDefault();
-            return false;
-        }
-    });
-});
-</script>
 {% endblock %}
