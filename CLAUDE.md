@@ -39,19 +39,52 @@ Multi-component Flask application for heart failure nutrition management with US
 - Weight-Tracker: http://localhost:5005
 
 ## Server Details
+
+### Production Server
 - Host: 129.212.181.161
-- SSH Key: /Users/mrrobot/.ssh/id_ed25519
+- SSH: `ssh heart-prod` or `ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161`
 - User: heartportal
 - Project Path: /opt/heart-portal
-- Production Path: /opt/heart-portal (will add venv)
-- Staging Path: /opt/heart-portal-staging (will add venv)
-- Services: Managed via systemctl (heart-portal-main, heart-portal-nutrition, heart-portal-food, heart-portal-blog, heart-portal-sodium, heart-portal-fluid, heart-portal-weight)
+- Git Branch: **production**
+- Services: heart-portal-{main,nutrition,food,blog,sodium,fluid,weight,bp}
+- Server Specs: 2 vCPU / 2GB RAM
 
-### Server Connection
-```bash
-./scripts/connect-server.sh                    # Quick SSH connection
-ssh -i /Users/mrrobot/.ssh/id_ed25519 heartportal@129.212.181.161
+### Staging Server
+- Host: 134.199.202.67
+- SSH: `ssh heart-staging` or `ssh -i /Users/mrrobot/.ssh/id_HFP_staging heartportal@134.199.202.67`
+- User: heartportal
+- Project Path: /opt/heart-portal
+- Git Branch: **staging**
+- Services: heart-portal-staging-{main,nutrition,food,blog,sodium,fluid,weight,bp}
+- Server Specs: 1 vCPU / 1GB RAM
+- Access: http://134.199.202.67 (HTTP only, no SSL yet)
+
+## Git Branch Strategy
+
+The repository uses a three-tier branch system for managing deployments:
+
 ```
+main                    # Main development branch
+├── production         # Deployed to production server (129.212.181.161)
+└── staging            # Deployed to staging server (134.199.202.67)
+    └── feature-*      # Feature branches (merge to staging first)
+```
+
+### Branch Usage:
+- **main**: Primary development branch, contains latest features
+- **production**: Stable code deployed to production server (heartfailureportal.com)
+- **staging**: Testing branch deployed to staging server (134.199.202.67)
+- **postgres-migration**: Active development for PostgreSQL migration
+
+### Deployment Workflow:
+1. Develop features locally on feature branches
+2. Merge to **staging** branch → Deploy to staging server for testing
+3. After testing passes, merge to **production** branch → Deploy to production server
+4. Keep **main** in sync with latest stable code
+
+### Server Branch Configuration:
+- Production server: Tracks **production** branch
+- Staging server: Tracks **staging** branch
 
 ## Development Workflow
 **CRITICAL: All changes must be made locally, never on the server**
