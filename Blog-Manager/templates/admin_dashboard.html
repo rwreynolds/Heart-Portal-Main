@@ -479,8 +479,7 @@
                     <div class="review-actions">
                         <form method="POST" action="{{ get_blog_url() }}admin/approve/{{ post.id }}" style="flex: 1;">
                             <textarea name="review_notes" placeholder="Approval notes (optional)" rows="2"></textarea>
-                            <button type="submit" class="btn-small btn-approve"
-                                    onclick="return confirm('Approve this post for publication?')">
+                            <button type="submit" class="btn-small btn-approve">
                                 ✅ Approve & Publish
                             </button>
                         </form>
@@ -489,8 +488,7 @@
                     <div class="review-actions" style="margin-top: 10px;">
                         <form method="POST" action="{{ get_blog_url() }}admin/reject/{{ post.id }}" style="flex: 1;">
                             <textarea name="review_notes" placeholder="Rejection reason (required)" rows="2" required></textarea>
-                            <button type="submit" class="btn-small btn-reject"
-                                    onclick="return confirm('Reject this post? The author will be notified.')">
+                            <button type="submit" class="btn-small btn-reject">
                                 ❌ Reject Post
                             </button>
                         </form>
