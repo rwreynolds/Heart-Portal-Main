@@ -69,6 +69,7 @@ Multi-component Flask application for heart failure nutrition management with US
 - Services: heart-portal-staging-{main,nutrition,food,blog,sodium,fluid,weight,bp}
 - Server Specs: 1 vCPU / 1GB RAM
 - Access: http://134.199.202.67 (HTTP only, no SSL yet)
+- **Important**: `.env` file must contain `STAGING_BASE_URL=http://134.199.202.67` for correct URL generation
 
 ## Git Branch Strategy
 
