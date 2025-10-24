@@ -14,14 +14,15 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Add shared directory to path for authentication module and URL helpers
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
-from auth import init_auth_db, authenticate_user, create_user, get_current_user, login_required, create_session, invalidate_session, make_user_admin, get_all_users, deactivate_user, activate_user, remove_admin_privileges, delete_user
+from auth import init_auth_db, authenticate_user, create_user, get_current_user, login_required, create_session, delete_session, get_all_users, update_user, delete_user, admin_required
 from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
 # Import blog queries from local module (uses direct PostgreSQL connection to blog DB)
-import blog_queries
+# TODO: Re-enable when blog_queries.py is created
+# import blog_queries
 
 app = Flask(__name__)
 # Shared secret key for cross-application session compatibility
@@ -195,7 +196,7 @@ def register():
 def logout():
     """User logout"""
     if 'session_token' in session:
-        invalidate_session(session['session_token'])
+        delete_session(session['session_token'])
 
     session.clear()
     return redirect(url_for('landing_page'))
@@ -220,13 +221,14 @@ def admin_dashboard():
 
     # Get overview statistics
     all_users = get_all_users()
-    pending_posts_count = blog_queries.get_pending_posts_count()
+    # TODO: Re-enable when blog_queries.py is created
+    # pending_posts_count = blog_queries.get_pending_posts_count()
 
     stats = {
         'total_users': len(all_users),
-        'admin_users': len([u for u in all_users if u['is_admin']]),
-        'pending_posts': pending_posts_count,
-        'active_users': len([u for u in all_users if u['is_active']])
+        'admin_users': len([u for u in all_users if u.is_admin]),
+        'pending_posts': 0,  # TODO: Get from blog_queries
+        'active_users': len([u for u in all_users if u.is_active])
     }
 
     return render_template('admin/dashboard.html', stats=stats)
@@ -252,7 +254,7 @@ def admin_promote_user(user_id):
         flash('Admin access required.', 'error')
         return redirect(url_for('landing_page'))
 
-    make_user_admin(user_id)
+    update_user(user_id, is_admin=True)
     flash('User promoted to admin successfully!', 'success')
     return redirect(url_for('admin_users'))
 
@@ -270,7 +272,7 @@ def admin_demote_user(user_id):
         flash('Cannot demote yourself!', 'error')
         return redirect(url_for('admin_users'))
 
-    remove_admin_privileges(user_id)
+    update_user(user_id, is_admin=False)
     flash('Admin privileges removed successfully!', 'success')
     return redirect(url_for('admin_users'))
 
@@ -288,7 +290,7 @@ def admin_deactivate_user(user_id):
         flash('Cannot deactivate your own account!', 'error')
         return redirect(url_for('admin_users'))
 
-    deactivate_user(user_id)
+    update_user(user_id, is_active=False)
     flash('User account deactivated successfully!', 'success')
     return redirect(url_for('admin_users'))
 
@@ -301,7 +303,7 @@ def admin_activate_user(user_id):
         flash('Admin access required.', 'error')
         return redirect(url_for('landing_page'))
 
-    activate_user(user_id)
+    update_user(user_id, is_active=True)
     flash('User account activated successfully!', 'success')
     return redirect(url_for('admin_users'))
 
@@ -395,7 +397,8 @@ def admin_delete_post(post_id):
 if __name__ == '__main__':
     # Initialize databases
     init_auth_db()
-    init_blog_database()
+    # TODO: Re-enable when blog_queries.py is created
+    # init_blog_database()
 
     # Use debug=False in production, True for development
     debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
