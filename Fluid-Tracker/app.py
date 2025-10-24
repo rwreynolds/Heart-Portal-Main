@@ -10,6 +10,7 @@ import sqlite3
 from datetime import datetime, date
 import json
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 # Load environment variables from .env file
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -44,6 +45,13 @@ app.jinja_loader = ChoiceLoader([
 
 # Database configuration
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'fluid_tracker.db')
+
+# Timezone configuration
+TIMEZONE = os.getenv('TIMEZONE', 'America/New_York')  # Default to Eastern Time
+
+def get_current_date():
+    """Get current date in configured timezone"""
+    return datetime.now(ZoneInfo(TIMEZONE)).date()
 
 # URL helpers are now imported from shared module
 
@@ -120,7 +128,7 @@ def init_database():
 def get_daily_intake(target_date=None):
     """Get total fluid intake for a specific date"""
     if target_date is None:
-        target_date = date.today().isoformat()
+        target_date = get_current_date().isoformat()
 
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -137,7 +145,7 @@ def get_daily_intake(target_date=None):
 def get_daily_goal(target_date=None):
     """Get daily fluid goal for a specific date"""
     if target_date is None:
-        target_date = date.today().isoformat()
+        target_date = get_current_date().isoformat()
 
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -171,7 +179,7 @@ def index():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={request.url}")
 
-    today = date.today()
+    today = get_current_date()
     today_str = today.isoformat()
 
     # Get today's intake
@@ -224,7 +232,7 @@ def add_entry():
     """Add a new fluid entry"""
     if request.method == 'POST':
         data = request.form
-        entry_date = data.get('date', date.today().isoformat())
+        entry_date = data.get('date', get_current_date().isoformat())
 
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
@@ -252,7 +260,7 @@ def add_entry():
         return redirect('./')
 
     return render_template('add_entry.html',
-                         today=date.today().isoformat(),
+                         today=get_current_date().isoformat(),
                          main_app_url=get_main_app_url(),
                          blog_url=get_blog_url(),
                          nutrition_url=get_nutrition_url(),

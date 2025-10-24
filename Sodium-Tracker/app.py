@@ -10,6 +10,7 @@ from datetime import datetime, date
 import json
 from dotenv import load_dotenv
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 # Load environment variables from both shared .env and app-specific .env
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))  # Shared .env
@@ -46,6 +47,13 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
 
+# Timezone configuration
+TIMEZONE = os.getenv('TIMEZONE', 'America/New_York')  # Default to Eastern Time
+
+def get_current_date():
+    """Get current date in configured timezone"""
+    return datetime.now(ZoneInfo(TIMEZONE)).date()
+
 # URL helpers are now imported from shared module
 
 # Make URL functions available in templates
@@ -75,13 +83,13 @@ def init_database():
 def get_daily_intake(target_date=None):
     """Get total sodium intake for a specific date"""
     if target_date is None:
-        target_date = date.today().isoformat()
+        target_date = get_current_date().isoformat()
     return db.get_daily_total(target_date)
 
 def get_daily_goal(target_date=None):
     """Get daily sodium goal for a specific date"""
     if target_date is None:
-        target_date = date.today().isoformat()
+        target_date = get_current_date().isoformat()
 
     # Try to get specific goal for the date
     goal = db.get_daily_goal(target_date)
@@ -100,7 +108,7 @@ def index():
         main_app_url = get_main_app_url()
         return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
 
-    today = date.today()
+    today = get_current_date()
     today_str = today.isoformat()
 
     # Get today's intake
@@ -134,7 +142,7 @@ def add_entry():
 
     if request.method == 'POST':
         data = request.form
-        entry_date = data.get('date', date.today().isoformat())
+        entry_date = data.get('date', get_current_date().isoformat())
 
         db.add_entry(
             date=entry_date,
@@ -148,7 +156,7 @@ def add_entry():
         return redirect('./')
 
     return render_template('add_entry.html',
-                         today=date.today().isoformat(),
+                         today=get_current_date().isoformat(),
                          main_app_url=get_main_app_url(),
                          blog_url=get_blog_url(),
                          nutrition_url=get_nutrition_url(),

@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, date
 from flask import Flask, render_template, request, redirect, url_for, jsonify, g
 import logging
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 
 # Load environment variables from both shared .env and app-specific .env
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))  # Shared .env
@@ -54,6 +55,13 @@ app.jinja_loader = ChoiceLoader([
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Timezone configuration
+TIMEZONE = os.getenv('TIMEZONE', 'America/New_York')  # Default to Eastern Time
+
+def get_current_date():
+    """Get current date in configured timezone"""
+    return datetime.now(ZoneInfo(TIMEZONE)).date()
 
 # Database connection management using Flask g object
 def get_db():
@@ -179,7 +187,7 @@ def add_entry():
 
     return render_template('add_entry.html',
                          preferred_unit=preferred_unit,
-                         today=date.today().isoformat(),
+                         today=get_current_date().isoformat(),
                          base_url=get_base_url())
 
 @app.route('/history')
