@@ -7,11 +7,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Default to production server
 SERVER_HOST="129.212.181.161"
 SERVER_USER="heartportal"
 SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
-
-# Default to production services
 SERVICE_PREFIX="heart-portal"
 
 # Service definitions (will be prefixed with staging if --staging is used)
@@ -43,14 +43,19 @@ if [ "$(whoami)" = "$SERVER_USER" ]; then
     SSH_CMD=""
 fi
 
-# Override run mode and service prefix if specified
+# Override run mode, service prefix, and server if specified
 for arg in "$@"; do
     case "$arg" in
         --local)
             RUN_MODE="local"
             ;;
         --staging)
+            # Switch to staging server
+            SERVER_HOST="134.199.202.67"
+            SSH_KEY="/Users/mrrobot/.ssh/id_HFP_staging"
             SERVICE_PREFIX="heart-portal-staging"
+            # Update SSH command for staging server
+            SSH_CMD="ssh -i $SSH_KEY -o BatchMode=yes -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST"
             ;;
     esac
 done

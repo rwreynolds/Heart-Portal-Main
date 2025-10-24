@@ -7,20 +7,23 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Default to production server
 SERVER_HOST="129.212.181.161"
 SERVER_USER="heartportal"
 SSH_KEY="/Users/mrrobot/.ssh/id_ed25519"
+SERVICE_PREFIX="heart-portal"
 
-# Service definitions
+# Service definitions (will be prefixed with staging if --staging is used)
 SERVICES=(
-    "heart-portal-main:3000"
-    "heart-portal-nutrition:5000"
-    "heart-portal-food:5001"
-    "heart-portal-blog:5002"
-    "heart-portal-sodium:5003"
-    "heart-portal-fluid:5004"
-    "heart-portal-weight:5005"
-    "heart-portal-bp:5006"
+    "main:3000"
+    "nutrition:5000"
+    "food:5001"
+    "blog:5002"
+    "sodium:5003"
+    "fluid:5004"
+    "weight:5005"
+    "bp:5006"
     "nginx:80,443"
 )
 
@@ -53,7 +56,7 @@ else
     PID_FILE="/tmp/heart-portal-monitor.pid"
 fi
 
-# Override run mode if specified
+# Override run mode and server if specified
 for arg in "$@"; do
     case "$arg" in
         --local)
@@ -63,6 +66,14 @@ for arg in "$@"; do
         --remote)
             RUN_MODE="server"
             SSH_CMD=""
+            ;;
+        --staging)
+            # Switch to staging server
+            SERVER_HOST="134.199.202.67"
+            SSH_KEY="/Users/mrrobot/.ssh/id_HFP_staging"
+            SERVICE_PREFIX="heart-portal-staging"
+            RUN_MODE="local"
+            SSH_CMD="ssh -i $SSH_KEY -o BatchMode=yes -o ConnectTimeout=10 $SERVER_USER@$SERVER_HOST"
             ;;
     esac
 done
@@ -209,7 +220,7 @@ show_service_status() {
     fi
 
     # Show additional details for main app
-    if [ "$service_name" = "heart-portal-main" ]; then
+    if [ "$service_name" = "${SERVICE_PREFIX}-main" ]; then
         show_main_app_details
     fi
 }
@@ -310,7 +321,8 @@ continuous_monitoring() {
                 continue  # Skip nginx for auto-restart
             fi
 
-            service_name="${service_def%%:*}"
+            service_short="${service_def%%:*}"
+            service_name="${SERVICE_PREFIX}-${service_short}"
             ports="${service_def##*:}"
             main_port="${ports%%,*}"
 
@@ -337,7 +349,13 @@ case "$ACTION" in
         echo
 
         for service_def in "${SERVICES[@]}"; do
-            service_name="${service_def%%:*}"
+            service_short="${service_def%%:*}"
+            # nginx doesn't need prefix
+            if [ "$service_short" = "nginx" ]; then
+                service_name="nginx"
+            else
+                service_name="${SERVICE_PREFIX}-${service_short}"
+            fi
             ports="${service_def##*:}"
             show_service_status "$service_name" "$ports"
         done
@@ -349,7 +367,7 @@ case "$ACTION" in
     main)
         log "Heart Portal Main App Monitor ($RUN_MODE mode)"
         echo
-        show_service_status "heart-portal-main" "3000"
+        show_service_status "${SERVICE_PREFIX}-main" "3000"
         ;;
 
     continuous)
