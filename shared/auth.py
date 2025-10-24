@@ -1,9 +1,10 @@
 """
 Shared Authentication Module for Heart Portal
-Provides user management, login/logout, and session handling
+Provides user management, login/logout, and session handling with PostgreSQL
 """
 
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import hashlib
 import secrets
 from datetime import datetime, timedelta
@@ -11,8 +12,8 @@ from functools import wraps
 from flask import session, request, redirect, url_for, flash, g
 import os
 
-# Database path for user authentication
-AUTH_DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
+# Get database URL from environment
+DATABASE_URL = os.getenv('DATABASE_URL_USERS')
 
 class User:
     """User model for authentication"""
@@ -32,295 +33,367 @@ class User:
 
 def get_db():
     """Get database connection"""
-    db = sqlite3.connect(AUTH_DB_PATH)
-    db.row_factory = sqlite3.Row
-    return db
+    if not DATABASE_URL:
+        raise ValueError("DATABASE_URL_USERS environment variable not set")
+
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+    return conn
 
 def init_auth_db():
     """Initialize the authentication database"""
-    db = get_db()
-    db.execute('''
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(255) UNIQUE NOT NULL,
+            email VARCHAR(255) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            is_active BOOLEAN DEFAULT 1,
-            is_admin BOOLEAN DEFAULT 0
+            is_active BOOLEAN DEFAULT TRUE,
+            is_admin BOOLEAN DEFAULT FALSE
         )
     ''')
 
-    # Add is_admin column to existing tables if it doesn't exist
-    try:
-        db.execute('ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0')
-        db.commit()
-    except sqlite3.OperationalError:
-        # Column already exists, which is fine
-        pass
-
-    # Create sessions table for session management
-    db.execute('''
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_sessions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            session_token TEXT UNIQUE NOT NULL,
-            expires_at TIMESTAMP NOT NULL,
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            session_token VARCHAR(255) UNIQUE NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            expires_at TIMESTAMP NOT NULL,
+            ip_address VARCHAR(45),
+            user_agent TEXT
         )
     ''')
 
-    db.commit()
-    db.close()
+    # Create index on session_token for faster lookups
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_session_token ON user_sessions(session_token)
+    ''')
+
+    # Create index on expires_at for cleanup queries
+    cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_session_expires ON user_sessions(expires_at)
+    ''')
+
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 def hash_password(password):
-    """Hash a password with salt"""
-    salt = secrets.token_hex(16)
-    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
-    return salt + pwd_hash.hex()
+    """Hash a password using SHA-256"""
+    return hashlib.sha256(password.encode()).hexdigest()
 
 def verify_password(password, password_hash):
     """Verify a password against its hash"""
-    salt = password_hash[:32]
-    pwd_hash = password_hash[32:]
-    return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex() == pwd_hash
+    return hash_password(password) == password_hash
 
-def create_user(username, email, password):
-    """Create a new user account"""
-    db = get_db()
+def create_user(username, email, password, is_admin=False):
+    """Create a new user"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    password_hash = hash_password(password)
+
     try:
-        password_hash = hash_password(password)
-        cursor = db.execute(
-            'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-            (username, email, password_hash)
-        )
-        user_id = cursor.lastrowid
-        db.commit()
+        cursor.execute('''
+            INSERT INTO users (username, email, password_hash, is_admin)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        ''', (username, email, password_hash, is_admin))
+
+        user_id = cursor.fetchone()['id']
+        conn.commit()
+        cursor.close()
+        conn.close()
         return user_id
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
+        conn.rollback()
+        cursor.close()
+        conn.close()
         if 'username' in str(e):
-            return {'error': 'Username already exists'}
+            raise ValueError("Username already exists")
         elif 'email' in str(e):
-            return {'error': 'Email already exists'}
+            raise ValueError("Email already exists")
         else:
-            return {'error': 'User creation failed'}
-    finally:
-        db.close()
+            raise ValueError("User creation failed")
 
 def authenticate_user(username, password):
-    """Authenticate a user login"""
-    db = get_db()
-    user = db.execute(
-        'SELECT * FROM users WHERE username = ? AND is_active = 1',
-        (username,)
-    ).fetchone()
-    db.close()
+    """Authenticate a user and return User object if successful"""
+    conn = get_db()
+    cursor = conn.cursor()
 
-    if user and verify_password(password, user['password_hash']):
+    cursor.execute('''
+        SELECT id, username, email, password_hash, created_at, is_active, is_admin
+        FROM users
+        WHERE username = %s AND is_active = TRUE
+    ''', (username,))
+
+    user_row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if user_row and verify_password(password, user_row['password_hash']):
         return User(
-            user['id'],
-            user['username'],
-            user['email'],
-            user['password_hash'],
-            user['created_at'],
-            user['is_active'],
-            user['is_admin']
+            id=user_row['id'],
+            username=user_row['username'],
+            email=user_row['email'],
+            password_hash=user_row['password_hash'],
+            created_at=user_row['created_at'],
+            is_active=user_row['is_active'],
+            is_admin=user_row['is_admin']
         )
+
     return None
 
 def get_user_by_id(user_id):
-    """Get user by ID"""
-    db = get_db()
-    user = db.execute(
-        'SELECT * FROM users WHERE id = ? AND is_active = 1',
-        (user_id,)
-    ).fetchone()
-    db.close()
+    """Get a user by their ID"""
+    conn = get_db()
+    cursor = conn.cursor()
 
-    if user:
+    cursor.execute('''
+        SELECT id, username, email, password_hash, created_at, is_active, is_admin
+        FROM users
+        WHERE id = %s
+    ''', (user_id,))
+
+    user_row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if user_row:
         return User(
-            user['id'],
-            user['username'],
-            user['email'],
-            user['password_hash'],
-            user['created_at'],
-            user['is_active'],
-            user['is_admin']
+            id=user_row['id'],
+            username=user_row['username'],
+            email=user_row['email'],
+            password_hash=user_row['password_hash'],
+            created_at=user_row['created_at'],
+            is_active=user_row['is_active'],
+            is_admin=user_row['is_admin']
         )
+
     return None
 
-def create_session(user_id):
-    """Create a user session"""
+def get_user_by_username(username):
+    """Get a user by their username"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT id, username, email, password_hash, created_at, is_active, is_admin
+        FROM users
+        WHERE username = %s
+    ''', (username,))
+
+    user_row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if user_row:
+        return User(
+            id=user_row['id'],
+            username=user_row['username'],
+            email=user_row['email'],
+            password_hash=user_row['password_hash'],
+            created_at=user_row['created_at'],
+            is_active=user_row['is_active'],
+            is_admin=user_row['is_admin']
+        )
+
+    return None
+
+def get_all_users():
+    """Get all users"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        SELECT id, username, email, password_hash, created_at, is_active, is_admin
+        FROM users
+        ORDER BY created_at DESC
+    ''')
+
+    users = []
+    for row in cursor.fetchall():
+        users.append(User(
+            id=row['id'],
+            username=row['username'],
+            email=row['email'],
+            password_hash=row['password_hash'],
+            created_at=row['created_at'],
+            is_active=row['is_active'],
+            is_admin=row['is_admin']
+        ))
+
+    cursor.close()
+    conn.close()
+    return users
+
+def update_user(user_id, **kwargs):
+    """Update user fields"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    allowed_fields = {'username', 'email', 'is_active', 'is_admin'}
+    updates = {k: v for k, v in kwargs.items() if k in allowed_fields}
+
+    if not updates:
+        cursor.close()
+        conn.close()
+        return False
+
+    set_clause = ', '.join([f"{k} = %s" for k in updates.keys()])
+    values = list(updates.values()) + [user_id]
+
+    cursor.execute(f'''
+        UPDATE users
+        SET {set_clause}
+        WHERE id = %s
+    ''', values)
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return success
+
+def update_password(user_id, new_password):
+    """Update a user's password"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    password_hash = hash_password(new_password)
+
+    cursor.execute('''
+        UPDATE users
+        SET password_hash = %s
+        WHERE id = %s
+    ''', (password_hash, user_id))
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return success
+
+def delete_user(user_id):
+    """Delete a user (soft delete by setting is_active to False)"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        UPDATE users
+        SET is_active = FALSE
+        WHERE id = %s
+    ''', (user_id,))
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return success
+
+def create_session(user_id, ip_address=None, user_agent=None, duration_days=30):
+    """Create a new session for a user"""
+    conn = get_db()
+    cursor = conn.cursor()
+
     session_token = secrets.token_urlsafe(32)
-    expires_at = datetime.now() + timedelta(days=30)  # 30 day sessions
+    expires_at = datetime.now() + timedelta(days=duration_days)
 
-    db = get_db()
-    db.execute(
-        'INSERT INTO user_sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)',
-        (user_id, session_token, expires_at)
-    )
-    db.commit()
-    db.close()
+    cursor.execute('''
+        INSERT INTO user_sessions (user_id, session_token, expires_at, ip_address, user_agent)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING session_token
+    ''', (user_id, session_token, expires_at, ip_address, user_agent))
 
-    return session_token
+    token = cursor.fetchone()['session_token']
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return token
 
-def get_user_from_session(session_token):
-    """Get user from session token"""
-    db = get_db()
-    session_data = db.execute('''
-        SELECT u.*, s.expires_at
-        FROM users u
-        JOIN user_sessions s ON u.id = s.user_id
-        WHERE s.session_token = ? AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = 1
-    ''', (session_token,)).fetchone()
-    db.close()
+def get_session(session_token):
+    """Get a session by token"""
+    conn = get_db()
+    cursor = conn.cursor()
 
-    if session_data:
-        return User(
-            session_data['id'],
-            session_data['username'],
-            session_data['email'],
-            session_data['password_hash'],
-            session_data['created_at'],
-            session_data['is_active'],
-            session_data['is_admin']
-        )
+    cursor.execute('''
+        SELECT user_id, expires_at
+        FROM user_sessions
+        WHERE session_token = %s AND expires_at > NOW()
+    ''', (session_token,))
+
+    session_row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if session_row:
+        return {
+            'user_id': session_row['user_id'],
+            'expires_at': session_row['expires_at']
+        }
+
     return None
 
-def invalidate_session(session_token):
-    """Invalidate a user session (logout)"""
-    db = get_db()
-    db.execute('DELETE FROM user_sessions WHERE session_token = ?', (session_token,))
-    db.commit()
-    db.close()
+def delete_session(session_token):
+    """Delete a session (logout)"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        DELETE FROM user_sessions
+        WHERE session_token = %s
+    ''', (session_token,))
+
+    success = cursor.rowcount > 0
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return success
 
 def cleanup_expired_sessions():
     """Clean up expired sessions"""
-    db = get_db()
-    db.execute('DELETE FROM user_sessions WHERE expires_at < CURRENT_TIMESTAMP')
-    db.commit()
-    db.close()
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute('''
+        DELETE FROM user_sessions
+        WHERE expires_at < NOW()
+    ''')
+
+    count = cursor.rowcount
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return count
+
+def get_current_user():
+    """Get the currently logged-in user from session"""
+    if 'user_id' not in session:
+        return None
+
+    return get_user_by_id(session['user_id'])
 
 def login_required(f):
     """Decorator to require login for a route"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Staging mode bypass for testing
-        if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
-            # Check if admin mode is enabled for staging
-            is_admin = os.environ.get('STAGING_ADMIN_MODE', '').lower() == 'true'
-            user_id = 998 if is_admin else 999
-            username = 'staging_admin_user' if is_admin else 'staging_test_user'
-            email = 'admin@staging.local' if is_admin else 'test@staging.local'
-
-            # Create a fake user for staging tests
-            fake_user = User(
-                id=user_id,
-                username=username,
-                email=email,
-                password_hash='fake_hash',
-                created_at=datetime.now().isoformat(),
-                is_active=True,
-                is_admin=is_admin
-            )
-            g.current_user = fake_user
-            return f(*args, **kwargs)
-
-        if 'session_token' not in session:
-            return redirect(url_for('login'))
-
-        user = get_user_from_session(session['session_token'])
-        if not user:
-            session.clear()
-            return redirect(url_for('login'))
-
-        g.current_user = user
+        if 'user_id' not in session:
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('login', next=request.url))
         return f(*args, **kwargs)
     return decorated_function
 
-def get_current_user():
-    """Get the current logged-in user"""
-    # Staging mode bypass for testing
-    if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
-        # Check if admin mode is enabled for staging
-        is_admin = os.environ.get('STAGING_ADMIN_MODE', '').lower() == 'true'
-        user_id = 998 if is_admin else 999
-        username = 'staging_admin_user' if is_admin else 'staging_test_user'
-        email = 'admin@staging.local' if is_admin else 'test@staging.local'
-
-        # Create a fake user for staging tests
-        fake_user = User(
-            id=user_id,
-            username=username,
-            email=email,
-            password_hash='fake_hash',
-            created_at=datetime.now().isoformat(),
-            is_active=True,
-            is_admin=is_admin
-        )
-
-        # Try to set g.current_user but don't fail if g is not available
-        try:
-            g.current_user = fake_user
-        except:
-            pass  # Flask g might not be available in all contexts
-
-        return fake_user
-
-    if hasattr(g, 'current_user'):
-        return g.current_user
-
-    if 'session_token' in session:
-        user = get_user_from_session(session['session_token'])
-        if user:
-            g.current_user = user
-            return user
-
-    return None
-
-def is_user_logged_in():
-    """Check if user is logged in"""
-    return get_current_user() is not None
-
-def make_user_admin(user_id):
-    """Make a user an administrator"""
-    db = get_db()
-    db.execute('UPDATE users SET is_admin = 1 WHERE id = ?', (user_id,))
-    db.commit()
-    db.close()
-
-def get_all_users():
-    """Get all users (admin function)"""
-    db = get_db()
-    users = db.execute('SELECT id, username, email, created_at, is_active, is_admin FROM users').fetchall()
-    db.close()
-    return users
-
-def deactivate_user(user_id):
-    """Deactivate a user account"""
-    db = get_db()
-    db.execute('UPDATE users SET is_active = 0 WHERE id = ?', (user_id,))
-    db.commit()
-    db.close()
-
-def activate_user(user_id):
-    """Activate a user account"""
-    db = get_db()
-    db.execute('UPDATE users SET is_active = 1 WHERE id = ?', (user_id,))
-    db.commit()
-    db.close()
-
-def remove_admin_privileges(user_id):
-    """Remove admin privileges from a user"""
-    db = get_db()
-    db.execute('UPDATE users SET is_admin = 0 WHERE id = ?', (user_id,))
-    db.commit()
-    db.close()
-
-def delete_user(user_id):
-    """Delete a user account (use with caution)"""
-    db = get_db()
-    db.execute('DELETE FROM users WHERE id = ?', (user_id,))
-    db.commit()
-    db.close()
+def admin_required(f):
+    """Decorator to require admin privileges for a route"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = get_current_user()
+        if not user or not user.is_admin:
+            flash('You need administrator privileges to access this page.', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
