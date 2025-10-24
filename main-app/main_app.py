@@ -17,7 +17,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 from auth import init_auth_db, authenticate_user, create_user, get_current_user, login_required, create_session, delete_session, get_all_users, update_user, delete_user, admin_required
 from url_helpers import (
     get_main_app_url, get_blog_url, get_nutrition_url, get_foodbase_url,
-    get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
+    get_sodium_url, get_fluid_url, get_weight_url, get_bp_url,
+    is_production_mode, is_staging_mode
 )
 
 # Import blog queries from local module (uses direct PostgreSQL connection to blog DB)
@@ -29,10 +30,21 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'heart-portal-shared-secret-key-2025')
 
 # Configure session cookies for reverse proxy setup
-# Production configuration for cross-app session sharing
-app.config['SESSION_COOKIE_DOMAIN'] = '.heartfailureportal.com'
+# Environment-aware session cookie configuration
+if is_production_mode():
+    # Production: domain-based session sharing with HTTPS
+    app.config['SESSION_COOKIE_DOMAIN'] = '.heartfailureportal.com'
+    app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS required
+elif is_staging_mode():
+    # Staging: IP-based, no domain, HTTP allowed
+    app.config['SESSION_COOKIE_DOMAIN'] = None  # Don't set domain for IP-based access
+    app.config['SESSION_COOKIE_SECURE'] = False  # HTTP allowed on staging
+else:
+    # Local development
+    app.config['SESSION_COOKIE_DOMAIN'] = None
+    app.config['SESSION_COOKIE_SECURE'] = False
+
 app.config['SESSION_COOKIE_PATH'] = '/'
-app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS required
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cross-site requests
 
