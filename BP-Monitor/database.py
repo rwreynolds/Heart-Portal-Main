@@ -99,7 +99,7 @@ def get_settings(conn) -> Optional[Dict]:
 
 def get_today_entries(conn, today: str) -> List[Dict]:
     """Get today's BP entries"""
-    query = 'SELECT * FROM bp_entries WHERE date = ? ORDER BY time DESC'
+    query = 'SELECT * FROM bp_entries WHERE date = ? ORDER BY recorded_at DESC'
     cursor = _db_config.execute_query(conn, query, (today,))
     results = cursor.fetchall()
     return [normalize_row(row) for row in results]
@@ -110,7 +110,7 @@ def get_recent_entries(conn, week_ago: str, limit: int = 10) -> List[Dict]:
     query = '''
         SELECT * FROM bp_entries
         WHERE date >= ?
-        ORDER BY date DESC, time DESC
+        ORDER BY date DESC, recorded_at DESC
         LIMIT ?
     '''
     cursor = _db_config.execute_query(conn, query, (week_ago, limit))
@@ -142,7 +142,7 @@ def get_bp_history(conn, limit: int = 20, offset: int = 0) -> List[Dict]:
     """Get paginated BP history"""
     query = '''
         SELECT * FROM bp_entries
-        ORDER BY date DESC, time DESC
+        ORDER BY date DESC, recorded_at DESC
         LIMIT ? OFFSET ?
     '''
     cursor = _db_config.execute_query(conn, query, (limit, offset))
@@ -163,7 +163,7 @@ def get_entries_since(conn, since_date: str) -> List[Dict]:
     query = '''
         SELECT * FROM bp_entries
         WHERE date >= ?
-        ORDER BY date ASC, time ASC
+        ORDER BY date ASC, recorded_at ASC
     '''
     cursor = _db_config.execute_query(conn, query, (since_date,))
     results = cursor.fetchall()
