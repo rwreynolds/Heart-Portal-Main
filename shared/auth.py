@@ -83,12 +83,16 @@ def init_auth_db():
     conn.close()
 
 def hash_password(password):
-    """Hash a password using SHA-256"""
-    return hashlib.sha256(password.encode()).hexdigest()
+    """Hash a password with PBKDF2 and salt"""
+    salt = secrets.token_hex(16)
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return salt + pwd_hash.hex()
 
 def verify_password(password, password_hash):
-    """Verify a password against its hash"""
-    return hash_password(password) == password_hash
+    """Verify a password against its hash using PBKDF2"""
+    salt = password_hash[:32]
+    pwd_hash = password_hash[32:]
+    return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex() == pwd_hash
 
 def create_user(username, email, password, is_admin=False):
     """Create a new user"""
