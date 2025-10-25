@@ -160,6 +160,19 @@ def index():
     print(f"DEBUG: Session contents: {dict(session)}", file=sys.stderr, flush=True)
     print(f"DEBUG: Session cookie domain: {app.config.get('SESSION_COOKIE_DOMAIN')}", file=sys.stderr, flush=True)
     print(f"DEBUG: Request cookies: {request.cookies.keys()}", file=sys.stderr, flush=True)
+    print(f"DEBUG: 'user_id' in session: {'user_id' in session}", file=sys.stderr, flush=True)
+
+    if 'user_id' in session:
+        print(f"DEBUG: session['user_id'] = {session['user_id']}", file=sys.stderr, flush=True)
+        # Try to get user directly
+        try:
+            from auth import get_user_by_id
+            user = get_user_by_id(session['user_id'])
+            print(f"DEBUG: get_user_by_id({session['user_id']}) returned: {user}", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"DEBUG: get_user_by_id failed with error: {e}", file=sys.stderr, flush=True)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
 
     # Check if user is logged in
     current_user = get_current_user()
