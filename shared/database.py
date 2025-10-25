@@ -39,9 +39,11 @@ class DatabaseConfig:
 
         if DATABASE_TYPE == 'postgresql':
             # PostgreSQL configuration
+            # Check for app-specific DATABASE_URL first, then fallback to generic
+            env_var = f'DATABASE_URL_{app_name.upper()}'
             self.database_url = os.getenv(
-                'DATABASE_URL',
-                f'postgresql://heartportal:password@localhost:5432/{db_name}'
+                env_var,
+                os.getenv('DATABASE_URL', f'postgresql://heartportal:password@localhost:5432/{db_name}')
             )
             self.connection_pool = None
         else:
