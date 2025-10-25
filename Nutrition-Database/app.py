@@ -38,11 +38,9 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cross-site requests
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
 
 try:
-    from auth import get_user_from_session, get_current_user
+    from auth import get_current_user
 except ImportError:
-    # If auth module not available, create dummy functions
-    def get_user_from_session(token):
-        return None
+    # If auth module not available, create dummy function
     def get_current_user():
         # Staging mode bypass for testing
         if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
