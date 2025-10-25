@@ -92,29 +92,6 @@ def utility_processor():
         get_bp_url=get_bp_url
     )
 
-# Authentication helper function
-def get_current_user():
-    """Get current user from session"""
-    # Staging mode bypass for testing
-    if os.environ.get('STAGING_MODE', '').lower() == 'true' and os.environ.get('STAGING_AUTH_BYPASS', '').lower() == 'true':
-        # Create a fake user for staging tests
-        class FakeUser:
-            def __init__(self):
-                self.id = 999
-                self.username = 'staging_test_user'
-                self.email = 'test@staging.local'
-                self.is_authenticated = True
-                self.is_anonymous = False
-        return FakeUser()
-
-    session_token = session.get('session_token')
-    if session_token:
-        try:
-            return get_user_from_session(session_token)
-        except:
-            return None
-    return None
-
 # Register template global functions
 app.jinja_env.globals.update(
     get_main_app_url=get_main_app_url,
