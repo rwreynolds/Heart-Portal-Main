@@ -6,7 +6,6 @@ Tracks daily fluid intake for heart failure patients
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
 import os
 import sys
-import sqlite3
 from datetime import datetime, date
 import json
 from dotenv import load_dotenv
@@ -25,6 +24,9 @@ from url_helpers import (
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
+# Import database functions
+import database as db
+
 app = Flask(__name__)
 # Shared secret key for cross-application session compatibility
 app.secret_key = os.environ.get('SECRET_KEY', 'heart-portal-shared-secret-key-2025')
@@ -42,9 +44,6 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
-
-# Database configuration
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'database', 'fluid_tracker.db')
 
 # Timezone configuration
 TIMEZONE = os.getenv('TIMEZONE', 'America/New_York')  # Default to Eastern Time
@@ -69,107 +68,24 @@ app.jinja_env.globals.update(
 )
 
 def init_database():
-    """Initialize the SQLite database"""
-    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
-
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    # Create fluid_entries table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS fluid_entries (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            fluid_type TEXT NOT NULL,
-            volume_ml INTEGER NOT NULL,
-            container_size TEXT,
-            time_consumed TEXT,
-            notes TEXT,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    ''')
-
-    # Create daily_goals table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS daily_goals (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL UNIQUE,
-            target_ml INTEGER NOT NULL DEFAULT 2000,
-            created_at TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    ''')
-
-    # Create user_settings table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user_settings (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            setting_name TEXT NOT NULL UNIQUE,
-            setting_value TEXT NOT NULL,
-            updated_at TEXT NOT NULL
-        )
-    ''')
-
-    # Insert default settings
-    cursor.execute('''
-        INSERT OR IGNORE INTO user_settings (setting_name, setting_value, updated_at)
-        VALUES ('default_daily_goal', '2000', ?)
-    ''', (datetime.now().isoformat(),))
-
-    cursor.execute('''
-        INSERT OR IGNORE INTO user_settings (setting_name, setting_value, updated_at)
-        VALUES ('alert_threshold', '80', ?)
-    ''', (datetime.now().isoformat(),))
-
-    conn.commit()
-    conn.close()
+    """Initialize the database"""
+    db.init_fluid_database()
 
 def get_daily_intake(target_date=None):
     """Get total fluid intake for a specific date"""
     if target_date is None:
         target_date = get_current_date().isoformat()
-
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT SUM(volume_ml) FROM fluid_entries WHERE date = ?
-    ''', (target_date,))
-
-    result = cursor.fetchone()
-    conn.close()
-
-    return result[0] or 0
+    return db.get_daily_total(target_date)
 
 def get_daily_goal(target_date=None):
     """Get daily fluid goal for a specific date"""
     if target_date is None:
         target_date = get_current_date().isoformat()
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    # Try to get specific goal for the date
-    cursor.execute('''
-        SELECT target_ml FROM daily_goals WHERE date = ?
-    ''', (target_date,))
-
-    result = cursor.fetchone()
-
-    if result:
-        conn.close()
-        return result[0]
-
-    # Fall back to default goal
-    cursor.execute('''
-        SELECT setting_value FROM user_settings WHERE setting_name = 'default_daily_goal'
-    ''', )
-
-    result = cursor.fetchone()
-    conn.close()
-
-    return int(result[0]) if result else 2000
+    goal = db.get_daily_goal(target_date)
+    if goal is None:
+        goal = db.get_default_daily_goal()
+    return goal
 
 @app.route('/')
 def index():
@@ -189,31 +105,8 @@ def index():
     # Calculate percentage
     percentage = (daily_intake / daily_goal * 100) if daily_goal > 0 else 0
 
-    # Get recent entries
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT * FROM fluid_entries
-        WHERE date = ?
-        ORDER BY created_at DESC
-        LIMIT 10
-    ''', (today_str,))
-
-    entries = []
-    for row in cursor.fetchall():
-        entries.append({
-            'id': row[0],
-            'date': row[1],
-            'fluid_type': row[2],
-            'volume_ml': row[3],
-            'container_size': row[4],
-            'time_consumed': row[5],
-            'notes': row[6],
-            'created_at': row[7]
-        })
-
-    conn.close()
+    # Get recent entries for today
+    entries = db.get_entries(date=today_str, limit=10)
 
     return render_template('index.html',
                          daily_intake=daily_intake,
@@ -234,27 +127,14 @@ def add_entry():
         data = request.form
         entry_date = data.get('date', get_current_date().isoformat())
 
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-
-        now = datetime.now().isoformat()
-        cursor.execute('''
-            INSERT INTO fluid_entries
-            (date, fluid_type, volume_ml, container_size, time_consumed, notes, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            entry_date,
-            data.get('fluid_type'),
-            int(data.get('volume_ml', 0)),
-            data.get('container_size'),
-            data.get('time_consumed'),
-            data.get('notes', ''),
-            now,
-            now
-        ))
-
-        conn.commit()
-        conn.close()
+        db.add_entry(
+            date=entry_date,
+            beverage_name=data.get('fluid_type'),
+            volume_ml=int(data.get('volume_ml', 0)),
+            beverage_type=data.get('container_size', ''),
+            time_consumed=data.get('time_consumed'),
+            notes=data.get('notes', '')
+        )
 
         flash('Fluid entry added successfully!', 'success')
         return redirect('./')
@@ -279,47 +159,19 @@ def history():
     per_page = 50
     offset = (page - 1) * per_page
 
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('''
-        SELECT date, SUM(volume_ml) as total_volume, COUNT(*) as entry_count
-        FROM fluid_entries
-        GROUP BY date
-        ORDER BY date DESC
-        LIMIT ? OFFSET ?
-    ''', (per_page, offset))
-
-    summaries = cursor.fetchall()
-
+    # Get daily summaries using database module
     daily_summaries = []
-    for row in summaries:
-        entry_date = row[0]
-        total_volume = row[1]
-        entry_count = row[2]
+    summaries = db.get_daily_summaries(limit=per_page, offset=offset)
+
+    for summary in summaries:
+        entry_date = summary['date']
+        total_volume = summary['total_ml']
+        entry_count = summary['entry_count']
         daily_goal = get_daily_goal(entry_date)
         percentage = (total_volume / daily_goal * 100) if daily_goal > 0 else 0
 
         # Get all entries for this date
-        cursor.execute('''
-            SELECT id, date, fluid_type, volume_ml, container_size, time_consumed, notes, created_at
-            FROM fluid_entries
-            WHERE date = ?
-            ORDER BY created_at DESC
-        ''', (entry_date,))
-
-        entries = []
-        for entry_row in cursor.fetchall():
-            entries.append({
-                'id': entry_row[0],
-                'date': entry_row[1],
-                'fluid_type': entry_row[2],
-                'volume_ml': entry_row[3],
-                'container_size': entry_row[4],
-                'time_consumed': entry_row[5],
-                'notes': entry_row[6],
-                'created_at': entry_row[7]
-            })
+        entries = db.get_entries(date=entry_date)
 
         daily_summaries.append({
             'date': entry_date,
@@ -329,8 +181,6 @@ def history():
             'percentage': round(percentage, 1),
             'entries': entries
         })
-
-    conn.close()
 
     return render_template('history.html',
                          daily_summaries=daily_summaries,
@@ -353,35 +203,13 @@ def settings():
         default_goal = request.form.get('default_daily_goal', 2000)
         alert_threshold = request.form.get('alert_threshold', 80)
 
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-
-        now = datetime.now().isoformat()
-
-        cursor.execute('''
-            UPDATE user_settings
-            SET setting_value = ?, updated_at = ?
-            WHERE setting_name = 'default_daily_goal'
-        ''', (default_goal, now))
-
-        cursor.execute('''
-            UPDATE user_settings
-            SET setting_value = ?, updated_at = ?
-            WHERE setting_name = 'alert_threshold'
-        ''', (alert_threshold, now))
-
-        conn.commit()
-        conn.close()
+        db.update_setting('default_daily_goal', str(default_goal))
+        db.update_setting('alert_threshold', str(alert_threshold))
 
         return redirect('./')
 
     # Get current settings
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('SELECT setting_name, setting_value FROM user_settings')
-    settings_data = dict(cursor.fetchall())
-    conn.close()
+    settings_data = db.get_all_settings()
 
     return render_template('settings.html',
                          settings=settings_data,
@@ -407,13 +235,7 @@ def api_daily_intake(target_date):
 @app.route('/delete_entry/<int:entry_id>', methods=['POST'])
 def delete_entry(entry_id):
     """Delete a fluid entry"""
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute('DELETE FROM fluid_entries WHERE id = ?', (entry_id,))
-    conn.commit()
-    conn.close()
-
+    db.delete_entry(entry_id)
     flash('Entry deleted successfully!', 'success')
     return redirect('./')
 
