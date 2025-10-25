@@ -155,11 +155,20 @@ def require_api_key(f):
 @app.route('/')
 def index():
     """Serve the main application page - requires login"""
+    # Debug logging
+    import sys
+    print(f"DEBUG: Session contents: {dict(session)}", file=sys.stderr, flush=True)
+    print(f"DEBUG: Session cookie domain: {app.config.get('SESSION_COOKIE_DOMAIN')}", file=sys.stderr, flush=True)
+    print(f"DEBUG: Request cookies: {request.cookies.keys()}", file=sys.stderr, flush=True)
+
     # Check if user is logged in
     current_user = get_current_user()
+    print(f"DEBUG: get_current_user() returned: {current_user}", file=sys.stderr, flush=True)
+
     if not current_user:
         # Not logged in - redirect to main app login
         main_app_url = get_main_app_url()
+        print(f"DEBUG: Redirecting to login: {main_app_url}/login", file=sys.stderr, flush=True)
         return redirect(f"{main_app_url}/login?next={request.url}")
 
     return render_template('index.html')
