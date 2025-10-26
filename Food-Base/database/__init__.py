@@ -25,9 +25,10 @@ def init_database(app):
     """
     if DATABASE_TYPE == 'postgresql':
         # PostgreSQL configuration
+        # Check for app-specific DATABASE_URL_FOOD first, then fallback to DATABASE_URL
         database_url = os.getenv(
-            'DATABASE_URL',
-            'postgresql://heartportal:password@localhost:5432/heart_portal_staging_food'
+            'DATABASE_URL_FOOD',
+            os.getenv('DATABASE_URL', 'postgresql://heartportal:heartportal@localhost:5432/heart_portal_staging_food')
         )
         app.config['SQLALCHEMY_DATABASE_URI'] = database_url
         print(f"📊 Using PostgreSQL database")
@@ -60,8 +61,8 @@ def get_database_info():
     """Get database information"""
     if DATABASE_TYPE == 'postgresql':
         database_url = os.getenv(
-            'DATABASE_URL',
-            'postgresql://heartportal:password@localhost:5432/heart_portal_staging_food'
+            'DATABASE_URL_FOOD',
+            os.getenv('DATABASE_URL', 'postgresql://heartportal:heartportal@localhost:5432/heart_portal_staging_food')
         )
         return {
             'type': 'postgresql',
