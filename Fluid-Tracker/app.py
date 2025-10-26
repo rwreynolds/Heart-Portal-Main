@@ -165,7 +165,7 @@ def history():
 
     for summary in summaries:
         entry_date = summary['date']
-        total_volume = summary['total_ml']
+        total_volume = summary['total_volume']
         entry_count = summary['entry_count']
         daily_goal = get_daily_goal(entry_date)
         percentage = (total_volume / daily_goal * 100) if daily_goal > 0 else 0
