@@ -154,8 +154,8 @@ def add_entry(date: str, beverage_name: str, volume_ml: float, beverage_type: st
     conn = get_db_connection()
 
     query = '''
-        INSERT INTO fluid_entries (date, beverage_name, volume_ml, beverage_type, time_of_day, notes, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        INSERT INTO fluid_entries (date, beverage_name, volume_ml, beverage_type, time_of_day, notes, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     '''
 
     cursor = _db_config.execute_query(
