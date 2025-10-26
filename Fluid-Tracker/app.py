@@ -132,7 +132,7 @@ def add_entry():
             beverage_name=data.get('fluid_type'),
             volume_ml=int(data.get('volume_ml', 0)),
             beverage_type=data.get('container_size', ''),
-            time_consumed=data.get('time_consumed'),
+            time_of_day=data.get('time_consumed'),
             notes=data.get('notes', '')
         )
 
