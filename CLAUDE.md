@@ -232,6 +232,7 @@ exit
 - Git workflow enforcement
 
 ## Recent Changes
+- ✅ **Fluid Tracker Fixed on Staging** - Fixed 5 critical issues: parameter name mismatches, database column naming, INSERT query missing updated_at, PostgreSQL sequence sync, and history page column reference (see FLUID_TRACKER_FIXES.md for details)
 - ✅ **Form Button Standardization Complete** - All forms now follow Cancel (left) → Action (right) pattern with centered layout
 - ✅ **Tracker Color Consistency** - Sodium Tracker and Weight Tracker action buttons now use blue (#2563eb)
 - ✅ **History Page Action Buttons** - Added "Add Entry" buttons below content cards on Sodium, Fluid, and Weight History pages
@@ -275,6 +276,11 @@ exit
 - Contact form exists but may need testing on staging
 
 ## Issues Recently Resolved
+- ✅ **Fluid Tracker Add Entry Error** - Fixed parameter mismatch between app.py and database.py (time_consumed vs time_of_day)
+- ✅ **Fluid Tracker Database Schema Mismatch** - Renamed columns to match code expectations (beverage_name, beverage_type, time_of_day)
+- ✅ **Fluid Tracker INSERT Query** - Added missing updated_at column to prevent NOT NULL constraint violations
+- ✅ **Fluid Tracker PostgreSQL Sequence** - Reset auto-increment sequence to prevent duplicate key errors
+- ✅ **Fluid Tracker History Page KeyError** - Fixed column name reference from total_ml to total_volume
 - ✅ **Navbar Inconsistency** - Fixed Tools dropdown structure across all applications
 - ✅ **About Page Submenu** - Fixed CSS overflow issue preventing Trackers submenu display
 - ✅ **Weight-Tracker Service** - Fixed close_db() TypeError and blank page issues
