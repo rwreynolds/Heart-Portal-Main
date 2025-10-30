@@ -144,6 +144,46 @@
     padding: 40px;
 }
 
+/* Action buttons */
+.actions-cell {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    margin: 0 2px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-edit {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #1d4ed8;
+    transform: scale(1.05);
+}
+
+.btn-delete {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #b91c1c;
+    transform: scale(1.05);
+}
+
 @media (max-width: 768px) {
     .history-table {
         font-size: 14px;
@@ -182,6 +222,7 @@
                         <th>Daily Goal</th>
                         <th>Progress</th>
                         <th>Entries</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -201,23 +242,34 @@
                             <small>{{ summary.percentage }}%</small>
                         </td>
                         <td>{{ summary.entry_count }}</td>
+                        <td></td>
                     </tr>
                     {% if summary.entries %}
                         {% for entry in summary.entries %}
                         <tr style="background: #f9fafb;">
                             <td style="padding-left: 40px; font-size: 0.9rem;">
                                 <i class="fas fa-arrow-right" style="color: #9ca3af; font-size: 0.7rem;"></i>
-                                {{ entry.fluid_type }}
+                                {{ entry.beverage_name }}
                             </td>
                             <td style="font-size: 0.9rem;">{{ entry.volume_ml }}ml</td>
                             <td style="font-size: 0.9rem; color: #6b7280;">
-                                {% if entry.container_size %}{{ entry.container_size }}{% endif %}
+                                {% if entry.beverage_type %}{{ entry.beverage_type }}{% endif %}
                             </td>
                             <td style="font-size: 0.9rem; color: #6b7280;">
-                                {% if entry.time_consumed %}{{ entry.time_consumed }}{% endif %}
+                                {% if entry.time_of_day %}{{ entry.time_of_day }}{% endif %}
                             </td>
                             <td style="font-size: 0.9rem; color: #6b7280;">
                                 {% if entry.notes %}{{ entry.notes }}{% endif %}
+                            </td>
+                            <td class="actions-cell" style="font-size: 0.9rem;">
+                                <a href="{{ get_fluid_url() }}/edit_entry/{{ entry.id }}" class="btn-action btn-edit" title="Edit Entry">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ get_fluid_url() }}/delete_entry/{{ entry.id }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this entry? This action cannot be undone.');">
+                                    <button type="submit" class="btn-action btn-delete" title="Delete Entry">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}

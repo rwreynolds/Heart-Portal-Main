@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Fluid Entry - Heart Portal{% endblock %}
+
+{% block additional_css %}
+<style>
+.main-content {
+    padding: 40px 0;
+}
+.back-button-container {
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 10;
+}
+.btn-back {
+    background-color: #6c757d !important;
+    color: white !important;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 10;
+}
+.btn-back:hover {
+    background-color: #5a6268 !important;
+    color: white !important;
+    text-decoration: none;
+}
+.btn-back i {
+    font-size: 0.8rem;
+}
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.page-header h1 {
+    color: white;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.page-header p {
+    color: #e5e7eb;
+    font-size: 1.1rem;
+}
+
+.form-card {
+    background: white;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #1d4ed8;
+}
+
+.form-group textarea {
+    height: 80px;
+    resize: vertical;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.required {
+    color: #ef4444;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-container" style="padding-top: 60px;">
+    <!-- Back Button -->
+    <div class="back-button-container">
+        <a href="{{ get_fluid_url() }}/history" class="btn-back">
+            <i class="fas fa-arrow-left"></i> Back to History
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>Edit Fluid Entry</h1>
+        <p>Update your fluid intake record</p>
+    </div>
+
+    <!-- Entry Form -->
+    <div class="form-card">
+        <form method="POST" action="{{ get_fluid_url() }}/edit_entry/{{ entry.id }}">
+            <div class="form-group">
+                <label for="fluid_type">Fluid Type <span class="required">*</span></label>
+                <input type="text" id="fluid_type" name="fluid_type" required
+                       value="{{ entry.beverage_name or '' }}"
+                       placeholder="e.g., Water, Coffee, Tea, Juice">
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="volume_ml">Volume (ml) <span class="required">*</span></label>
+                    <input type="number" id="volume_ml" name="volume_ml" required min="0"
+                           value="{{ entry.volume_ml or '' }}"
+                           placeholder="e.g., 250">
+                </div>
+
+                <div class="form-group">
+                    <label for="container_size">Container Size</label>
+                    <select id="container_size" name="container_size">
+                        <option value="">Select container</option>
+                        <option value="Small glass (150ml)" {% if entry.beverage_type == 'Small glass (150ml)' %}selected{% endif %}>Small glass (150ml)</option>
+                        <option value="Medium glass (250ml)" {% if entry.beverage_type == 'Medium glass (250ml)' %}selected{% endif %}>Medium glass (250ml)</option>
+                        <option value="Large glass (350ml)" {% if entry.beverage_type == 'Large glass (350ml)' %}selected{% endif %}>Large glass (350ml)</option>
+                        <option value="Coffee cup (200ml)" {% if entry.beverage_type == 'Coffee cup (200ml)' %}selected{% endif %}>Coffee cup (200ml)</option>
+                        <option value="Mug (300ml)" {% if entry.beverage_type == 'Mug (300ml)' %}selected{% endif %}>Mug (300ml)</option>
+                        <option value="Water bottle (500ml)" {% if entry.beverage_type == 'Water bottle (500ml)' %}selected{% endif %}>Water bottle (500ml)</option>
+                        <option value="Large bottle (1000ml)" {% if entry.beverage_type == 'Large bottle (1000ml)' %}selected{% endif %}>Large bottle (1000ml)</option>
+                        <option value="Bowl (250ml)" {% if entry.beverage_type == 'Bowl (250ml)' %}selected{% endif %}>Bowl (250ml)</option>
+                        <option value="Custom" {% if entry.beverage_type == 'Custom' %}selected{% endif %}>Custom</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="time_consumed">Time Consumed</label>
+                    <input type="time" id="time_consumed" name="time_consumed"
+                           value="{{ entry.time_of_day or '' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" name="date" value="{{ entry.date or '' }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Notes (Optional)</label>
+                <textarea id="notes" name="notes"
+                          placeholder="Any additional notes about this fluid intake">{{ entry.notes or '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ get_fluid_url() }}/history" class="btn btn-secondary">✖ Cancel</a>
+                <button type="submit" class="btn btn-primary">💾 Update Entry</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-focus on fluid type field
+    document.getElementById('fluid_type').focus();
+
+    // Auto-fill volume based on container size
+    document.getElementById('container_size').addEventListener('change', function() {
+        const volumeField = document.getElementById('volume_ml');
+        const containerSize = this.value;
+
+        if (containerSize.includes('150ml')) {
+            volumeField.value = '150';
+        } else if (containerSize.includes('250ml')) {
+            volumeField.value = '250';
+        } else if (containerSize.includes('350ml')) {
+            volumeField.value = '350';
+        } else if (containerSize.includes('200ml')) {
+            volumeField.value = '200';
+        } else if (containerSize.includes('300ml')) {
+            volumeField.value = '300';
+        } else if (containerSize.includes('500ml')) {
+            volumeField.value = '500';
+        } else if (containerSize.includes('1000ml')) {
+            volumeField.value = '1000';
+        }
+    });
+</script>
+{% endblock %}

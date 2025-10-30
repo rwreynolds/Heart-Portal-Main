@@ -148,6 +148,20 @@ def get_entries(date: str = None, limit: int = 100) -> List[Dict]:
     return entries
 
 
+def get_entry_by_id(entry_id: int) -> Optional[Dict]:
+    """Get a single fluid entry by ID"""
+    conn = get_db_connection()
+
+    query = 'SELECT * FROM fluid_entries WHERE id = ?'
+    cursor = _db_config.execute_query(conn, query, (entry_id,))
+
+    result = cursor.fetchone()
+    entry = _db_config.normalize_row(result) if result else None
+
+    release_connection(conn)
+    return entry
+
+
 def add_entry(date: str, beverage_name: str, volume_ml: float, beverage_type: str = '',
               time_of_day: str = '', notes: str = '') -> int:
     """Add a new fluid entry"""
@@ -174,42 +188,29 @@ def add_entry(date: str, beverage_name: str, volume_ml: float, beverage_type: st
     return entry_id
 
 
-def update_entry(entry_id: int, beverage_name: str = None, volume_ml: float = None,
-                beverage_type: str = None, time_of_day: str = None, notes: str = None) -> bool:
+def update_entry(entry_id: int, date: str, beverage_name: str, volume_ml: float,
+                beverage_type: str = '', time_of_day: str = '', notes: str = '') -> bool:
     """Update an existing fluid entry"""
     conn = get_db_connection()
 
-    updates = []
-    params = []
-
-    if beverage_name is not None:
-        updates.append('beverage_name = ?')
-        params.append(beverage_name)
-    if volume_ml is not None:
-        updates.append('volume_ml = ?')
-        params.append(volume_ml)
-    if beverage_type is not None:
-        updates.append('beverage_type = ?')
-        params.append(beverage_type)
-    if time_of_day is not None:
-        updates.append('time_of_day = ?')
-        params.append(time_of_day)
-    if notes is not None:
-        updates.append('notes = ?')
-        params.append(notes)
-
-    if not updates:
+    try:
+        query = '''
+            UPDATE fluid_entries SET
+            date = ?, beverage_name = ?, volume_ml = ?, beverage_type = ?,
+            time_of_day = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        '''
+        cursor = _db_config.execute_query(conn, query,
+                                          (date, beverage_name, volume_ml, beverage_type,
+                                           time_of_day, notes, entry_id),
+                                          use_dict_cursor=False)
+        success = cursor.rowcount > 0
+        release_connection(conn)
+        return success
+    except Exception as e:
+        print(f"Error updating fluid entry: {e}")
         release_connection(conn)
         return False
-
-    params.append(entry_id)
-    query = f"UPDATE fluid_entries SET {', '.join(updates)} WHERE id = ?"
-
-    cursor = _db_config.execute_query(conn, query, tuple(params), use_dict_cursor=False)
-    success = cursor.rowcount > 0
-
-    release_connection(conn)
-    return success
 
 
 def delete_entry(entry_id: int) -> bool:
