@@ -174,20 +174,20 @@ def edit_entry(entry_id):
         # Validate blood pressure values
         if systolic < 50 or systolic > 300:
             flash('Systolic pressure must be between 50-300 mmHg', 'error')
-            return redirect(url_for('edit_entry', entry_id=entry_id))
+            return redirect(f"{get_bp_url()}/edit_entry/{entry_id}")
 
         if diastolic < 30 or diastolic > 200:
             flash('Diastolic pressure must be between 30-200 mmHg', 'error')
-            return redirect(url_for('edit_entry', entry_id=entry_id))
+            return redirect(f"{get_bp_url()}/edit_entry/{entry_id}")
 
         if systolic <= diastolic:
             flash('Systolic pressure must be higher than diastolic pressure', 'error')
-            return redirect(url_for('edit_entry', entry_id=entry_id))
+            return redirect(f"{get_bp_url()}/edit_entry/{entry_id}")
 
         # Validate heart rate if provided
         if heart_rate and (int(heart_rate) < 30 or int(heart_rate) > 250):
             flash('Heart rate must be between 30-250 bpm', 'error')
-            return redirect(url_for('edit_entry', entry_id=entry_id))
+            return redirect(f"{get_bp_url()}/edit_entry/{entry_id}")
 
         success = update_entry(conn, entry_id, date, time, systolic, diastolic,
                                int(heart_rate) if heart_rate else None,
@@ -195,16 +195,16 @@ def edit_entry(entry_id):
 
         if success:
             flash('Blood pressure entry updated successfully!', 'success')
-            return redirect(url_for('history'))
+            return redirect(f"{get_bp_url()}/history")
         else:
             flash('Error updating entry', 'error')
-            return redirect(url_for('edit_entry', entry_id=entry_id))
+            return redirect(f"{get_bp_url()}/edit_entry/{entry_id}")
 
     # GET request - show form with existing data
     entry = get_entry_by_id(conn, entry_id)
     if not entry:
         flash('Entry not found', 'error')
-        return redirect(url_for('history'))
+        return redirect(f"{get_bp_url()}/history")
 
     return render_template('edit_entry.html', entry=entry)
 
@@ -223,7 +223,7 @@ def delete_entry_route(entry_id):
     else:
         flash('Error deleting entry', 'error')
 
-    return redirect(url_for('history'))
+    return redirect(f"{get_bp_url()}/history")
 
 @app.route('/history')
 def history():
