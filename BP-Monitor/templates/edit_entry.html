@@ -257,7 +257,7 @@
 {% block content %}
 <div class="main-container" style="padding-top: 80px;">
     <div class="back-button-container">
-        <a href="{{ url_for('history') }}" class="btn-back">
+        <a href="{{ get_bp_url() }}/history" class="btn-back">
             <i class="fas fa-arrow-left"></i> Back to History
         </a>
     </div>
@@ -270,7 +270,7 @@
 
     <!-- Entry Form -->
     <div class="form-card">
-        <form method="POST" action="{{ url_for('edit_entry', entry_id=entry.id) }}">
+        <form method="POST" action="{{ get_bp_url() }}/edit_entry/{{ entry.id }}">
             <div class="form-grid">
                 <div class="form-group">
                     <label for="date">Date <span class="required">*</span></label>
@@ -365,7 +365,7 @@
             </div>
 
             <div class="form-actions">
-                <a href="{{ url_for('history') }}" class="btn btn-secondary">✖ Cancel</a>
+                <a href="{{ get_bp_url() }}/history" class="btn btn-secondary">✖ Cancel</a>
                 <button type="submit" class="btn btn-primary">💾 Update Reading</button>
             </div>
         </form>
