@@ -162,6 +162,75 @@ def add_entry():
                          nutrition_url=get_nutrition_url(),
                          foodbase_url=get_foodbase_url())
 
+@app.route('/edit_entry/<int:entry_id>', methods=['GET', 'POST'])
+def edit_entry(entry_id):
+    """Edit an existing sodium entry - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
+
+    if request.method == 'POST':
+        data = request.form
+        entry_date = data.get('date', get_current_date().isoformat())
+
+        # Validate sodium value
+        try:
+            sodium_mg = float(data.get('sodium_mg', 0))
+            if sodium_mg < 0 or sodium_mg > 50000:
+                flash('Sodium must be between 0-50000 mg', 'error')
+                return redirect(f"{get_sodium_url()}/edit_entry/{entry_id}")
+        except ValueError:
+            flash('Invalid sodium value', 'error')
+            return redirect(f"{get_sodium_url()}/edit_entry/{entry_id}")
+
+        success = db.update_entry(
+            entry_id=entry_id,
+            date=entry_date,
+            food_item=data.get('food_item'),
+            sodium_mg=sodium_mg,
+            serving_size=data.get('serving_size', ''),
+            meal_type=data.get('meal_type', ''),
+            notes=data.get('notes', '')
+        )
+
+        if success:
+            flash('Sodium entry updated successfully!', 'success')
+            return redirect(f"{get_sodium_url()}/history")
+        else:
+            flash('Error updating entry', 'error')
+            return redirect(f"{get_sodium_url()}/edit_entry/{entry_id}")
+
+    # GET request - show form with existing data
+    entry = db.get_entry_by_id(entry_id)
+    if not entry:
+        flash('Entry not found', 'error')
+        return redirect(f"{get_sodium_url()}/history")
+
+    return render_template('edit_entry.html',
+                         entry=entry,
+                         main_app_url=get_main_app_url(),
+                         blog_url=get_blog_url(),
+                         nutrition_url=get_nutrition_url(),
+                         foodbase_url=get_foodbase_url())
+
+@app.route('/delete_entry/<int:entry_id>', methods=['POST'])
+def delete_entry_route(entry_id):
+    """Delete a sodium entry - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
+
+    success = db.delete_entry(entry_id)
+
+    if success:
+        flash('Sodium entry deleted successfully!', 'success')
+    else:
+        flash('Error deleting entry', 'error')
+
+    return redirect(f"{get_sodium_url()}/history")
+
 @app.route('/history')
 def history():
     """View sodium intake history - requires login"""

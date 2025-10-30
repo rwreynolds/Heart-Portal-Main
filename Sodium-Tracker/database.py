@@ -149,6 +149,20 @@ def get_entries(date: str = None, limit: int = 100) -> List[Dict]:
     return entries
 
 
+def get_entry_by_id(entry_id: int) -> Optional[Dict]:
+    """Get a single sodium entry by ID"""
+    conn = get_db_connection()
+
+    query = 'SELECT * FROM sodium_entries WHERE id = ?'
+    cursor = _db_config.execute_query(conn, query, (entry_id,))
+
+    result = cursor.fetchone()
+    entry = _db_config.normalize_row(result) if result else None
+
+    release_connection(conn)
+    return entry
+
+
 def add_entry(date: str, food_item: str, sodium_mg: float, serving_size: str = '',
               meal_type: str = '', notes: str = '') -> int:
     """Add a new sodium entry"""
@@ -175,45 +189,29 @@ def add_entry(date: str, food_item: str, sodium_mg: float, serving_size: str = '
     return entry_id
 
 
-def update_entry(entry_id: int, food_item: str = None, sodium_mg: float = None,
-                serving_size: str = None, meal_type: str = None, notes: str = None) -> bool:
+def update_entry(entry_id: int, date: str, food_item: str, sodium_mg: float,
+                serving_size: str = '', meal_type: str = '', notes: str = '') -> bool:
     """Update an existing sodium entry"""
     conn = get_db_connection()
 
-    updates = []
-    params = []
-
-    if food_item is not None:
-        updates.append('food_item = ?')
-        params.append(food_item)
-    if sodium_mg is not None:
-        updates.append('sodium_mg = ?')
-        params.append(sodium_mg)
-    if serving_size is not None:
-        updates.append('serving_size = ?')
-        params.append(serving_size)
-    if meal_type is not None:
-        updates.append('meal_type = ?')
-        params.append(meal_type)
-    if notes is not None:
-        updates.append('notes = ?')
-        params.append(notes)
-
-    if not updates:
+    try:
+        query = '''
+            UPDATE sodium_entries SET
+            date = ?, food_item = ?, sodium_mg = ?, serving_size = ?,
+            meal_type = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        '''
+        cursor = _db_config.execute_query(conn, query,
+                                          (date, food_item, sodium_mg, serving_size,
+                                           meal_type, notes, entry_id),
+                                          use_dict_cursor=False)
+        success = cursor.rowcount > 0
+        release_connection(conn)
+        return success
+    except Exception as e:
+        print(f"Error updating sodium entry: {e}")
         release_connection(conn)
         return False
-
-    # Always update the updated_at timestamp
-    updates.append('updated_at = CURRENT_TIMESTAMP')
-
-    params.append(entry_id)
-    query = f"UPDATE sodium_entries SET {', '.join(updates)} WHERE id = ?"
-
-    cursor = _db_config.execute_query(conn, query, tuple(params), use_dict_cursor=False)
-    success = cursor.rowcount > 0
-
-    release_connection(conn)
-    return success
 
 
 def delete_entry(entry_id: int) -> bool:
