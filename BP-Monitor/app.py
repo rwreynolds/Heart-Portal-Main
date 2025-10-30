@@ -20,7 +20,8 @@ from database import (
     init_bp_database, get_db_connection, release_connection,
     get_settings, get_today_entries, get_recent_entries,
     add_bp_entry, get_bp_history, get_total_entries_count,
-    get_entries_since, update_settings
+    get_entries_since, update_settings, get_entry_by_id,
+    update_entry, delete_entry
 )
 
 app = Flask(__name__)
@@ -149,6 +150,80 @@ def add_entry():
     current_time = datetime.now().strftime('%H:%M')
 
     return render_template('add_entry.html', today=today, current_time=current_time)
+
+@app.route('/edit_entry/<int:entry_id>', methods=['GET', 'POST'])
+def edit_entry(entry_id):
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
+
+    conn = get_db()
+
+    if request.method == 'POST':
+        date = request.form['date']
+        time = request.form['time']
+        systolic = int(request.form['systolic'])
+        diastolic = int(request.form['diastolic'])
+        heart_rate = request.form['heart_rate']
+        time_of_day = request.form.get('time_of_day', 'morning')
+        position = request.form['position']
+        arm = request.form['arm']
+        notes = request.form['notes']
+
+        # Validate blood pressure values
+        if systolic < 50 or systolic > 300:
+            flash('Systolic pressure must be between 50-300 mmHg', 'error')
+            return redirect(url_for('edit_entry', entry_id=entry_id))
+
+        if diastolic < 30 or diastolic > 200:
+            flash('Diastolic pressure must be between 30-200 mmHg', 'error')
+            return redirect(url_for('edit_entry', entry_id=entry_id))
+
+        if systolic <= diastolic:
+            flash('Systolic pressure must be higher than diastolic pressure', 'error')
+            return redirect(url_for('edit_entry', entry_id=entry_id))
+
+        # Validate heart rate if provided
+        if heart_rate and (int(heart_rate) < 30 or int(heart_rate) > 250):
+            flash('Heart rate must be between 30-250 bpm', 'error')
+            return redirect(url_for('edit_entry', entry_id=entry_id))
+
+        success = update_entry(conn, entry_id, date, time, systolic, diastolic,
+                               int(heart_rate) if heart_rate else None,
+                               time_of_day, position, arm, notes)
+
+        if success:
+            flash('Blood pressure entry updated successfully!', 'success')
+            return redirect(url_for('history'))
+        else:
+            flash('Error updating entry', 'error')
+            return redirect(url_for('edit_entry', entry_id=entry_id))
+
+    # GET request - show form with existing data
+    entry = get_entry_by_id(conn, entry_id)
+    if not entry:
+        flash('Entry not found', 'error')
+        return redirect(url_for('history'))
+
+    return render_template('edit_entry.html', entry=entry)
+
+@app.route('/delete_entry/<int:entry_id>', methods=['POST'])
+def delete_entry_route(entry_id):
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={quote(request.url, safe='')}")
+
+    conn = get_db()
+    success = delete_entry(conn, entry_id)
+
+    if success:
+        flash('Blood pressure entry deleted successfully!', 'success')
+    else:
+        flash('Error deleting entry', 'error')
+
+    return redirect(url_for('history'))
 
 @app.route('/history')
 def history():

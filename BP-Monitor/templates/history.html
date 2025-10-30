@@ -63,6 +63,7 @@
                             <th>Arm</th>
                             <th>Category</th>
                             <th>Notes</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,6 +100,16 @@
                                 {% endif %}
                             </td>
                             <td>{{ entry.notes or '' }}</td>
+                            <td class="actions-cell">
+                                <a href="{{ url_for('edit_entry', entry_id=entry.id) }}" class="btn-action btn-edit" title="Edit Entry">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('delete_entry_route', entry_id=entry.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this entry? This action cannot be undone.');">
+                                    <button type="submit" class="btn-action btn-delete" title="Delete Entry">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -336,6 +347,46 @@
 
 .btn-secondary:hover {
     background: #545b62;
+}
+
+/* Action buttons */
+.actions-cell {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    margin: 0 4px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-edit {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #1d4ed8;
+    transform: scale(1.05);
+}
+
+.btn-delete {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #b91c1c;
+    transform: scale(1.05);
 }
 
 @media (max-width: 768px) {

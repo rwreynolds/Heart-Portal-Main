@@ -170,6 +170,46 @@ def get_entries_since(conn, since_date: str) -> List[Dict]:
     return [normalize_row(row) for row in results]
 
 
+def get_entry_by_id(conn, entry_id: int) -> Optional[Dict]:
+    """Get a single BP entry by ID"""
+    query = 'SELECT * FROM bp_entries WHERE id = ?'
+    cursor = _db_config.execute_query(conn, query, (entry_id,))
+    result = cursor.fetchone()
+    return normalize_row(result) if result else None
+
+
+def update_entry(conn, entry_id: int, date: str, time: str, systolic: int,
+                diastolic: int, heart_rate: Optional[int], time_of_day: str,
+                position: str, arm: str, notes: str = '') -> bool:
+    """Update an existing BP entry"""
+    try:
+        query = '''
+            UPDATE bp_entries SET
+            date = ?, time = ?, systolic = ?, diastolic = ?,
+            heart_rate = ?, time_of_day = ?, position = ?, arm = ?, notes = ?
+            WHERE id = ?
+        '''
+        cursor = _db_config.execute_query(conn, query,
+                                          (date, time, systolic, diastolic, heart_rate,
+                                           time_of_day, position, arm, notes, entry_id),
+                                          use_dict_cursor=False)
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating BP entry: {e}")
+        return False
+
+
+def delete_entry(conn, entry_id: int) -> bool:
+    """Delete a BP entry"""
+    try:
+        query = 'DELETE FROM bp_entries WHERE id = ?'
+        cursor = _db_config.execute_query(conn, query, (entry_id,), use_dict_cursor=False)
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error deleting BP entry: {e}")
+        return False
+
+
 def update_settings(conn, bp_target_systolic: int, bp_target_diastolic: int,
                    hr_target_min: int, hr_target_max: int,
                    reminder_enabled: bool, reminder_time: str,
