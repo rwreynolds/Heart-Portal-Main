@@ -223,6 +223,46 @@
     flex-wrap: wrap;
 }
 
+/* Action buttons */
+.actions-cell {
+    white-space: nowrap;
+    text-align: center;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    margin: 0 2px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-edit {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-edit:hover {
+    background: #1d4ed8;
+    transform: scale(1.05);
+}
+
+.btn-delete {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #b91c1c;
+    transform: scale(1.05);
+}
+
 @media (max-width: 768px) {
     .page-header h1 {
         font-size: 2rem;
@@ -300,6 +340,7 @@
                         <th>Weight</th>
                         <th>Time</th>
                         <th>Notes</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -334,6 +375,16 @@
                                 {% else %}
                                     <span style="color: #9ca3af;">—</span>
                                 {% endif %}
+                            </td>
+                            <td class="actions-cell">
+                                <a href="{{ get_weight_url() }}/edit_entry/{{ entry.id }}" class="btn-action btn-edit" title="Edit Entry">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="POST" action="{{ get_weight_url() }}/delete_entry/{{ entry.id }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this entry? This action cannot be undone.');">
+                                    <button type="submit" class="btn-action btn-delete" title="Delete Entry">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     {% endfor %}

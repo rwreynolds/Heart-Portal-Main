@@ -231,6 +231,43 @@ def get_weight_entry_by_date(conn, date: str) -> Optional[Dict]:
     return normalize_row(result) if result else None
 
 
+def get_entry_by_id(conn, entry_id: int) -> Optional[Dict]:
+    """Get a single weight entry by ID"""
+    query = 'SELECT * FROM weight_entries WHERE id = ?'
+    cursor = _db_config.execute_query(conn, query, (entry_id,))
+    result = cursor.fetchone()
+    return normalize_row(result) if result else None
+
+
+def update_entry(conn, entry_id: int, date: str, weight_lbs: float, weight_kg: float,
+                time_of_day: str, notes: str = '') -> bool:
+    """Update an existing weight entry"""
+    try:
+        query = '''
+            UPDATE weight_entries SET
+            date = ?, weight_lbs = ?, weight_kg = ?, time_of_day = ?, notes = ?
+            WHERE id = ?
+        '''
+        cursor = _db_config.execute_query(conn, query,
+                                          (date, weight_lbs, weight_kg, time_of_day, notes, entry_id),
+                                          use_dict_cursor=False)
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error updating weight entry: {e}")
+        return False
+
+
+def delete_entry(conn, entry_id: int) -> bool:
+    """Delete a weight entry"""
+    try:
+        query = 'DELETE FROM weight_entries WHERE id = ?'
+        cursor = _db_config.execute_query(conn, query, (entry_id,), use_dict_cursor=False)
+        return cursor.rowcount > 0
+    except Exception as e:
+        print(f"Error deleting weight entry: {e}")
+        return False
+
+
 # Utility functions
 def lbs_to_kg(lbs: float) -> float:
     """Convert pounds to kilograms"""

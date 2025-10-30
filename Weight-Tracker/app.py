@@ -2,7 +2,7 @@
 
 import os
 from datetime import datetime, timedelta, date
-from flask import Flask, render_template, request, redirect, url_for, jsonify, g
+from flask import Flask, render_template, request, redirect, url_for, jsonify, g, flash
 import logging
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
@@ -31,6 +31,7 @@ from database import (
     get_user_settings, get_today_entry, get_recent_entries, get_current_goal,
     add_weight_entry, get_weight_history, get_total_entries_count,
     update_user_settings, set_weight_goal, get_weight_entry_by_date,
+    get_entry_by_id, update_entry, delete_entry,
     lbs_to_kg, kg_to_lbs
 )
 
@@ -189,6 +190,80 @@ def add_entry():
                          preferred_unit=preferred_unit,
                          today=get_current_date().isoformat(),
                          base_url=get_base_url())
+
+@app.route('/edit_entry/<int:entry_id>', methods=['GET', 'POST'])
+def edit_entry(entry_id):
+    """Edit an existing weight entry - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
+    conn = get_db()
+
+    if request.method == 'POST':
+        entry_date = request.form['date']
+        weight_input = float(request.form['weight'])
+        unit = request.form['unit']
+        time_of_day = request.form['time_of_day']
+        notes = request.form.get('notes', '')
+
+        # Validate weight value
+        if weight_input <= 0 or weight_input > 1000:
+            flash('Weight must be between 0-1000', 'error')
+            return redirect(f"{get_weight_url()}/edit_entry/{entry_id}")
+
+        # Convert to both units for storage
+        if unit == 'lbs':
+            weight_lbs = weight_input
+            weight_kg = lbs_to_kg(weight_input)
+        else:
+            weight_kg = weight_input
+            weight_lbs = kg_to_lbs(weight_input)
+
+        success = update_entry(conn, entry_id, entry_date, weight_lbs, weight_kg, time_of_day, notes)
+
+        if success:
+            flash('Weight entry updated successfully!', 'success')
+            logger.info(f"Weight entry updated: {weight_lbs}lbs/{weight_kg}kg on {entry_date}")
+            return redirect(f"{get_weight_url()}/history")
+        else:
+            flash('Error updating entry', 'error')
+            return redirect(f"{get_weight_url()}/edit_entry/{entry_id}")
+
+    # GET request - show form with existing data
+    entry = get_entry_by_id(conn, entry_id)
+    if not entry:
+        flash('Entry not found', 'error')
+        return redirect(f"{get_weight_url()}/history")
+
+    # Get user settings for default unit
+    settings = get_user_settings(conn)
+    preferred_unit = settings['preferred_unit'] if settings else 'lbs'
+
+    return render_template('edit_entry.html',
+                         entry=entry,
+                         preferred_unit=preferred_unit,
+                         base_url=get_base_url())
+
+@app.route('/delete_entry/<int:entry_id>', methods=['POST'])
+def delete_entry_route(entry_id):
+    """Delete a weight entry - requires login"""
+    current_user = get_current_user()
+    if not current_user:
+        main_app_url = get_main_app_url()
+        return redirect(f"{main_app_url}/login?next={request.url}")
+
+    conn = get_db()
+    success = delete_entry(conn, entry_id)
+
+    if success:
+        flash('Weight entry deleted successfully!', 'success')
+        logger.info(f"Weight entry {entry_id} deleted")
+    else:
+        flash('Error deleting entry', 'error')
+
+    return redirect(f"{get_weight_url()}/history")
 
 @app.route('/history')
 def history():
