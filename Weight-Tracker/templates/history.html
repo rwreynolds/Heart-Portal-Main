@@ -233,12 +233,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 10px;
-    margin: 0 2px;
+    gap: 6px;
+    padding: 10px 16px;
+    margin: 0 4px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 15px;
+    font-weight: 500;
     transition: all 0.3s ease;
     text-decoration: none;
 }
@@ -378,11 +380,11 @@
                             </td>
                             <td class="actions-cell">
                                 <a href="{{ get_weight_url() }}/edit_entry/{{ entry.id }}" class="btn-action btn-edit" title="Edit Entry">
-                                    <i class="fas fa-edit"></i>
+                                    <i class="fas fa-edit"></i> Edit
                                 </a>
                                 <form method="POST" action="{{ get_weight_url() }}/delete_entry/{{ entry.id }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this entry? This action cannot be undone.');">
                                     <button type="submit" class="btn-action btn-delete" title="Delete Entry">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash"></i> Delete
                                     </button>
                                 </form>
                             </td>
