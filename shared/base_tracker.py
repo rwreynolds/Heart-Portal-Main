@@ -19,8 +19,8 @@ Usage:
 from abc import ABC, abstractmethod
 from typing import List, Dict, Optional, Any, Tuple
 from datetime import datetime, timedelta
-from shared.database import DatabaseConfig
-from shared.logger import get_logger
+from database import DatabaseConfig
+from logger import get_logger
 
 logger = get_logger('base-tracker')
 

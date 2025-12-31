@@ -7,7 +7,7 @@ from typing import Dict, Any, Callable, Optional
 from flask import Flask, jsonify, Response
 from datetime import datetime
 import sys
-from shared.database import DatabaseConfig
+from database import DatabaseConfig
 
 
 def create_health_check_endpoint(
