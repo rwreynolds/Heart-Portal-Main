@@ -1,10 +1,8 @@
 """
 Shared Authentication Module for Heart Portal
-Provides user management, login/logout, and session handling with PostgreSQL
+Provides user management, login/logout, and session handling with PostgreSQL and SQLite
 """
 
-import psycopg2
-import psycopg2.extras
 import hashlib
 import secrets
 from datetime import datetime, timedelta
@@ -14,6 +12,17 @@ import os
 
 # Get database URL from environment
 DATABASE_URL = os.getenv('DATABASE_URL_USERS')
+
+# Determine database type from URL
+IS_SQLITE = DATABASE_URL and DATABASE_URL.startswith('sqlite:///')
+IS_POSTGRES = DATABASE_URL and DATABASE_URL.startswith('postgresql://')
+
+# Import appropriate database driver
+if IS_SQLITE:
+    import sqlite3
+elif IS_POSTGRES:
+    import psycopg2
+    import psycopg2.extras
 
 class User:
     """User model for authentication"""
@@ -32,41 +41,77 @@ class User:
         return str(self.id)
 
 def get_db():
-    """Get database connection"""
+    """Get database connection - supports both SQLite and PostgreSQL"""
     if not DATABASE_URL:
         raise ValueError("DATABASE_URL_USERS environment variable not set")
 
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
-    return conn
+    if IS_SQLITE:
+        # Extract file path from sqlite:///path format
+        db_path = DATABASE_URL.replace('sqlite:///', '')
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row  # Return rows as dictionaries
+        return conn
+    elif IS_POSTGRES:
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+        return conn
+    else:
+        raise ValueError(f"Unsupported database URL format: {DATABASE_URL}")
 
 def init_auth_db():
-    """Initialize the authentication database"""
+    """Initialize the authentication database - supports both SQLite and PostgreSQL"""
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(255) UNIQUE NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            password_hash VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            is_active BOOLEAN DEFAULT TRUE,
-            is_admin BOOLEAN DEFAULT FALSE
-        )
-    ''')
+    if IS_SQLITE:
+        # SQLite syntax
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                is_active INTEGER DEFAULT 1,
+                is_admin INTEGER DEFAULT 0
+            )
+        ''')
 
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user_sessions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            session_token VARCHAR(255) UNIQUE NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            expires_at TIMESTAMP NOT NULL,
-            ip_address VARCHAR(45),
-            user_agent TEXT
-        )
-    ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                session_token TEXT UNIQUE NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                expires_at TEXT NOT NULL,
+                ip_address TEXT,
+                user_agent TEXT
+            )
+        ''')
+    else:
+        # PostgreSQL syntax
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                is_admin BOOLEAN DEFAULT FALSE
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                session_token VARCHAR(255) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                expires_at TIMESTAMP NOT NULL,
+                ip_address VARCHAR(45),
+                user_agent TEXT
+            )
+        ''')
 
     # Create index on session_token for faster lookups
     cursor.execute('''
