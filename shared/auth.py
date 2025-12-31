@@ -174,11 +174,18 @@ def authenticate_user(username, password):
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute('''
-        SELECT id, username, email, password_hash, created_at, is_active, is_admin
-        FROM users
-        WHERE username = %s AND is_active = TRUE
-    ''', (username,))
+    if IS_SQLITE:
+        cursor.execute('''
+            SELECT id, username, email, password_hash, created_at, is_active, is_admin
+            FROM users
+            WHERE username = ? AND is_active = 1
+        ''', (username,))
+    else:
+        cursor.execute('''
+            SELECT id, username, email, password_hash, created_at, is_active, is_admin
+            FROM users
+            WHERE username = %s AND is_active = TRUE
+        ''', (username,))
 
     user_row = cursor.fetchone()
     cursor.close()
