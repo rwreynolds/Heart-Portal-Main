@@ -25,6 +25,11 @@ from url_helpers import (
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
+# Import ClaudeExperiment features
+from logger import setup_logger
+from security_headers import init_security_headers
+from health_check import create_health_check_endpoint
+
 # Import database module
 from database import (
     init_weight_database, get_db_connection, release_connection,
@@ -53,9 +58,12 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Initialize security headers (NEW: ClaudeExperiment)
+init_security_headers(app)
+
+# Initialize logger (NEW: ClaudeExperiment - replaces old logging config)
+logger = setup_logger('heart-portal-weight')
+logger.info("Security headers initialized")
 
 # Timezone configuration
 TIMEZONE = os.getenv('TIMEZONE', 'America/New_York')  # Default to Eastern Time
@@ -417,7 +425,24 @@ def not_found(error):
 def internal_error(error):
     return render_template('500.html', base_url=get_base_url()), 500
 
+# Add health check endpoint (NEW: ClaudeExperiment)
+create_health_check_endpoint(
+    app,
+    'heart-portal-weight',
+    database_url=f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'weight_tracker.db')}"
+)
+logger.info("Health check endpoint added at /health")
+
 if __name__ == '__main__':
+    logger.info("Initializing Weight Tracker database...")
     init_weight_database()
+
+    # Use debug=False in production, True for development
+    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
+
+    # Read port from environment variable (for staging) or use default
     port = int(os.environ.get('PORT', 5005))
-    app.run(host='0.0.0.0', port=port, debug=True)
+
+    logger.info(f"Starting Weight Tracker on port {port}")
+    logger.info(f"Debug mode: {debug_mode}")
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

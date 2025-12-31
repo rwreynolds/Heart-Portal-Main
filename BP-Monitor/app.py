@@ -15,6 +15,11 @@ from session_config import configure_session
 from auth import get_current_user
 from url_helpers import get_base_url, get_bp_url, get_nutrition_url, get_foodbase_url, get_sodium_url, get_fluid_url, get_weight_url, get_main_app_url, get_blog_url
 
+# Import ClaudeExperiment features
+from logger import setup_logger
+from security_headers import init_security_headers
+from health_check import create_health_check_endpoint
+
 # Import database module
 from database import (
     init_bp_database, get_db_connection, release_connection,
@@ -23,6 +28,9 @@ from database import (
     get_entries_since, update_settings, get_entry_by_id,
     update_entry, delete_entry
 )
+
+# Initialize logger (NEW: ClaudeExperiment)
+logger = setup_logger('heart-portal-bp')
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'heart-portal-shared-secret-key-2025')
@@ -35,6 +43,10 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
+
+# Initialize security headers (NEW: ClaudeExperiment)
+init_security_headers(app)
+logger.info("Security headers initialized")
 
 # Database connection management using Flask g object
 def get_db():
@@ -453,6 +465,24 @@ def not_found_error(error):
 def internal_error(error):
     return render_template('500.html'), 500
 
+# Add health check endpoint (NEW: ClaudeExperiment)
+create_health_check_endpoint(
+    app,
+    'heart-portal-bp',
+    database_url=f"sqlite:///{os.path.join(os.path.dirname(__file__), 'bp_monitor.db')}"
+)
+logger.info("Health check endpoint added at /health")
+
 if __name__ == '__main__':
+    logger.info("Initializing BP Monitor database...")
+    init_bp_database()
+
+    # Use debug=False in production, True for development
+    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
+
+    # Read port from environment variable (for staging) or use default
     port = int(os.environ.get('PORT', 5006))
-    app.run(host='0.0.0.0', port=port, debug=True)
+
+    logger.info(f"Starting BP Monitor on port {port}")
+    logger.info(f"Debug mode: {debug_mode}")
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

@@ -24,8 +24,16 @@ from url_helpers import (
     get_sodium_url, get_fluid_url, get_weight_url, get_bp_url
 )
 
+# Import ClaudeExperiment features
+from logger import setup_logger
+from security_headers import init_security_headers
+from health_check import create_health_check_endpoint
+
 # Import database functions
 import database as db
+
+# Initialize logger (NEW: ClaudeExperiment)
+logger = setup_logger('heart-portal-fluid')
 
 app = Flask(__name__)
 # Shared secret key for cross-application session compatibility
@@ -44,6 +52,10 @@ app.jinja_loader = ChoiceLoader([
     FileSystemLoader(os.path.join(os.path.dirname(__file__), 'templates')),
     FileSystemLoader(os.path.join(os.path.dirname(__file__), '..', 'shared', 'templates'))
 ])
+
+# Initialize security headers (NEW: ClaudeExperiment)
+init_security_headers(app)
+logger.info("Security headers initialized")
 
 # Timezone configuration
 TIMEZONE = os.getenv('TIMEZONE', 'America/New_York')  # Default to Eastern Time
@@ -338,8 +350,17 @@ def internal_server_error(e):
     """500 error handler"""
     return render_template('500.html'), 500
 
+# Add health check endpoint (NEW: ClaudeExperiment)
+create_health_check_endpoint(
+    app,
+    'heart-portal-fluid',
+    database_url=f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'fluid_tracker.db')}"
+)
+logger.info("Health check endpoint added at /health")
+
 if __name__ == '__main__':
     # Initialize database on startup
+    logger.info("Initializing Fluid Tracker database...")
     init_database()
 
     # Use debug=False in production, True for development
@@ -347,4 +368,7 @@ if __name__ == '__main__':
 
     # Read port from environment variable (for staging) or use default
     port = int(os.getenv('PORT', 5004))
+
+    logger.info(f"Starting Fluid Tracker on port {port}")
+    logger.info(f"Debug mode: {debug_mode}")
     app.run(debug=debug_mode, port=port, host='0.0.0.0')
