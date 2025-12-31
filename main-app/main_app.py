@@ -21,13 +21,25 @@ from url_helpers import (
     is_production_mode, is_staging_mode
 )
 
+# Import new ClaudeExperiment features
+from logger import setup_logger
+from security_headers import init_security_headers
+from health_check import create_health_check_endpoint
+
 # Import blog queries from local module (uses direct PostgreSQL connection to blog DB)
 # TODO: Re-enable when blog_queries.py is created
 # import blog_queries
 
+# Initialize logger (NEW: ClaudeExperiment)
+logger = setup_logger('heart-portal-main')
+
 app = Flask(__name__)
 # Shared secret key for cross-application session compatibility
 app.secret_key = os.environ.get('SECRET_KEY', 'heart-portal-shared-secret-key-2025')
+
+# Initialize security headers (NEW: ClaudeExperiment)
+init_security_headers(app)
+logger.info("Security headers initialized")
 
 # Configure session cookies for reverse proxy setup
 # Environment-aware session cookie configuration
@@ -406,8 +418,17 @@ def admin_delete_post(post_id):
 
     return redirect(url_for('admin_blog'))
 
+# Add health check endpoint (NEW: ClaudeExperiment)
+create_health_check_endpoint(
+    app,
+    'heart-portal-main',
+    database_url=os.getenv('DATABASE_URL_USERS')
+)
+logger.info("Health check endpoint added at /health")
+
 if __name__ == '__main__':
     # Initialize databases
+    logger.info("Initializing databases...")
     init_auth_db()
     # TODO: Re-enable when blog_queries.py is created
     # init_blog_database()
@@ -417,4 +438,10 @@ if __name__ == '__main__':
 
     # Read port from environment variable (for staging) or use default
     port = int(os.getenv('PORT', 3000))
+
+    logger.info(f"Starting Heart Portal Main Application on port {port}")
+    logger.info(f"Debug mode: {debug_mode}")
+    logger.info(f"Production mode: {is_production_mode()}")
+    logger.info(f"Staging mode: {is_staging_mode()}")
+
     app.run(debug=debug_mode, port=port, host='0.0.0.0')
