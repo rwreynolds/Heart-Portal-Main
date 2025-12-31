@@ -7,7 +7,22 @@ from typing import Dict, Any, Callable, Optional
 from flask import Flask, jsonify, Response
 from datetime import datetime
 import sys
-from database import DatabaseConfig
+import os
+
+# Determine database type and import appropriate driver
+IS_SQLITE = lambda url: url and url.startswith('sqlite:///')
+IS_POSTGRES = lambda url: url and url.startswith('postgresql://')
+
+# Try importing database drivers
+try:
+    import sqlite3
+except ImportError:
+    sqlite3 = None
+
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
 
 
 def create_health_check_endpoint(
@@ -103,21 +118,42 @@ def check_database(database_url: str) -> Dict[str, Any]:
     Check database connectivity
 
     Args:
-        database_url: Database connection string
+        database_url: Database connection string (sqlite:/// or postgresql://)
 
     Returns:
         Dictionary with check results
     """
     try:
-        db = DatabaseConfig(database_url)
-        conn = db.get_connection()
+        conn = None
 
-        # Try a simple query
-        cursor = db.dict_cursor(conn)
-        cursor.execute("SELECT 1")
-        result = cursor.fetchone()
+        if IS_SQLITE(database_url):
+            # SQLite connection
+            if sqlite3 is None:
+                raise ImportError("sqlite3 module not available")
 
-        db.release_connection(conn)
+            db_path = database_url.replace('sqlite:///', '')
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            cursor.close()
+
+        elif IS_POSTGRES(database_url):
+            # PostgreSQL connection
+            if psycopg2 is None:
+                raise ImportError("psycopg2 module not available")
+
+            conn = psycopg2.connect(database_url)
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+            cursor.close()
+
+        else:
+            raise ValueError(f"Unsupported database URL format: {database_url}")
+
+        if conn:
+            conn.close()
 
         return {
             'status': 'ok',
@@ -125,6 +161,12 @@ def check_database(database_url: str) -> Dict[str, Any]:
             'connected': True
         }
     except Exception as e:
+        if conn:
+            try:
+                conn.close()
+            except:
+                pass
+
         return {
             'status': 'error',
             'healthy': False,
