@@ -359,14 +359,22 @@ def create_session(user_id, ip_address=None, user_agent=None, duration_days=30):
     session_token = secrets.token_urlsafe(32)
     expires_at = datetime.now() + timedelta(days=duration_days)
 
-    cursor.execute('''
-        INSERT INTO user_sessions (user_id, session_token, expires_at, ip_address, user_agent)
-        VALUES (%s, %s, %s, %s, %s)
-        RETURNING session_token
-    ''', (user_id, session_token, expires_at, ip_address, user_agent))
+    if IS_SQLITE:
+        cursor.execute('''
+            INSERT INTO user_sessions (user_id, session_token, expires_at, ip_address, user_agent)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_id, session_token, expires_at, ip_address, user_agent))
+        conn.commit()
+        token = session_token  # SQLite doesn't support RETURNING
+    else:
+        cursor.execute('''
+            INSERT INTO user_sessions (user_id, session_token, expires_at, ip_address, user_agent)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING session_token
+        ''', (user_id, session_token, expires_at, ip_address, user_agent))
+        token = cursor.fetchone()['session_token']
+        conn.commit()
 
-    token = cursor.fetchone()['session_token']
-    conn.commit()
     cursor.close()
     conn.close()
     return token
